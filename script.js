@@ -7,6 +7,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnPostJob = document.getElementById('btnPostJob');
     const jobListContainer = document.getElementById('jobList'); // Container chứa danh sách việc làm
 
+    // Khởi tạo danh sách công việc (Lấy từ localStorage nếu có, nếu không thì dùng danh sách mẫu mặc định)
+    let jobsList = JSON.parse(localStorage.getItem('my_jobs_list')) || [
+        { id: 1, title: 'Nhân viên Phục vụ Bán thời gian', location: 'TP.HCM', salary: '25k - 30k/giờ', isUrgent: true },
+        { id: 2, title: 'Nhân viên Thiết kế đồ họa', location: 'Hà Nội', salary: '12 - 15 triệu', isUrgent: false }
+    ];
+
+    // Hàm render toàn bộ danh sách ra giao diện
+    function renderJobs() {
+        if (!jobListContainer) return;
+        jobListContainer.innerHTML = ''; // Xóa nội dung cũ để render lại từ mảng
+
+        if (jobsList.length === 0) {
+            jobListContainer.innerHTML = '<p class="text-center text-slate-400 py-6">Chưa có công việc nào.</p>';
+            return;
+        }
+
+        jobsList.forEach(job => {
+            const jobCard = document.createElement('div');
+            jobCard.className = 'p-4 bg-white rounded-lg shadow border border-slate-200 flex justify-between items-center transition hover:shadow-md';
+            jobCard.innerHTML = `
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-bold text-slate-800 text-lg">${job.title}</h3>
+                        ${job.isUrgent ? '<span class="px-2 py-0.5 text-xs bg-red-100 text-red-600 font-semibold rounded">GẤP</span>' : ''}
+                    </div>
+                    <p class="text-sm text-slate-500 mt-1">📍 ${job.location} | 💰 ${job.salary}</p>
+                </div>
+                <button class="px-3 py-1.5 bg-slate-900 text-white text-sm font-medium rounded hover:bg-slate-800">
+                    Ứng tuyển
+                </button>
+            `;
+            jobListContainer.appendChild(jobCard);
+        });
+    }
+
     // 1. Chuyển đổi trạng thái nút danh mục khi bấm
     categoryBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -20,9 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 2. Tính năng Thêm việc mới
+    // 2. Tính năng Thêm việc mới (Dùng prompt y nguyên cấu trúc của bạn + Lưu localStorage + Tự xuất hiện)
     btnPostJob.addEventListener('click', () => {
-        // Nhập thông tin việc mới (Bạn có thể thay đoạn này bằng Form / Modal nếu muốn)
         const title = prompt('Nhập tên công việc:');
         if (!title) return; // Hủy nếu không nhập tên
 
@@ -39,36 +73,17 @@ document.addEventListener('DOMContentLoaded', () => {
             isUrgent: isUrgent
         };
 
-        // Thêm vào danh sách giao diện
-        addJobToUI(newJob);
+        // Thêm vào đầu mảng dữ liệu
+        jobsList.unshift(newJob);
+
+        // Lưu vào localStorage để không bị mất khi F5
+        localStorage.setItem('my_jobs_list', JSON.stringify(jobsList));
+
+        // Cập nhật lại giao diện ngay lập tức
+        renderJobs();
+        
         alert('Thêm công việc thành công!');
     });
-
-    // Hàm hiển thị công việc mới ra HTML
-    function addJobToUI(job) {
-        if (!jobListContainer) {
-            console.log('Đã thêm công việc mới:', job);
-            return;
-        }
-
-        const jobCard = document.createElement('div');
-        jobCard.className = 'p-4 bg-white rounded-lg shadow border border-slate-200 flex justify-between items-center transition hover:shadow-md';
-        jobCard.innerHTML = `
-            <div>
-                <div class="flex items-center gap-2">
-                    <h3 class="font-bold text-slate-800 text-lg">${job.title}</h3>
-                    ${job.isUrgent ? '<span class="px-2 py-0.5 text-xs bg-red-100 text-red-600 font-semibold rounded">GẤP</span>' : ''}
-                </div>
-                <p class="text-sm text-slate-500 mt-1">📍 ${job.location} | 💰 ${job.salary}</p>
-            </div>
-            <button class="px-3 py-1.5 bg-slate-900 text-white text-sm font-medium rounded hover:bg-slate-800">
-                Ứng tuyển
-            </button>
-        `;
-
-        // Thêm việc mới lên đầu danh sách
-        jobListContainer.prepend(jobCard);
-    }
 
     // 3. Lắng nghe thay đổi tìm kiếm & bộ lọc
     if (searchInput) {
@@ -88,4 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Lọc chỉ việc gấp:', e.target.checked);
         });
     }
+
+    // Chạy render lần đầu khi tải trang
+    renderJobs();
 });

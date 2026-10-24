@@ -65,7 +65,10 @@
 
             <!-- Đăng Nhập Bằng Google -->
             <div class="flex justify-center">
-                <!-- Nút Google tự động render (cần cấu hình Client ID ở dưới) -->
+                <!-- 
+                  LƯU Ý: Bạn cần thay giá trị data-client_id thành Google Client ID của bạn 
+                  khi đưa ứng dụng lên server thực tế.
+                -->
                 <div id="g_id_onload"
                      data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
                      data-callback="handleGoogleLogin"
@@ -151,10 +154,10 @@
 
     <!-- Logic Xử lý -->
     <script>
-        // Danh sách Email Google được phép đăng nhập làm Admin (Bạn có thể thêm nhiều email tùy ý)
-        const ALLOWED_ADMIN_EMAILS = ['admin@viecgap.com', 'your_email@gmail.com'];
+        // Đã cấu hình thêm email của bạn vào danh sách cho phép quản trị
+        const ALLOWED_ADMIN_EMAILS = ['hiêu199771@gmail.com', 'admin@viecgap.com'];
 
-        // Lấy mật khẩu từ localStorage hoặc dùng mặc định 'admin123'
+        // Lấy mật khẩu tùy chỉnh hoặc dùng mặc định 'admin123'
         function getAdminPassword() {
             return localStorage.getItem('admin_custom_password') || 'admin123';
         }
@@ -178,12 +181,11 @@
             const statPendingWorkers = document.getElementById('statPendingWorkers');
             const statPendingOrgs = document.getElementById('statPendingOrgs');
 
-            // Tự động mở nếu đã đăng nhập trước đó
             if (localStorage.getItem('is_admin_logged') === 'true') {
                 openDashboard();
             }
 
-            // Xử lý Đăng nhập Mật khẩu
+            // Đăng nhập bằng Mật khẩu
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 if (passwordInput.value.trim() === getAdminPassword()) {
@@ -194,7 +196,7 @@
                 }
             });
 
-            // Xử lý Đăng xuất
+            // Đăng xuất
             btnLogout.addEventListener('click', () => {
                 localStorage.removeItem('is_admin_logged');
                 mainContent.classList.add('hidden');
@@ -206,7 +208,7 @@
                 googleErrorMsg.classList.add('hidden');
             });
 
-            // Modal Đổi Mật Khẩu
+            // Đổi mật khẩu
             btnOpenChangePassModal.addEventListener('click', () => {
                 changePassModal.classList.remove('hidden');
                 changePassModal.classList.add('flex');
@@ -229,7 +231,7 @@
                 changePassModal.classList.add('hidden');
                 changePassModal.classList.remove('flex');
                 newPasswordInput.value = '';
-                alert('Đổi mật khẩu thành công! Hãy dùng mật khẩu mới cho lần đăng nhập sau.');
+                alert('Đổi mật khẩu thành công!');
             });
 
             function openDashboard() {
@@ -240,10 +242,9 @@
                 loadPendingData();
             }
 
-            // Hàm xử lý khi đăng nhập Google thành công trả về token
+            // Xử lý xác thực Google OAuth
             window.handleGoogleLogin = function(response) {
                 try {
-                    // Giải mã token JWT từ Google để lấy thông tin email
                     const base64Url = response.credential.split('.')[1];
                     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                     const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -251,11 +252,10 @@
                     }).join(''));
 
                     const userInfo = JSON.parse(jsonPayload);
-                    const userEmail = userInfo.email;
+                    const userEmail = userInfo.email.toLowerCase().trim();
 
-                    // Kiểm tra xem email có nằm trong danh sách cấp phép không
-                    // Hoặc bạn có thể cho phép bất kỳ email nào đăng nhập bằng cách bỏ kiểm tra mảng
-                    if (ALLOWED_ADMIN_EMAILS.includes(userEmail) || ALLOWED_ADMIN_EMAILS.includes('your_email@gmail.com')) {
+                    // Kiểm tra email đăng nhập có trùng với email của bạn không
+                    if (ALLOWED_ADMIN_EMAILS.includes(userEmail)) {
                         localStorage.setItem('is_admin_logged', 'true');
                         localStorage.setItem('admin_email', userEmail);
                         googleErrorMsg.classList.add('hidden');
@@ -327,54 +327,4 @@
                     }
                 }
 
-                // Render Tổ chức
-                if (adminPendingOrgList) {
-                    adminPendingOrgList.innerHTML = '';
-                    if (pendingOrgs.length === 0) {
-                        adminPendingOrgList.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">Không có tổ chức nào đang chờ duyệt.</p>`;
-                    } else {
-                        pendingOrgs.forEach(o => {
-                            const div = document.createElement('div');
-                            div.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs';
-                            div.innerHTML = `
-                                <div>
-                                    <h4 class="font-bold text-slate-800 text-sm">${o.name}</h4>
-                                    <p class="text-slate-600 mt-0.5">📞 ${o.phone} &bull; 📍 ${o.location}</p>
-                                    <p class="text-blue-700 font-medium mt-0.5">Thế mạnh: ${o.strength}</p>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button data-id="${o.id}" class="btn-approve-org px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition cursor-pointer">Đồng ý</button>
-                                    <button data-id="${o.id}" class="btn-reject-org px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition cursor-pointer">Từ chối</button>
-                                </div>`;
-                            adminPendingOrgList.appendChild(div);
-                        });
-
-                        document.querySelectorAll('.btn-approve-org').forEach(btn => {
-                            btn.addEventListener('click', (e) => {
-                                const id = Number(e.currentTarget.getAttribute('data-id'));
-                                let currentOrgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
-                                currentOrgs = currentOrgs.map(o => o.id === id ? { ...o, status: 'approved' } : o);
-                                localStorage.setItem('organizations_list', JSON.stringify(currentOrgs));
-                                loadPendingData();
-                                alert('Đã phê duyệt tổ chức thành công!');
-                            });
-                        });
-
-                        document.querySelectorAll('.btn-reject-org').forEach(btn => {
-                            btn.addEventListener('click', (e) => {
-                                const id = Number(e.currentTarget.getAttribute('data-id'));
-                                if (confirm('Bạn có chắc muốn từ chối và xóa tổ chức này?')) {
-                                    let currentOrgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
-                                    currentOrgs = currentOrgs.filter(o => o.id !== id);
-                                    localStorage.setItem('organizations_list', JSON.stringify(currentOrgs));
-                                    loadPendingData();
-                                }
-                            });
-                        });
-                    }
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+                //

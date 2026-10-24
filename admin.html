@@ -27,7 +27,7 @@
         </div>
     </header>
 
-    <!-- 1. KHUNG ĐĂNG NHẬP (Mặc định hiện lên nếu chưa đăng nhập) -->
+    <!-- 1. KHUNG ĐĂNG NHẬP -->
     <div id="adminLoginSection" class="flex-1 flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-100 p-6 space-y-5">
             <div class="text-center space-y-1">
@@ -48,11 +48,11 @@
                     Đăng nhập
                 </button>
             </form>
-            <p class="text-[11px] text-center text-slate-400">Mật khẩu mẫu: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">admin123</code></p>
+            <p class="text-[11px] text-center text-slate-400">Mật khẩu mặc định: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">admin123</code></p>
         </div>
     </div>
 
-    <!-- 2. KHU VỰC QUẢN TRỊ (Ẩn đi cho đến khi đăng nhập đúng mật khẩu) -->
+    <!-- 2. KHU VỰC QUẢN TRỊ -->
     <main id="adminMainContent" class="flex-1 max-w-5xl w-full mx-auto p-6 space-y-6 hidden">
         
         <!-- Thống kê nhanh -->
@@ -83,9 +83,7 @@
             <div class="p-4 border-b border-slate-100 bg-slate-50">
                 <h3 class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-user-check mr-2 text-amber-500"></i> Phê duyệt Hồ sơ Cá nhân</h3>
             </div>
-            <div id="adminPendingWorkerList" class="p-4 space-y-3">
-                <!-- Danh sách sẽ được chèn vào đây bằng JS -->
-            </div>
+            <div id="adminPendingWorkerList" class="p-4 space-y-3"></div>
         </div>
 
         <!-- Bảng phê duyệt Tổ chức -->
@@ -93,14 +91,12 @@
             <div class="p-4 border-b border-slate-100 bg-slate-50">
                 <h3 class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-building-shield mr-2 text-blue-600"></i> Phê duyệt Tổ chức / Đối tác</h3>
             </div>
-            <div id="adminPendingOrgList" class="p-4 space-y-3">
-                <!-- Danh sách sẽ được chèn vào đây bằng JS -->
-            </div>
+            <div id="adminPendingOrgList" class="p-4 space-y-3"></div>
         </div>
 
     </main>
 
-    <!-- Script xử lý hiển thị và nút duyệt -->
+    <!-- Script xử lý -->
     <script>
         const ADMIN_PASS = 'admin123';
         
@@ -111,12 +107,10 @@
         const loginErrorMsg = document.getElementById('loginErrorMsg');
         const btnLogout = document.getElementById('btnLogout');
 
-        // Kiểm tra xem trước đó đã đăng nhập chưa
         if (localStorage.getItem('is_admin_logged') === 'true') {
             openDashboard();
         }
 
-        // Sự kiện gửi form đăng nhập
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
             if (passwordInput.value.trim() === ADMIN_PASS) {
@@ -127,7 +121,6 @@
             }
         });
 
-        // Nút Đăng xuất
         btnLogout.addEventListener('click', function() {
             localStorage.removeItem('is_admin_logged');
             mainContent.classList.add('hidden');
@@ -147,13 +140,14 @@
             const workers = JSON.parse(localStorage.getItem('workers_list') || '[]');
             const orgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
 
+            // Lọc các hồ sơ chưa duyệt hoặc đang ở trạng thái pending
             const pendingWorkers = workers.filter(w => !w.status || w.status === 'pending');
             const pendingOrgs = orgs.filter(o => !o.status || o.status === 'pending');
 
             document.getElementById('statPendingWorkers').textContent = pendingWorkers.length;
             document.getElementById('statPendingOrgs').textContent = pendingOrgs.length;
 
-            // 1. Render danh sách Cá nhân
+            // 1. Render Cá nhân
             const workerContainer = document.getElementById('adminPendingWorkerList');
             workerContainer.innerHTML = '';
             if (pendingWorkers.length === 0) {
@@ -168,15 +162,15 @@
                             <p class="text-slate-600 mt-0.5">📞 ${w.phone} &bull; 📍 ${w.location}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="approveWorker(${w.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm">Đồng ý</button>
-                            <button onclick="rejectWorker(${w.id})" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm">Từ chối</button>
+                            <button onclick="approveWorker(${w.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
+                            <button onclick="rejectWorker(${w.id})" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
                         </div>
                     `;
                     workerContainer.appendChild(item);
                 });
             }
 
-            // 2. Render danh sách Tổ chức
+            // 2. Render Tổ chức
             const orgContainer = document.getElementById('adminPendingOrgList');
             orgContainer.innerHTML = '';
             if (pendingOrgs.length === 0) {
@@ -192,8 +186,8 @@
                             <p class="text-blue-700 font-medium mt-0.5">Thế mạnh: ${o.strength}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="approveOrg(${o.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm">Đồng ý</button>
-                            <button onclick="rejectOrg(${o.id})" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm">Từ chối</button>
+                            <button onclick="approveOrg(${o.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
+                            <button onclick="rejectOrg(${o.id})" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
                         </div>
                     `;
                     orgContainer.appendChild(item);
@@ -201,7 +195,7 @@
             }
         }
 
-        // Các hàm xử lý bấm nút Đồng ý / Từ chối (Toàn cục)
+        // --- CƠ CHẾ ĐỒNG Ý & TỪ CHỐI ---
         window.approveWorker = function(id) {
             let workers = JSON.parse(localStorage.getItem('workers_list') || '[]');
             workers = workers.map(w => w.id === id ? { ...w, status: 'approved' } : w);
@@ -211,7 +205,7 @@
         };
 
         window.rejectWorker = function(id) {
-            if (confirm('Bạn có chắc chắn muốn từ chối hồ sơ này?')) {
+            if (confirm('Bạn có chắc chắn muốn từ chối và xóa hồ sơ này?')) {
                 let workers = JSON.parse(localStorage.getItem('workers_list') || '[]');
                 workers = workers.filter(w => w.id !== id);
                 localStorage.setItem('workers_list', JSON.stringify(workers));
@@ -228,7 +222,7 @@
         };
 
         window.rejectOrg = function(id) {
-            if (confirm('Bạn có chắc chắn muốn từ chối tổ chức này?')) {
+            if (confirm('Bạn có chắc chắn muốn từ chối và xóa tổ chức này?')) {
                 let orgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
                 orgs = orgs.filter(o => o.id !== id);
                 localStorage.setItem('organizations_list', JSON.stringify(orgs));

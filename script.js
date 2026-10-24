@@ -452,3 +452,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderJobs();
 });
+<script src="admin.js"></script>

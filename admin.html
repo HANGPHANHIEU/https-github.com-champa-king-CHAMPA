@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Identity Services SDK cho Đăng nhập Google -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
@@ -18,6 +20,9 @@
             <span class="font-bold text-lg tracking-tight">Hệ Thống Phê Duyệt - Việc Gấp Admin</span>
         </div>
         <div class="flex items-center gap-3">
+            <button id="btnOpenChangePassModal" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition hidden">
+                <i class="fa-solid fa-key mr-1"></i> Đổi mật khẩu
+            </button>
             <button id="btnLogout" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition hidden">
                 <i class="fa-solid fa-right-from-bracket mr-1"></i> Đăng xuất
             </button>
@@ -27,7 +32,7 @@
         </div>
     </header>
 
-    <!-- 1. KHUNG ĐĂNG NHẬP ADMIN -->
+    <!-- 1. KHUNG ĐĂNG NHẬP ADMIN (Mật khẩu hoặc Google) -->
     <div id="adminLoginSection" class="flex-1 flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-100 p-6 space-y-5">
             <div class="text-center space-y-1">
@@ -35,9 +40,10 @@
                     <i class="fa-solid fa-lock"></i>
                 </div>
                 <h2 class="text-xl font-bold text-slate-900">Xác thực Quản trị viên</h2>
-                <p class="text-xs text-slate-500">Nhập mật khẩu admin để kiểm duyệt hồ sơ</p>
+                <p class="text-xs text-slate-500">Đăng nhập để kiểm duyệt hồ sơ hệ thống</p>
             </div>
 
+            <!-- Form Đăng Nhập Mật Khẩu -->
             <form id="adminLoginForm" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu Admin</label>
@@ -46,15 +52,43 @@
                 <p id="loginErrorMsg" class="text-xs text-red-500 font-semibold hidden text-center">
                     <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mật khẩu không chính xác!
                 </p>
-                <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl transition text-sm shadow-sm">
-                    Đăng nhập hệ thống
+                <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">
+                    Đăng nhập bằng Mật khẩu
                 </button>
             </form>
+
+            <div class="flex items-center my-3">
+                <div class="flex-grow border-t border-slate-200"></div>
+                <span class="px-2 text-[11px] text-slate-400 font-medium uppercase">hoặc</span>
+                <div class="flex-grow border-t border-slate-200"></div>
+            </div>
+
+            <!-- Đăng Nhập Bằng Google -->
+            <div class="flex justify-center">
+                <!-- Nút Google tự động render (cần cấu hình Client ID ở dưới) -->
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+                     data-callback="handleGoogleLogin"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="outline"
+                     data-text="sign_in_with"
+                     data-size="large"
+                     data-logo_alignment="left">
+                </div>
+            </div>
+            <p id="googleErrorMsg" class="text-xs text-red-500 font-semibold hidden text-center">
+                <i class="fa-solid fa-triangle-exclamation mr-1"></i> Tài khoản Google không có quyền Quản trị!
+            </p>
+
             <p class="text-[11px] text-center text-slate-400">Mật khẩu mặc định: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">admin123</code></p>
         </div>
     </div>
 
-    <!-- 2. KHU VỰC PHÊ DUYỆT ĐƠN (Chỉ hiển thị khi nhập đúng mật khẩu) -->
+    <!-- 2. KHU VỰC PHÊ DUYỆT ĐƠN -->
     <main id="adminMainContent" class="flex-1 max-w-5xl w-full mx-auto p-6 space-y-6 hidden">
         
         <!-- Thống kê nhanh số đơn chờ duyệt -->
@@ -98,27 +132,61 @@
 
     </main>
 
-    <!-- Logic xử lý kiểm duyệt cho admin.html -->
+    <!-- Modal Đổi Mật Khẩu -->
+    <div id="changePassModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-100 p-6 space-y-4">
+            <h3 class="font-bold text-slate-900 text-base"><i class="fa-solid fa-key text-teal-600 mr-2"></i> Đổi Mật Khẩu Quản Trị</h3>
+            <form id="changePassForm" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
+                    <input type="password" id="newPasswordInput" required placeholder="Nhập mật khẩu mới..." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" id="btnCloseChangePass" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-xs transition">Hủy</button>
+                    <button type="submit" class="flex-1 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl text-xs transition">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Logic Xử lý -->
     <script>
+        // Danh sách Email Google được phép đăng nhập làm Admin (Bạn có thể thêm nhiều email tùy ý)
+        const ALLOWED_ADMIN_EMAILS = ['admin@viecgap.com', 'your_email@gmail.com'];
+
+        // Lấy mật khẩu từ localStorage hoặc dùng mặc định 'admin123'
+        function getAdminPassword() {
+            return localStorage.getItem('admin_custom_password') || 'admin123';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            const ADMIN_PASS = 'admin123';
-            
             const loginSection = document.getElementById('adminLoginSection');
             const mainContent = document.getElementById('adminMainContent');
             const loginForm = document.getElementById('adminLoginForm');
             const passwordInput = document.getElementById('adminPasswordInput');
             const loginErrorMsg = document.getElementById('loginErrorMsg');
+            const googleErrorMsg = document.getElementById('googleErrorMsg');
             const btnLogout = document.getElementById('btnLogout');
+            const btnOpenChangePassModal = document.getElementById('btnOpenChangePassModal');
+            const changePassModal = document.getElementById('changePassModal');
+            const btnCloseChangePass = document.getElementById('btnCloseChangePass');
+            const changePassForm = document.getElementById('changePassForm');
+            const newPasswordInput = document.getElementById('newPasswordInput');
 
-            // Tự động vào thẳng nếu đã xác thực trước đó
+            const adminPendingWorkerList = document.getElementById('adminPendingWorkerList');
+            const adminPendingOrgList = document.getElementById('adminPendingOrgList');
+            const statPendingWorkers = document.getElementById('statPendingWorkers');
+            const statPendingOrgs = document.getElementById('statPendingOrgs');
+
+            // Tự động mở nếu đã đăng nhập trước đó
             if (localStorage.getItem('is_admin_logged') === 'true') {
                 openDashboard();
             }
 
-            // Xử lý xác thực mật khẩu
+            // Xử lý Đăng nhập Mật khẩu
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                if (passwordInput.value.trim() === ADMIN_PASS) {
+                if (passwordInput.value.trim() === getAdminPassword()) {
                     localStorage.setItem('is_admin_logged', 'true');
                     openDashboard();
                 } else {
@@ -126,115 +194,186 @@
                 }
             });
 
-            // Xử lý đăng xuất
+            // Xử lý Đăng xuất
             btnLogout.addEventListener('click', () => {
                 localStorage.removeItem('is_admin_logged');
                 mainContent.classList.add('hidden');
                 loginSection.classList.remove('hidden');
                 btnLogout.classList.add('hidden');
+                btnOpenChangePassModal.classList.add('hidden');
                 passwordInput.value = '';
                 loginErrorMsg.classList.add('hidden');
+                googleErrorMsg.classList.add('hidden');
+            });
+
+            // Modal Đổi Mật Khẩu
+            btnOpenChangePassModal.addEventListener('click', () => {
+                changePassModal.classList.remove('hidden');
+                changePassModal.classList.add('flex');
+            });
+
+            btnCloseChangePass.addEventListener('click', () => {
+                changePassModal.classList.add('hidden');
+                changePassModal.classList.remove('flex');
+                newPasswordInput.value = '';
+            });
+
+            changePassForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newPass = newPasswordInput.value.trim();
+                if (newPass.length < 4) {
+                    alert('Mật khẩu phải có ít nhất 4 ký tự!');
+                    return;
+                }
+                localStorage.setItem('admin_custom_password', newPass);
+                changePassModal.classList.add('hidden');
+                changePassModal.classList.remove('flex');
+                newPasswordInput.value = '';
+                alert('Đổi mật khẩu thành công! Hãy dùng mật khẩu mới cho lần đăng nhập sau.');
             });
 
             function openDashboard() {
                 loginSection.classList.add('hidden');
                 mainContent.classList.remove('hidden');
                 btnLogout.classList.remove('hidden');
+                btnOpenChangePassModal.classList.remove('hidden');
                 loadPendingData();
             }
+
+            // Hàm xử lý khi đăng nhập Google thành công trả về token
+            window.handleGoogleLogin = function(response) {
+                try {
+                    // Giải mã token JWT từ Google để lấy thông tin email
+                    const base64Url = response.credential.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+
+                    const userInfo = JSON.parse(jsonPayload);
+                    const userEmail = userInfo.email;
+
+                    // Kiểm tra xem email có nằm trong danh sách cấp phép không
+                    // Hoặc bạn có thể cho phép bất kỳ email nào đăng nhập bằng cách bỏ kiểm tra mảng
+                    if (ALLOWED_ADMIN_EMAILS.includes(userEmail) || ALLOWED_ADMIN_EMAILS.includes('your_email@gmail.com')) {
+                        localStorage.setItem('is_admin_logged', 'true');
+                        localStorage.setItem('admin_email', userEmail);
+                        googleErrorMsg.classList.add('hidden');
+                        openDashboard();
+                    } else {
+                        googleErrorMsg.textContent = `Tài khoản (${userEmail}) không có quyền Quản trị viên!`;
+                        googleErrorMsg.classList.remove('hidden');
+                    }
+                } catch (err) {
+                    console.error('Lỗi xác thực Google:', err);
+                    googleErrorMsg.textContent = 'Xác thực Google thất bại!';
+                    googleErrorMsg.classList.remove('hidden');
+                }
+            };
 
             function loadPendingData() {
                 const workers = JSON.parse(localStorage.getItem('workers_list') || '[]');
                 const orgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
 
-                const pendingWorkers = workers.filter(w => !w.status || w.status === 'pending');
-                const pendingOrgs = orgs.filter(o => !o.status || o.status === 'pending');
+                const pendingWorkers = workers.filter(w => w.status === 'pending' || !w.status);
+                const pendingOrgs = orgs.filter(o => o.status === 'pending' || !o.status);
 
-                document.getElementById('statPendingWorkers').textContent = pendingWorkers.length;
-                document.getElementById('statPendingOrgs').textContent = pendingOrgs.length;
+                if (statPendingWorkers) statPendingWorkers.textContent = pendingWorkers.length;
+                if (statPendingOrgs) statPendingOrgs.textContent = pendingOrgs.length;
 
-                // 1. Render danh sách Cá nhân
-                const workerContainer = document.getElementById('adminPendingWorkerList');
-                workerContainer.innerHTML = '';
-                if (pendingWorkers.length === 0) {
-                    workerContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">Không có hồ sơ cá nhân nào đang chờ duyệt.</p>`;
-                } else {
-                    pendingWorkers.forEach(w => {
-                        const item = document.createElement('div');
-                        item.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs';
-                        item.innerHTML = `
-                            <div>
-                                <h4 class="font-bold text-slate-800 text-sm">${w.name} - <span class="text-amber-600">${w.skill}</span></h4>
-                                <p class="text-slate-600 mt-0.5">📞 ${w.phone} &bull; 📍 ${w.location}</p>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="approveWorker(${w.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
-                                <button onclick="rejectWorker(${w.id})" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
-                            </div>
-                        `;
-                        workerContainer.appendChild(item);
-                    });
+                // Render Cá nhân
+                if (adminPendingWorkerList) {
+                    adminPendingWorkerList.innerHTML = '';
+                    if (pendingWorkers.length === 0) {
+                        adminPendingWorkerList.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">Không có hồ sơ cá nhân nào đang chờ duyệt.</p>`;
+                    } else {
+                        pendingWorkers.forEach(w => {
+                            const div = document.createElement('div');
+                            div.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs';
+                            div.innerHTML = `
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm">${w.name} - <span class="text-amber-600">${w.skill}</span></h4>
+                                    <p class="text-slate-600 mt-0.5">📞 ${w.phone} &bull; 📍 ${w.location}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button data-id="${w.id}" class="btn-approve-worker px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition cursor-pointer">Đồng ý</button>
+                                    <button data-id="${w.id}" class="btn-reject-worker px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition cursor-pointer">Từ chối</button>
+                                </div>`;
+                            adminPendingWorkerList.appendChild(div);
+                        });
+
+                        document.querySelectorAll('.btn-approve-worker').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const id = Number(e.currentTarget.getAttribute('data-id'));
+                                let currentWorkers = JSON.parse(localStorage.getItem('workers_list') || '[]');
+                                currentWorkers = currentWorkers.map(w => w.id === id ? { ...w, status: 'approved' } : w);
+                                localStorage.setItem('workers_list', JSON.stringify(currentWorkers));
+                                loadPendingData();
+                                alert('Đã phê duyệt hồ sơ cá nhân thành công!');
+                            });
+                        });
+
+                        document.querySelectorAll('.btn-reject-worker').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const id = Number(e.currentTarget.getAttribute('data-id'));
+                                if (confirm('Bạn có chắc muốn từ chối và xóa hồ sơ này?')) {
+                                    let currentWorkers = JSON.parse(localStorage.getItem('workers_list') || '[]');
+                                    currentWorkers = currentWorkers.filter(w => w.id !== id);
+                                    localStorage.setItem('workers_list', JSON.stringify(currentWorkers));
+                                    loadPendingData();
+                                }
+                            });
+                        });
+                    }
                 }
 
-                // 2. Render danh sách Tổ chức
-                const orgContainer = document.getElementById('adminPendingOrgList');
-                orgContainer.innerHTML = '';
-                if (pendingOrgs.length === 0) {
-                    orgContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">Không có tổ chức nào đang chờ duyệt.</p>`;
-                } else {
-                    pendingOrgs.forEach(o => {
-                        const item = document.createElement('div');
-                        item.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs';
-                        item.innerHTML = `
-                            <div>
-                                <h4 class="font-bold text-slate-800 text-sm">${o.name}</h4>
-                                <p class="text-slate-600 mt-0.5">📞 ${o.phone} &bull; 📍 ${o.location}</p>
-                                <p class="text-blue-700 font-medium mt-0.5">Thế mạnh: ${o.strength}</p>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="approveOrg(${o.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
-                                <button onclick="rejectOrg(${o.id})" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
-                            </div>
-                        `;
-                        orgContainer.appendChild(item);
-                    });
+                // Render Tổ chức
+                if (adminPendingOrgList) {
+                    adminPendingOrgList.innerHTML = '';
+                    if (pendingOrgs.length === 0) {
+                        adminPendingOrgList.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">Không có tổ chức nào đang chờ duyệt.</p>`;
+                    } else {
+                        pendingOrgs.forEach(o => {
+                            const div = document.createElement('div');
+                            div.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs';
+                            div.innerHTML = `
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm">${o.name}</h4>
+                                    <p class="text-slate-600 mt-0.5">📞 ${o.phone} &bull; 📍 ${o.location}</p>
+                                    <p class="text-blue-700 font-medium mt-0.5">Thế mạnh: ${o.strength}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button data-id="${o.id}" class="btn-approve-org px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition cursor-pointer">Đồng ý</button>
+                                    <button data-id="${o.id}" class="btn-reject-org px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition cursor-pointer">Từ chối</button>
+                                </div>`;
+                            adminPendingOrgList.appendChild(div);
+                        });
+
+                        document.querySelectorAll('.btn-approve-org').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const id = Number(e.currentTarget.getAttribute('data-id'));
+                                let currentOrgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
+                                currentOrgs = currentOrgs.map(o => o.id === id ? { ...o, status: 'approved' } : o);
+                                localStorage.setItem('organizations_list', JSON.stringify(currentOrgs));
+                                loadPendingData();
+                                alert('Đã phê duyệt tổ chức thành công!');
+                            });
+                        });
+
+                        document.querySelectorAll('.btn-reject-org').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const id = Number(e.currentTarget.getAttribute('data-id'));
+                                if (confirm('Bạn có chắc muốn từ chối và xóa tổ chức này?')) {
+                                    let currentOrgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
+                                    currentOrgs = currentOrgs.filter(o => o.id !== id);
+                                    localStorage.setItem('organizations_list', JSON.stringify(currentOrgs));
+                                    loadPendingData();
+                                }
+                            });
+                        });
+                    }
                 }
             }
-
-            // --- XỬ LÝ HÀNH ĐỘNG ĐỒNG Ý / TỪ CHỐI ---
-            window.approveWorker = function(id) {
-                let workers = JSON.parse(localStorage.getItem('workers_list') || '[]');
-                workers = workers.map(w => w.id === id ? { ...w, status: 'approved' } : w);
-                localStorage.setItem('workers_list', JSON.stringify(workers));
-                loadPendingData();
-                alert('Đã phê duyệt hồ sơ cá nhân thành công!');
-            };
-
-            window.rejectWorker = function(id) {
-                if (confirm('Bạn có chắc chắn muốn từ chối và xóa hồ sơ này?')) {
-                    let workers = JSON.parse(localStorage.getItem('workers_list') || '[]');
-                    workers = workers.filter(w => w.id !== id);
-                    localStorage.setItem('workers_list', JSON.stringify(workers));
-                    loadPendingData();
-                }
-            };
-
-            window.approveOrg = function(id) {
-                let orgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
-                orgs = orgs.map(o => o.id === id ? { ...o, status: 'approved' } : o);
-                localStorage.setItem('organizations_list', JSON.stringify(orgs));
-                loadPendingData();
-                alert('Đã phê duyệt tổ chức thành công!');
-            };
-
-            window.rejectOrg = function(id) {
-                if (confirm('Bạn có chắc chắn muốn từ chối và xóa tổ chức này?')) {
-                    let orgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
-                    orgs = orgs.filter(o => o.id !== id);
-                    localStorage.setItem('organizations_list', JSON.stringify(orgs));
-                    loadPendingData();
-                }
-            };
         });
     </script>
 </body>

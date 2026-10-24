@@ -1,5 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Dữ liệu mẫu khởi tạo (Thêm thuộc tính status: 'approved' mặc định cho dữ liệu mẫu)
+    // Mật khẩu Admin mặc định
+    const ADMIN_PASSWORD = 'admin123';
+
+    // Dữ liệu mẫu khởi tạo
     const defaultJobs = [
         { id: 1, title: 'Một chuyến giao hàng hỏa tốc', phone: '0901112223', location: 'Quận 3', category: 'delivery', salary: '180.000đ / chuyến', isUrgent: true },
         { id: 2, title: 'Dọn dẹp căn hộ chung cư 2 phòng ngủ', phone: '0904445556', location: 'Quận 7', category: 'cleaning', salary: '300.000đ / buổi', isUrgent: false },
@@ -95,16 +98,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- KIỂM TRA PHÂN TRANG (TỰ ĐỘNG NHẬN DIỆN ADMIN HAY USER) ---
-    const isAdminPage = document.getElementById('adminPendingWorkerList') !== null;
+    const isAdminPage = document.getElementById('adminLoginForm') !== null;
 
     if (isAdminPage) {
         // ==========================================
-        // LOGIC CHO TRANG ADMIN (`admin.html`)
+        // LOGIC DÀNH CHO TRANG ADMIN (`admin.html`)
         // ==========================================
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        const adminMainContent = document.getElementById('adminMainContent');
+        const loginForm = document.getElementById('loginForm');
+        const adminPasswordInput = document.getElementById('adminPasswordInput');
+        const loginErrorMsg = document.getElementById('loginErrorMsg');
+        const btnLogout = document.getElementById('btnLogout');
+
         const adminPendingWorkerList = document.getElementById('adminPendingWorkerList');
         const adminPendingOrgList = document.getElementById('adminPendingOrgList');
         const statPendingWorkers = document.getElementById('statPendingWorkers');
         const statPendingOrgs = document.getElementById('statPendingOrgs');
+
+        // Hàm kiểm tra trạng thái đăng nhập
+        function checkAuth() {
+            const isLogged = localStorage.getItem('is_admin_logged') === 'true';
+            if (isLogged) {
+                adminLoginForm?.classList.add('hidden');
+                adminMainContent?.classList.remove('hidden');
+                btnLogout?.classList.remove('hidden');
+                renderApprovalDashboard();
+            } else {
+                adminLoginForm?.classList.remove('hidden');
+                adminMainContent?.classList.add('hidden');
+                btnLogout?.classList.add('hidden');
+            }
+        }
+
+        // Xử lý sự kiện Submit Đăng Nhập
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const inputPass = adminPasswordInput.value.trim();
+                if (inputPass === ADMIN_PASSWORD) {
+                    localStorage.setItem('is_admin_logged', 'true');
+                    loginErrorMsg?.classList.add('hidden');
+                    adminPasswordInput.value = '';
+                    checkAuth();
+                } else {
+                    loginErrorMsg?.classList.remove('hidden');
+                }
+            });
+        }
+
+        // Xử lý Đăng xuất
+        if (btnLogout) {
+            btnLogout.addEventListener('click', () => {
+                localStorage.removeItem('is_admin_logged');
+                checkAuth();
+            });
+        }
 
         function renderApprovalDashboard() {
             const workers = getWorkers();
@@ -196,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        renderApprovalDashboard();
+        checkAuth();
 
     } else {
         // ==========================================

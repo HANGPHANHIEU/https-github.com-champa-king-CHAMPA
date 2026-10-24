@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const ADMIN_PASSWORD = 'admin123';
 
     const defaultJobs = [
         { id: 1, title: 'Một chuyến giao hàng hỏa tốc', phone: '0901112223', location: 'Quận 3', category: 'delivery', salary: '180.000đ / chuyến', isUrgent: true },
@@ -15,9 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 1, name: 'Trần Văn Bình', phone: '0988123456', skill: 'Giao hàng hỏa tốc, Tài xế công nghệ', location: 'Quận 3', status: 'approved' }
     ];
 
+    // --- QUẢN LÝ LOCALSTORAGE AN TOÀN ---
     function getJobs() {
-        const saved = localStorage.getItem('my_jobs_list');
-        return saved ? JSON.parse(saved) : defaultJobs;
+        try {
+            const saved = localStorage.getItem('my_jobs_list');
+            return saved ? JSON.parse(saved) : defaultJobs;
+        } catch (e) {
+            return defaultJobs;
+        }
     }
 
     function saveJob(newJob) {
@@ -33,8 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getAcceptedJobs() {
-        const saved = localStorage.getItem('accepted_jobs_list');
-        return saved ? JSON.parse(saved) : [];
+        try {
+            const saved = localStorage.getItem('accepted_jobs_list');
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            return [];
+        }
     }
 
     function acceptJob(jobId) {
@@ -55,10 +63,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target) {
             if (action === 'checkin') {
                 target.checkedIn = true;
-                alert('Chấm công thành công ca làm việc!');
+                showToast('Chấm công thành công ca làm việc!', 'success');
             } else if (action === 'rate') {
                 target.rating = value;
-                alert(`Đã gửi đánh giá ${value} sao!`);
+                showToast(`Đã gửi đánh giá ${value} sao! Cảm ơn bạn.`, 'success');
             }
             localStorage.setItem('accepted_jobs_list', JSON.stringify(accepted));
             renderAcceptedJobs();
@@ -66,8 +74,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function getOrganizations() {
-        const saved = localStorage.getItem('organizations_list');
-        return saved ? JSON.parse(saved) : defaultOrgs;
+        try {
+            const saved = localStorage.getItem('organizations_list');
+            return saved ? JSON.parse(saved) : defaultOrgs;
+        } catch (e) {
+            return defaultOrgs;
+        }
     }
 
     function saveOrganization(newOrg) {
@@ -77,8 +89,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getWorkers() {
-        const saved = localStorage.getItem('workers_list');
-        return saved ? JSON.parse(saved) : defaultWorkers;
+        try {
+            const saved = localStorage.getItem('workers_list');
+            return saved ? JSON.parse(saved) : defaultWorkers;
+        } catch (e) {
+            return defaultWorkers;
+        }
     }
 
     function saveWorker(newWorker) {
@@ -87,7 +103,26 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('workers_list', JSON.stringify(workers));
     }
 
-    // Các phần tử giao diện
+    // --- HÀM HIỂN THỊ THÔNG BÁO NỔI (TOAST) ---
+    function showToast(message, type = 'success') {
+        const existingToast = document.getElementById('appToast');
+        if (existingToast) existingToast.remove();
+
+        const toast = document.createElement('div');
+        toast.id = 'appToast';
+        toast.className = `fixed top-5 right-5 z-50 px-4 py-3 rounded-xl text-xs font-bold text-white shadow-xl transition-all duration-300 flex items-center gap-2 ${
+            type === 'success' ? 'bg-teal-600' : 'bg-slate-900'
+        }`;
+        toast.innerHTML = `<i class="fa-solid fa-circle-check text-sm"></i> ${message}`;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // --- CÁC PHẦN TỬ GIAO DIỆN ---
     const categoryBtns = document.querySelectorAll('.category-btn');
     const searchInput = document.getElementById('searchInput');
     const locationSelect = document.getElementById('locationSelect');
@@ -102,23 +137,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const navBtns = document.querySelectorAll('.nav-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
-    // Quản lý Modal & Admin
-    const btnOpenAdmin = document.getElementById('btnOpenAdmin');
-    const adminLoginModal = document.getElementById('adminLoginModal');
-    const btnCloseAdminModal = document.getElementById('btnCloseAdminModal');
-    const adminLoginForm = document.getElementById('adminLoginForm');
-    const adminPasswordInput = document.getElementById('adminPasswordInput');
-    const loginErrorMsg = document.getElementById('loginErrorMsg');
-    const btnCloseAdmin = document.getElementById('btnCloseAdmin');
-
-    const adminPendingWorkerList = document.getElementById('adminPendingWorkerList');
-    const adminPendingOrgList = document.getElementById('adminPendingOrgList');
-    const statPendingWorkers = document.getElementById('statPendingWorkers');
-    const statPendingOrgs = document.getElementById('statPendingOrgs');
-
     let currentCategory = 'all';
 
-    // Chuyển tab thông thường
+    // Chuyển tab giao diện người dùng
     navBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetTabId = btn.getAttribute('data-tab');
@@ -135,164 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Xử lý mở khóa Admin bằng mật khẩu
-    if (btnOpenAdmin) {
-        btnOpenAdmin.addEventListener('click', () => {
-            const isLogged = localStorage.getItem('is_admin_logged') === 'true';
-            if (isLogged) {
-                switchToAdminTab();
-            } else {
-                adminLoginModal?.classList.remove('hidden');
-                adminLoginModal?.classList.add('flex');
-            }
-        });
-    }
-
-    if (btnCloseAdminModal) {
-        btnCloseAdminModal.addEventListener('click', () => {
-            adminLoginModal?.classList.add('hidden');
-            adminLoginModal?.classList.remove('flex');
-            adminLoginForm?.reset();
-            loginErrorMsg?.classList.add('hidden');
-        });
-    }
-
-    if (adminLoginForm) {
-        adminLoginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (adminPasswordInput.value.trim() === ADMIN_PASSWORD) {
-                localStorage.setItem('is_admin_logged', 'true');
-                adminLoginModal?.classList.add('hidden');
-                adminLoginModal?.classList.remove('flex');
-                adminPasswordInput.value = '';
-                loginErrorMsg?.classList.add('hidden');
-                switchToAdminTab();
-            } else {
-                loginErrorMsg?.classList.remove('hidden');
-            }
-        });
-    }
-
-    if (btnCloseAdmin) {
-        btnCloseAdmin.addEventListener('click', () => {
-            // Chuyển về tab tìm việc
-            document.querySelector('[data-tab="tabFindJob"]')?.click();
-        });
-    }
-
-    function switchToAdminTab() {
-        tabContents.forEach(tab => tab.classList.add('hidden'));
-        document.getElementById('tabAdmin')?.classList.remove('hidden');
-        renderApprovalDashboard();
-    }
-
-    // Render Bảng duyệt Admin
-    function renderApprovalDashboard() {
-        const workers = getWorkers();
-        const orgs = getOrganizations();
-
-        const pendingWorkers = workers.filter(w => w.status === 'pending' || !w.status);
-        const pendingOrgs = orgs.filter(o => o.status === 'pending' || !o.status);
-
-        if (statPendingWorkers) statPendingWorkers.textContent = pendingWorkers.length;
-        if (statPendingOrgs) statPendingOrgs.textContent = pendingOrgs.length;
-
-        // Render danh sách cá nhân chờ duyệt
-        if (adminPendingWorkerList) {
-            adminPendingWorkerList.innerHTML = '';
-            if (pendingWorkers.length === 0) {
-                adminPendingWorkerList.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">Không có hồ sơ cá nhân nào đang chờ duyệt.</p>`;
-            } else {
-                pendingWorkers.forEach(w => {
-                    const div = document.createElement('div');
-                    div.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs';
-                    div.innerHTML = `
-                        <div>
-                            <h4 class="font-bold text-slate-800 text-sm">${w.name} - <span class="text-amber-600">${w.skill}</span></h4>
-                            <p class="text-slate-600 mt-0.5">📞 ${w.phone} &bull; 📍 ${w.location}</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button data-id="${w.id}" class="btn-approve-worker px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition">Đồng ý</button>
-                            <button data-id="${w.id}" class="btn-reject-worker px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition">Từ chối</button>
-                        </div>`;
-                    adminPendingWorkerList.appendChild(div);
-                });
-
-                // Bắt sự kiện Đồng ý / Từ chối cá nhân
-                document.querySelectorAll('.btn-approve-worker').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = Number(e.currentTarget.getAttribute('data-id'));
-                        let currentWorkers = getWorkers();
-                        currentWorkers = currentWorkers.map(w => w.id === id ? { ...w, status: 'approved' } : w);
-                        localStorage.setItem('workers_list', JSON.stringify(currentWorkers));
-                        renderApprovalDashboard();
-                        alert('Đã phê duyệt hồ sơ cá nhân thành công!');
-                    });
-                });
-
-                document.querySelectorAll('.btn-reject-worker').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = Number(e.currentTarget.getAttribute('data-id'));
-                        if (confirm('Bạn có chắc muốn từ chối hồ sơ này?')) {
-                            let currentWorkers = getWorkers();
-                            currentWorkers = currentWorkers.filter(w => w.id !== id);
-                            localStorage.setItem('workers_list', JSON.stringify(currentWorkers));
-                            renderApprovalDashboard();
-                        }
-                    });
-                });
-            }
-        }
-
-        // Render danh sách tổ chức chờ duyệt
-        if (adminPendingOrgList) {
-            adminPendingOrgList.innerHTML = '';
-            if (pendingOrgs.length === 0) {
-                adminPendingOrgList.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">Không có tổ chức nào đang chờ duyệt.</p>`;
-            } else {
-                pendingOrgs.forEach(o => {
-                    const div = document.createElement('div');
-                    div.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs';
-                    div.innerHTML = `
-                        <div>
-                            <h4 class="font-bold text-slate-800 text-sm">${o.name}</h4>
-                            <p class="text-slate-600 mt-0.5">📞 ${o.phone} &bull; 📍 ${o.location}</p>
-                            <p class="text-blue-700 font-medium mt-0.5">Thế mạnh: ${o.strength}</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button data-id="${o.id}" class="btn-approve-org px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition">Đồng ý</button>
-                            <button data-id="${o.id}" class="btn-reject-org px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition">Từ chối</button>
-                        </div>`;
-                    adminPendingOrgList.appendChild(div);
-                });
-
-                document.querySelectorAll('.btn-approve-org').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = Number(e.currentTarget.getAttribute('data-id'));
-                        let currentOrgs = getOrganizations();
-                        currentOrgs = currentOrgs.map(o => o.id === id ? { ...o, status: 'approved' } : o);
-                        localStorage.setItem('organizations_list', JSON.stringify(currentOrgs));
-                        renderApprovalDashboard();
-                        alert('Đã phê duyệt tổ chức thành công!');
-                    });
-                });
-
-                document.querySelectorAll('.btn-reject-org').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = Number(e.currentTarget.getAttribute('data-id'));
-                        if (confirm('Bạn có chắc muốn từ chối tổ chức này?')) {
-                            let currentOrgs = getOrganizations();
-                            currentOrgs = currentOrgs.filter(o => o.id !== id);
-                            localStorage.setItem('organizations_list', JSON.stringify(currentOrgs));
-                            renderApprovalDashboard();
-                        }
-                    });
-                });
-            }
-        }
-    }
-
-    // Render việc làm
+    // Render danh sách việc làm ngoài trang chủ
     function renderJobs() {
         if (!jobListContainer) return;
         const jobsList = getJobs();
@@ -302,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isUrgentOnly = urgentCheck ? urgentCheck.checked : false;
 
         const filteredJobs = jobsList.filter(job => {
-            const matchesKeyword = job.title.toLowerCase().includes(keyword);
+            const matchesKeyword = job.title.toLowerCase().includes(keyword) || job.location.toLowerCase().includes(keyword);
             const matchesLocation = !selectedLocation || job.location === selectedLocation;
             const matchesCategory = currentCategory === 'all' || job.category === currentCategory;
             const matchesUrgent = !isUrgentOnly || job.isUrgent === true;
@@ -320,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filteredJobs.forEach(job => {
             const isAccepted = acceptedList.some(item => item.id === job.id);
             const card = document.createElement('div');
-            card.className = 'p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center';
+            card.className = 'p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center transition hover:shadow-md';
             card.innerHTML = `
                 <div class="space-y-1">
                     <div class="flex items-center gap-2">
@@ -342,29 +206,33 @@ document.addEventListener('DOMContentLoaded', () => {
             jobListContainer.appendChild(card);
         });
 
+        // Bắt sự kiện Nhận việc
         document.querySelectorAll('.btn-accept').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const jobId = Number(e.currentTarget.getAttribute('data-id'));
                 if (acceptJob(jobId)) {
-                    alert('Nhận việc thành công! Kiểm tra trong tab "Đã nhận".');
+                    showToast('Nhận việc thành công! Kiểm tra trong tab "Đã nhận".');
                     renderJobs();
                 } else {
-                    alert('Bạn đã nhận công việc này rồi.');
+                    showToast('Bạn đã nhận công việc này rồi trước đó.', 'error');
                 }
             });
         });
 
+        // Bắt sự kiện Xóa việc
         document.querySelectorAll('.btn-delete-job').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const jobId = Number(e.currentTarget.getAttribute('data-id'));
                 if (confirm('Bạn có chắc chắn muốn xóa công việc này?')) {
                     deleteJob(jobId);
                     renderJobs();
+                    showToast('Đã xóa công việc khỏi hệ thống.');
                 }
             });
         });
     }
 
+    // Render danh sách công việc đã nhận
     function renderAcceptedJobs() {
         if (!acceptedJobListContainer) return;
         const acceptedList = getAcceptedJobs();
@@ -396,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span class="font-semibold text-slate-600">Đánh giá nhân viên:</span>
+                    <span class="font-semibold text-slate-600">Đánh giá chất lượng:</span>
                     <div class="flex items-center gap-1">
                         ${[1, 2, 3, 4, 5].map(star => `
                             <button onclick="updateJobState(${job.id}, 'rate', ${star})" class="text-base ${job.rating >= star ? 'text-amber-400' : 'text-slate-300'} hover:text-amber-400 transition">
@@ -411,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Hiển thị danh sách Tổ chức & Cá nhân ĐÃ ĐƯỢC DUYỆT
+    // Hiển thị danh sách Tổ chức & Cá nhân ĐÃ ĐƯỢC ADMIN DUYỆT (approved)
     function renderOrganizations() {
         if (!orgListContainer) return;
         const orgs = getOrganizations().filter(o => o.status === 'approved');
@@ -423,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
         orgListContainer.appendChild(workerHeader);
 
         if (workers.length === 0) {
-            orgListContainer.innerHTML += `<p class="text-xs text-slate-400 mb-4">Chưa có cá nhân nào được duyệt.</p>`;
+            orgListContainer.innerHTML += `<p class="text-xs text-slate-400 mb-4">Chưa có hồ sơ cá nhân nào được phê duyệt.</p>`;
         } else {
             workers.forEach(w => {
                 const card = document.createElement('div');
@@ -450,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         orgListContainer.appendChild(orgHeader);
 
         if (orgs.length === 0) {
-            orgListContainer.innerHTML += `<p class="text-xs text-slate-400 mb-4">Chưa có tổ chức nào được duyệt.</p>`;
+            orgListContainer.innerHTML += `<p class="text-xs text-slate-400 mb-4">Chưa có tổ chức nào được phê duyệt.</p>`;
         } else {
             orgs.forEach(org => {
                 const card = document.createElement('div');
@@ -474,6 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Render bản đồ Radar
     function renderRadarMap() {
         if (!mapPinsContainer) return;
         const jobs = getJobs();
@@ -500,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Modal Controls
+    // --- XỬ LÝ MODAL (ĐĂNG VIỆC, TỔ CHỨC, CÁ NHÂN) ---
     const postJobModal = document.getElementById('postJobModal');
     const btnPostJob = document.getElementById('btnPostJob');
     const btnCloseModal = document.getElementById('btnCloseModal');
@@ -531,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnCloseWorkerModal) btnCloseWorkerModal.addEventListener('click', () => { workerModal?.classList.add('hidden'); workerModal?.classList.remove('flex'); });
     if (btnCancelWorkerModal) btnCancelWorkerModal.addEventListener('click', () => { workerModal?.classList.add('hidden'); workerModal?.classList.remove('flex'); });
 
+    // Submit Đăng việc
     if (postJobForm) {
         postJobForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -549,10 +419,11 @@ document.addEventListener('DOMContentLoaded', () => {
             postJobModal?.classList.remove('flex');
             postJobForm.reset();
             renderJobs();
-            alert('Đăng công việc thành công!');
+            showToast('Đăng công việc mới thành công!');
         });
     }
 
+    // Submit Đăng ký Tổ chức (Trạng thái pending chờ admin duyệt)
     if (orgForm) {
         orgForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -563,17 +434,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 address: document.getElementById('orgAddressInput').value.trim(),
                 strength: document.getElementById('orgStrengthInput').value.trim(),
                 location: document.getElementById('orgLocationInput').value,
-                status: 'pending' // Chờ duyệt
+                status: 'pending' 
             };
             if (!newOrg.name) return;
             saveOrganization(newOrg);
             orgModal?.classList.add('hidden');
             orgModal?.classList.remove('flex');
             orgForm.reset();
-            alert('Ghi danh thành công! Đang chờ Quản trị viên phê duyệt.');
+            showToast('Ghi danh thành công! Đang chờ Quản trị viên kiểm duyệt.');
         });
     }
 
+    // Submit Đăng ký Cá nhân (Trạng thái pending chờ admin duyệt)
     if (workerForm) {
         workerForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -583,21 +455,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 phone: document.getElementById('workerPhoneInput').value.trim(),
                 skill: document.getElementById('workerSkillInput').value.trim(),
                 location: document.getElementById('workerLocationInput').value,
-                status: 'pending' // Chờ duyệt
+                status: 'pending' 
             };
             if (!newWorker.name) return;
             saveWorker(newWorker);
             workerModal?.classList.add('hidden');
             workerModal?.classList.remove('flex');
             workerForm.reset();
-            alert('Đăng ký hồ sơ thành công! Đang chờ Quản trị viên phê duyệt.');
+            showToast('Đăng ký hồ sơ thành công! Đang chờ Quản trị viên kiểm duyệt.');
         });
     }
 
+    // Lọc tìm kiếm theo từ khóa & khu vực
     if (searchInput) searchInput.addEventListener('input', renderJobs);
     if (locationSelect) locationSelect.addEventListener('change', renderJobs);
     if (urgentCheck) urgentCheck.addEventListener('change', renderJobs);
 
+    // Lọc theo danh mục pills
     categoryBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
             categoryBtns.forEach(b => {
@@ -612,5 +486,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Khởi chạy ban đầu
     renderJobs();
 });

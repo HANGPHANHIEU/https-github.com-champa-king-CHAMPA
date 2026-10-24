@@ -1,4 +1,3 @@
-//version 1
 document.addEventListener('DOMContentLoaded', () => {
     // Dữ liệu mẫu khởi tạo
     const defaultJobs = [

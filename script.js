@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const defaultJobs = [
-        { id: 1, title: 'Một chuyến giao hàng hỏa tốc', phone: '0901112223', location: 'Quận 3', category: 'delivery', salary: '180.000đ / chuyến', isUrgent: true },
-        { id: 2, title: 'Dọn dẹp căn hộ chung cư 2 phòng ngủ', phone: '0904445556', location: 'Quận 7', category: 'cleaning', salary: '300.000đ / buổi', isUrgent: false },
-        { id: 3, title: 'Sửa đường ống nước bị rò rỉ tại nhà', phone: '0907778889', location: 'Bình Thạnh', category: 'repair', salary: '250.000đ', isUrgent: true }
+        { id: 1, title: 'Một chuyến giao hàng hỏa tốc', phone: '0901112223', location: 'Quận 3', category: 'delivery', salary: '180.000đ / chuyến', isUrgent: true, createdBy: '0901112223' },
+        { id: 2, title: 'Dọn dẹp căn hộ chung cư 2 phòng ngủ', phone: '0904445556', location: 'Quận 7', category: 'cleaning', salary: '300.000đ / buổi', isUrgent: false, createdBy: '0904445556' },
+        { id: 3, title: 'Sửa đường ống nước bị rò rỉ tại nhà', phone: '0907778889', location: 'Bình Thạnh', category: 'repair', salary: '250.000đ', isUrgent: true, createdBy: '0907778889' }
     ];
 
     const defaultOrgs = [
@@ -30,10 +30,27 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('my_jobs_list', JSON.stringify(jobs));
     }
 
+    // Cập nhật hàm xóa việc: Yêu cầu nhập đúng số điện thoại người đăng mới được xóa
     function deleteJob(jobId) {
         let jobs = getJobs();
+        const targetJob = jobs.find(j => j.id === jobId);
+
+        if (!targetJob) return;
+
+        const inputPhone = prompt("Nhập số điện thoại của người đã đăng công việc này để xác nhận xóa:");
+        if (!inputPhone) return; // Người dùng bấm Hủy
+
+        // Kiểm tra xem số điện thoại nhập vào có khớp với createdBy hoặc phone của việc đó không
+        const trimmedPhone = inputPhone.trim();
+        if (trimmedPhone !== targetJob.createdBy && trimmedPhone !== targetJob.phone) {
+            showToast('Bạn không phải là người đăng công việc này nên không thể xóa!', 'error');
+            return;
+        }
+
         jobs = jobs.filter(j => j.id !== jobId);
         localStorage.setItem('my_jobs_list', JSON.stringify(jobs));
+        renderJobs();
+        showToast('Đã xóa công việc thành công.');
     }
 
     function getAcceptedJobs() {
@@ -231,8 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (acceptJob(jobId)) {
                     showToast('Nhận việc thành công! Kiểm tra trong tab "Đã nhận".');
                     renderJobs();
-                } else {
-                    // Nếu không nhận được (ví dụ đã nhận hoặc chưa nhập thông tin) thì không báo trùng nếu do chưa nhập
                 }
             });
         });
@@ -240,11 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.btn-delete-job').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const jobId = Number(e.currentTarget.getAttribute('data-id'));
-                if (confirm('Bạn có chắc chắn muốn xóa công việc này?')) {
-                    deleteJob(jobId);
-                    renderJobs();
-                    showToast('Đã xóa công việc.');
-                }
+                deleteJob(jobId); // Gọi hàm kiểm tra xác thực số điện thoại
             });
         });
     }
@@ -428,20 +439,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnCloseWorkerModal) btnCloseWorkerModal.addEventListener('click', () => { workerModal?.classList.add('hidden'); workerModal?.classList.remove('flex'); });
     if (btnCancelWorkerModal) btnCancelWorkerModal.addEventListener('click', () => { workerModal?.classList.add('hidden'); workerModal?.classList.remove('flex'); });
 
-    // Đăng việc mới
+    // Đăng việc mới (Đã lưu thêm trường createdBy từ SĐT liên hệ)
     if (postJobForm) {
         postJobForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            const phoneVal = document.getElementById('jobPhoneInput').value.trim();
             const newJob = {
                 id: Date.now(),
                 title: document.getElementById('jobTitleInput').value.trim(),
-                phone: document.getElementById('jobPhoneInput').value.trim(),
+                phone: phoneVal,
                 location: document.getElementById('jobLocationInput').value,
                 category: document.getElementById('jobCategoryInput').value,
                 salary: document.getElementById('jobSalaryInput').value.trim() || 'Thỏa thuận',
-                isUrgent: document.getElementById('jobUrgentInput').checked
+                isUrgent: document.getElementById('jobUrgentInput').checked,
+                createdBy: phoneVal // Lưu lại số điện thoại người đăng làm quyền hạn xóa
             };
-            if (!newJob.title) return;
+            if (!newJob.title || !newJob.phone) {
+                showToast('Vui lòng nhập tiêu đề và số điện thoại liên hệ!', 'error');
+                return;
+            }
             saveJob(newJob);
             postJobModal?.classList.add('hidden');
             postJobModal?.classList.remove('flex');

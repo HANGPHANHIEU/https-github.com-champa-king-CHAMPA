@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const defaultJobs = [
-        { id: 1, title: 'Một chuyến giao hàng hỏa tốc', phone: '0901112223', location: 'Quận 3', category: 'delivery', salary: '180.000đ / chuyến', isUrgent: true, createdBy: '0901112223' },
-        { id: 2, title: 'Dọn dẹp căn hộ chung cư 2 phòng ngủ', phone: '0904445556', location: 'Quận 7', category: 'cleaning', salary: '300.000đ / buổi', isUrgent: false, createdBy: '0904445556' },
-        { id: 3, title: 'Sửa đường ống nước bị rò rỉ tại nhà', phone: '0907778889', location: 'Bình Thạnh', category: 'repair', salary: '250.000đ', isUrgent: true, createdBy: '0907778889' }
+        { id: 1, title: 'Một chuyến giao hàng hỏa tốc', phone: '0901112223', location: 'Quận 3', category: 'delivery', salary: '180.000đ / chuyến', isUrgent: true, createdByName: 'Nguyễn Văn A', createdBy: '0901112223' },
+        { id: 2, title: 'Dọn dẹp căn hộ chung cư 2 phòng ngủ', phone: '0904445556', location: 'Quận 7', category: 'cleaning', salary: '300.000đ / buổi', isUrgent: false, createdByName: 'Trần Thị B', createdBy: '0904445556' },
+        { id: 3, title: 'Sửa đường ống nước bị rò rỉ tại nhà', phone: '0907778889', location: 'Bình Thạnh', category: 'repair', salary: '250.000đ', isUrgent: true, createdByName: 'Lê Văn C', createdBy: '0907778889' }
     ];
 
     const defaultOrgs = [
@@ -30,20 +30,22 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('my_jobs_list', JSON.stringify(jobs));
     }
 
-    // Cập nhật hàm xóa việc: Yêu cầu nhập đúng số điện thoại người đăng mới được xóa
+    // Xóa việc: Yêu cầu nhập Tên người đăng để xác thực
     function deleteJob(jobId) {
         let jobs = getJobs();
         const targetJob = jobs.find(j => j.id === jobId);
 
         if (!targetJob) return;
 
-        const inputPhone = prompt("Nhập số điện thoại của người đã đăng công việc này để xác nhận xóa:");
-        if (!inputPhone) return; // Người dùng bấm Hủy
+        const inputName = prompt("Nhập TÊN người đã đăng công việc này để xác nhận xóa:");
+        if (!inputName) return; // Người dùng bấm Hủy
 
-        // Kiểm tra xem số điện thoại nhập vào có khớp với createdBy hoặc phone của việc đó không
-        const trimmedPhone = inputPhone.trim();
-        if (trimmedPhone !== targetJob.createdBy && trimmedPhone !== targetJob.phone) {
-            showToast('Bạn không phải là người đăng công việc này nên không thể xóa!', 'error');
+        // Chuẩn hóa chuỗi so sánh (bỏ khoảng trắng thừa, không phân biệt hoa thường)
+        const trimmedInput = inputName.trim().toLowerCase();
+        const creatorName = (targetJob.createdByName || '').trim().toLowerCase();
+
+        if (trimmedInput !== creatorName) {
+            showToast('Tên người đăng không chính xác! Bạn không có quyền xóa.', 'error');
             return;
         }
 
@@ -62,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Cập nhật hàm nhận việc: Yêu cầu nhập thông tin người nhận
     function acceptJob(jobId) {
         const jobs = getJobs();
         const accepted = getAcceptedJobs();
@@ -175,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentCategory = 'all';
 
-    // Điều hướng Tab người dùng
     navBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetTabId = btn.getAttribute('data-tab');
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${job.isUrgent ? '<span class="px-2 py-0.5 text-[10px] bg-red-100 text-red-600 font-bold rounded-md">GẤP</span>' : ''}
                     </div>
                     <p class="text-xs text-slate-500 font-medium">📍 ${job.location} &bull; 💰 ${job.salary}</p>
-                    <p class="text-xs text-teal-700 font-semibold">📞 LH: ${job.phone || 'Chưa cập nhật'}</p>
+                    <p class="text-xs text-teal-700 font-semibold">👤 Đăng bởi: ${job.createdByName || 'Ẩn danh'} &bull; 📞 ${job.phone || 'Chưa cập nhật'}</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <button data-id="${job.id}" class="btn-accept px-3 py-1.5 text-xs font-semibold rounded-xl transition shadow-sm ${isAccepted ? 'bg-emerald-100 text-emerald-700 cursor-default' : 'bg-slate-900 hover:bg-slate-800 text-white'}">
@@ -255,12 +255,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.btn-delete-job').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const jobId = Number(e.currentTarget.getAttribute('data-id'));
-                deleteJob(jobId); // Gọi hàm kiểm tra xác thực số điện thoại
+                deleteJob(jobId);
             });
         });
     }
 
-    // Render công việc đã nhận kèm thông tin người nhận
     function renderAcceptedJobs() {
         if (!acceptedJobListContainer) return;
         const acceptedList = getAcceptedJobs();
@@ -292,7 +291,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
 
-                <!-- Hiển thị thông tin người nhận công việc -->
                 ${job.acceptedBy ? `
                     <div class="p-3 bg-teal-50/70 border border-teal-100 rounded-xl text-xs space-y-1">
                         <p class="font-bold text-teal-900 flex items-center"><i class="fa-solid fa-user-check mr-1.5 text-teal-600"></i> Thông tin người thực hiện:</p>
@@ -318,7 +316,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Render Tổ chức & Cá nhân ĐÃ ĐƯỢC ADMIN DUYỆT (approved)
     function renderOrganizations() {
         if (!orgListContainer) return;
         const orgs = getOrganizations().filter(o => o.status === 'approved');
@@ -381,7 +378,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Render bản đồ Radar
     function renderRadarMap() {
         if (!mapPinsContainer) return;
         const jobs = getJobs();
@@ -400,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="absolute bottom-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-slate-900 text-white text-[11px] p-2 rounded-lg shadow-xl whitespace-nowrap z-30">
                         <p class="font-bold">${job.title}</p>
-                        <p class="text-teal-400">📍 ${job.location} - 💰 ${job.salary} - 📞 ${job.phone}</p>
+                        <p class="text-teal-400">📍 ${job.location} - 💰 ${job.salary} - 👤 ${job.createdByName || 'N/A'}</p>
                     </div>
                 </div>
             `;
@@ -439,25 +435,35 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnCloseWorkerModal) btnCloseWorkerModal.addEventListener('click', () => { workerModal?.classList.add('hidden'); workerModal?.classList.remove('flex'); });
     if (btnCancelWorkerModal) btnCancelWorkerModal.addEventListener('click', () => { workerModal?.classList.add('hidden'); workerModal?.classList.remove('flex'); });
 
-    // Đăng việc mới (Đã lưu thêm trường createdBy từ SĐT liên hệ)
+    // Đăng việc mới (Lưu cả Tên người đăng và SĐT)
     if (postJobForm) {
         postJobForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            const titleVal = document.getElementById('jobTitleInput').value.trim();
             const phoneVal = document.getElementById('jobPhoneInput').value.trim();
+            
+            // Nếu form của bạn chưa có ô nhập Tên người đăng, chúng ta sẽ hỏi prompt hoặc bạn có thể tạo thêm ô input trên HTML. 
+            // Ở đây tạm thời code sẽ tự động lấy prompt hỏi tên nếu chưa có input, hoặc bạn có thể nhập trực tiếp.
+            const creatorNameVal = prompt("Nhập Tên của bạn (người đăng việc):");
+
+            if (!creatorNameVal || !creatorNameVal.trim()) {
+                showToast('Vui lòng nhập tên người đăng!', 'error');
+                return;
+            }
+
             const newJob = {
                 id: Date.now(),
-                title: document.getElementById('jobTitleInput').value.trim(),
+                title: titleVal,
                 phone: phoneVal,
                 location: document.getElementById('jobLocationInput').value,
                 category: document.getElementById('jobCategoryInput').value,
                 salary: document.getElementById('jobSalaryInput').value.trim() || 'Thỏa thuận',
                 isUrgent: document.getElementById('jobUrgentInput').checked,
-                createdBy: phoneVal // Lưu lại số điện thoại người đăng làm quyền hạn xóa
+                createdByName: creatorNameVal.trim(), // Lưu tên người đăng
+                createdBy: phoneVal
             };
-            if (!newJob.title || !newJob.phone) {
-                showToast('Vui lòng nhập tiêu đề và số điện thoại liên hệ!', 'error');
-                return;
-            }
+
+            if (!newJob.title) return;
             saveJob(newJob);
             postJobModal?.classList.add('hidden');
             postJobModal?.classList.remove('flex');
@@ -467,7 +473,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Đăng ký Tổ chức
     if (orgForm) {
         orgForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -489,7 +494,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Đăng ký Cá nhân
     if (workerForm) {
         workerForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -510,7 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Sự kiện bộ lọc
     if (searchInput) searchInput.addEventListener('input', renderJobs);
     if (locationSelect) locationSelect.addEventListener('change', renderJobs);
     if (urgentCheck) urgentCheck.addEventListener('change', renderJobs);

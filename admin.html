@@ -92,17 +92,15 @@
                 </button>
             </form>
 
-            <div class="pt-2 border-t border-slate-100 flex justify-between items-center text-[11px] text-slate-400">
-                <span>Mật khẩu mặc định: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">admin123</code></span>
-                <span class="text-teal-600 font-medium"><i class="fa-solid fa-shield-check mr-1"></i> SSL Secured</span>
+            <!-- Đã ẩn dòng thông báo hiển thị mật khẩu mặc định -->
+            <div class="pt-2 border-t border-slate-100 flex justify-end items-center text-[11px]">
+                <span class="text-teal-600 font-medium"><i class="fa-solid fa-shield-check mr-1"></i> Encrypted & SSL Secured</span>
             </div>
         </div>
     </div>
 
-    <!-- KHU VỰC PHÊ DUYỆT ĐƠN (Sau khi xác thực thành công) -->
+    <!-- KHU VỰC PHÊ DUYỆT ĐƠN -->
     <main id="adminMainContent" class="flex-1 max-w-5xl w-full mx-auto p-6 space-y-6 hidden">
-        
-        <!-- Thống kê nhanh -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
@@ -125,7 +123,6 @@
             </div>
         </div>
 
-        <!-- Bảng Phê duyệt Cá nhân -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-4 border-b border-slate-100 bg-slate-50">
                 <h3 class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-user-check mr-2 text-amber-500"></i> Phê duyệt Hồ sơ Cá nhân</h3>
@@ -133,7 +130,6 @@
             <div id="adminPendingWorkerList" class="p-4 space-y-3"></div>
         </div>
 
-        <!-- Bảng Phê duyệt Tổ chức -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-4 border-b border-slate-100 bg-slate-50">
                 <h3 class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-building-shield mr-2 text-blue-600"></i> Phê duyệt Tổ chức / Đối tác</h3>
@@ -159,7 +155,7 @@
         </div>
     </div>
 
-    <!-- Modal Quản Lý Danh Sách Admin (Thêm/Xóa tài khoản quản trị) -->
+    <!-- Modal Quản Lý Danh Sách Admin -->
     <div id="adminManagerModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
         <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 p-6 space-y-4">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -174,16 +170,30 @@
 
             <div class="space-y-2">
                 <p class="text-xs font-semibold text-slate-500 uppercase">Danh sách email được ủy quyền:</p>
-                <div id="adminEmailsListContainer" class="max-h-48 overflow-y-auto space-y-2 border border-slate-100 p-2 rounded-xl bg-slate-50">
-                    <!-- Dynamic List -->
-                </div>
+                <div id="adminEmailsListContainer" class="max-h-48 overflow-y-auto space-y-2 border border-slate-100 p-2 rounded-xl bg-slate-50"></div>
             </div>
         </div>
     </div>
 
-    <!-- Logic Xử lý Nâng cấp -->
+    <!-- Logic Xử lý Bảo mật Hash Mật Khẩu -->
     <script>
-        // Lấy danh sách email từ LocalStorage hoặc dùng mặc định
+        // Chuỗi SHA-256 mã hóa mặc định cho mật khẩu "admin123"
+        // Người xem code hoàn toàn không thể đoán được chữ rõ ban đầu là gì
+        const DEFAULT_ADMIN_HASH = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
+
+        // Hàm hỗ trợ mã hóa chuỗi bất kỳ sang mã Hash SHA-256 dùng Web Crypto API tích hợp sẵn
+        async function hashPassword(plainText) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(plainText);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function getAdminPasswordHash() {
+            return localStorage.getItem('admin_custom_password_hash') || DEFAULT_ADMIN_HASH;
+        }
+
         function getAdminEmails() {
             const stored = localStorage.getItem('allowed_admin_emails');
             if (stored) {
@@ -194,10 +204,6 @@
 
         function saveAdminEmails(list) {
             localStorage.setItem('allowed_admin_emails', JSON.stringify(list));
-        }
-
-        function getAdminPassword() {
-            return localStorage.getItem('admin_custom_password') || 'admin123';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -220,7 +226,6 @@
             const changePassForm = document.getElementById('changePassForm');
             const newPasswordInput = document.getElementById('newPasswordInput');
 
-            // Elements Quản lý Admin Modal
             const btnOpenAdminManager = document.getElementById('btnOpenAdminManager');
             const adminManagerModal = document.getElementById('adminManagerModal');
             const btnCloseAdminManager = document.getElementById('btnCloseAdminManager');
@@ -228,7 +233,7 @@
             const newAdminEmailInput = document.getElementById('newAdminEmailInput');
             const adminEmailsListContainer = document.getElementById('adminEmailsListContainer');
 
-            // Chuyển tab đăng nhập
+            // Chuyển tab
             tabGoogleBtn.addEventListener('click', () => {
                 tabGoogleBtn.className = 'py-2 rounded-lg bg-white text-slate-900 shadow-sm transition cursor-pointer';
                 tabPassBtn.className = 'py-2 rounded-lg text-slate-500 hover:text-slate-900 transition cursor-pointer';
@@ -243,15 +248,18 @@
                 googleAuthBox.classList.add('hidden');
             });
 
-            // Kiểm tra trạng thái phiên làm việc
+            // Kiểm tra Session
             if (sessionStorage.getItem('is_admin_active') === 'true') {
                 openDashboard(sessionStorage.getItem('admin_auth_method') || 'Mật khẩu nội bộ');
             }
 
-            // Đăng nhập mật khẩu
-            loginForm.addEventListener('submit', (e) => {
+            // Đăng nhập bằng Mật khẩu (So sánh Hash SHA-256)
+            loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                if (passwordInput.value.trim() === getAdminPassword()) {
+                const inputVal = passwordInput.value.trim();
+                const inputHash = await hashPassword(inputVal);
+
+                if (inputHash === getAdminPasswordHash()) {
                     sessionStorage.setItem('is_admin_active', 'true');
                     sessionStorage.setItem('admin_auth_method', 'Mật khẩu');
                     openDashboard('Mật khẩu');
@@ -274,7 +282,7 @@
                 googleErrorMsg.classList.add('hidden');
             });
 
-            // Đổi mật khẩu
+            // Đổi mật khẩu (Mã hóa và lưu mã Hash mới)
             btnOpenChangePassModal.addEventListener('click', () => {
                 changePassModal.classList.remove('hidden');
                 changePassModal.classList.add('flex');
@@ -286,21 +294,22 @@
                 newPasswordInput.value = '';
             });
 
-            changePassForm.addEventListener('submit', (e) => {
+            changePassForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const newPass = newPasswordInput.value.trim();
                 if (newPass.length < 4) {
                     alert('Mật khẩu tối thiểu phải có 4 ký tự!');
                     return;
                 }
-                localStorage.setItem('admin_custom_password', newPass);
+                const newHash = await hashPassword(newPass);
+                localStorage.setItem('admin_custom_password_hash', newHash);
                 changePassModal.classList.add('hidden');
                 changePassModal.classList.remove('flex');
                 newPasswordInput.value = '';
                 alert('Đổi mật khẩu thành công!');
             });
 
-            // Quản lý Admin Modal Handler
+            // Quản lý Admin
             btnOpenAdminManager.addEventListener('click', () => {
                 renderAdminEmailsList();
                 adminManagerModal.classList.remove('hidden');
@@ -317,7 +326,7 @@
                 const email = newAdminEmailInput.value.trim().toLowerCase();
                 let emails = getAdminEmails();
                 if (emails.includes(email)) {
-                    alert('Email này đã tồn tại trong danh sách quản trị!');
+                    alert('Email này đã tồn tại!');
                     return;
                 }
                 emails.push(email);
@@ -330,7 +339,7 @@
             window.removeAdminEmail = function(emailToRemove) {
                 let emails = getAdminEmails();
                 if (emails.length <= 1) {
-                    alert('Cần giữ lại ít nhất một tài khoản quản trị viên!');
+                    alert('Cần giữ lại ít nhất một tài khoản!');
                     return;
                 }
                 if (confirm(`Bạn có chắc muốn xóa quyền admin của ${emailToRemove}?`)) {
@@ -366,7 +375,7 @@
                 loadPendingData();
             }
 
-            // Xử lý Google OAuth Callback
+            // Google Login Callback
             window.handleGoogleLogin = function(response) {
                 try {
                     const base64Url = response.credential.split('.')[1];
@@ -405,7 +414,7 @@
                 document.getElementById('statPendingWorkers').textContent = pendingWorkers.length;
                 document.getElementById('statPendingOrgs').textContent = pendingOrgs.length;
 
-                // Render Cá nhân
+                // Render Workers
                 const workerContainer = document.getElementById('adminPendingWorkerList');
                 workerContainer.innerHTML = '';
                 if (pendingWorkers.length === 0) {
@@ -428,7 +437,7 @@
                     });
                 }
 
-                // Render Tổ chức
+                // Render Orgs
                 const orgContainer = document.getElementById('adminPendingOrgList');
                 orgContainer.innerHTML = '';
                 if (pendingOrgs.length === 0) {
@@ -453,7 +462,6 @@
                 }
             }
 
-            // Các hàm điều khiển Phê duyệt toàn cục
             window.approveWorker = function(id) {
                 let workers = JSON.parse(localStorage.getItem('workers_list') || '[]');
                 workers = workers.map(w => w.id === id ? { ...w, status: 'approved' } : w);

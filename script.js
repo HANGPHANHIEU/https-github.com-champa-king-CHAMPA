@@ -45,12 +45,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Cập nhật hàm nhận việc: Yêu cầu nhập thông tin người nhận
     function acceptJob(jobId) {
         const jobs = getJobs();
         const accepted = getAcceptedJobs();
         const target = jobs.find(j => j.id === jobId);
+        
         if (target && !accepted.some(j => j.id === jobId)) {
-            accepted.unshift({ ...target, checkedIn: false, rating: null });
+            const workerName = prompt("Nhập họ và tên của bạn để nhận việc:");
+            const workerPhone = prompt("Nhập số điện thoại liên hệ của bạn:");
+
+            if (!workerName || !workerName.trim() || !workerPhone || !workerPhone.trim()) {
+                showToast('Vui lòng nhập đầy đủ họ tên và số điện thoại!', 'error');
+                return false;
+            }
+
+            accepted.unshift({ 
+                ...target, 
+                checkedIn: false, 
+                rating: null,
+                acceptedBy: {
+                    name: workerName.trim(),
+                    phone: workerPhone.trim(),
+                    time: new Date().toLocaleString('vi-VN')
+                }
+            });
             localStorage.setItem('accepted_jobs_list', JSON.stringify(accepted));
             return true;
         }
@@ -111,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const toast = document.createElement('div');
         toast.id = 'appToast';
         toast.className = `fixed top-5 right-5 z-50 px-4 py-3 rounded-xl text-xs font-bold text-white shadow-xl transition-all duration-300 flex items-center gap-2 ${
-            type === 'success' ? 'bg-teal-600' : 'bg-slate-900'
+            type === 'success' ? 'bg-teal-600' : 'bg-red-600'
         }`;
         toast.innerHTML = `<i class="fa-solid fa-circle-check text-sm"></i> ${message}`;
         document.body.appendChild(toast);
@@ -213,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast('Nhận việc thành công! Kiểm tra trong tab "Đã nhận".');
                     renderJobs();
                 } else {
-                    showToast('Bạn đã nhận công việc này rồi.', 'error');
+                    // Nếu không nhận được (ví dụ đã nhận hoặc chưa nhập thông tin) thì không báo trùng nếu do chưa nhập
                 }
             });
         });
@@ -230,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Render công việc đã nhận
+    // Render công việc đã nhận kèm thông tin người nhận
     function renderAcceptedJobs() {
         if (!acceptedJobListContainer) return;
         const acceptedList = getAcceptedJobs();
@@ -245,14 +264,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm space-y-3';
             card.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <div>
+                <div class="flex justify-between items-start">
+                    <div class="space-y-1">
                         <div class="flex items-center gap-2">
                             <h3 class="font-bold text-slate-800 text-sm md:text-base">${job.title}</h3>
                             <span class="px-2 py-0.5 text-[10px] bg-emerald-100 text-emerald-700 font-bold rounded-md">ĐÃ NHẬN</span>
                         </div>
-                        <p class="text-xs text-slate-500 font-medium mt-1">📍 ${job.location} &bull; 💰 ${job.salary}</p>
-                        <p class="text-xs text-teal-700 font-semibold mt-0.5">📞 LH Nhà tuyển dụng: ${job.phone}</p>
+                        <p class="text-xs text-slate-500 font-medium">📍 ${job.location} &bull; 💰 ${job.salary}</p>
+                        <p class="text-xs text-teal-700 font-semibold">📞 LH Nhà tuyển dụng: ${job.phone}</p>
                     </div>
                     <div>
                         ${job.checkedIn ? 
@@ -261,6 +280,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     </div>
                 </div>
+
+                <!-- Hiển thị thông tin người nhận công việc -->
+                ${job.acceptedBy ? `
+                    <div class="p-3 bg-teal-50/70 border border-teal-100 rounded-xl text-xs space-y-1">
+                        <p class="font-bold text-teal-900 flex items-center"><i class="fa-solid fa-user-check mr-1.5 text-teal-600"></i> Thông tin người thực hiện:</p>
+                        <p class="text-slate-700">👤 Họ tên: <b>${job.acceptedBy.name}</b></p>
+                        <p class="text-slate-700">📞 Số điện thoại: <b>${job.acceptedBy.phone}</b></p>
+                        <p class="text-slate-400 text-[11px]">⏱ Nhận lúc: ${job.acceptedBy.time}</p>
+                    </div>
+                ` : ''}
+
                 <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                     <span class="font-semibold text-slate-600">Đánh giá chất lượng:</span>
                     <div class="flex items-center gap-1">
@@ -421,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Đăng ký Tổ chức (Trạng thái pending chờ admin duyệt)
+    // Đăng ký Tổ chức
     if (orgForm) {
         orgForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -443,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Đăng ký Cá nhân (Trạng thái pending chờ admin duyệt)
+    // Đăng ký Cá nhân
     if (workerForm) {
         workerForm.addEventListener('submit', (e) => {
             e.preventDefault();

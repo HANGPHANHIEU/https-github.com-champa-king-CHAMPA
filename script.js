@@ -14,6 +14,59 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 1, name: 'Trần Văn Bình', phone: '0988123456', skill: 'Giao hàng hỏa tốc, Tài xế công nghệ', location: 'Quận 3', status: 'approved' }
     ];
 
+    // --- TỰ ĐỘNG THÊM 2 NÚT BẤM LỚN (GRAB & XANH SM) PHÍA TRÊN ---
+    function renderRideHailingButtons() {
+        const tabJob = document.getElementById('tabJob');
+        if (!tabJob) return;
+
+        // Kiểm tra xem đã thêm chưa để tránh trùng lặp
+        if (document.getElementById('rideHailingContainer')) return;
+
+        const rideContainer = document.createElement('div');
+        rideContainer.id = 'rideHailingContainer';
+        rideContainer.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6';
+        rideContainer.innerHTML = `
+            <!-- Nút Xe Ôm Grab -->
+            <a href="https://www.grab.com/vi/driver/drive/" target="_blank" rel="noopener noreferrer" 
+               class="flex items-center justify-between p-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 group">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl font-black">
+                        <i class="fa-solid fa-motorcycle"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-base leading-tight">Xe Ôm (Grab)</h3>
+                        <p class="text-xs text-emerald-100 font-medium mt-0.5">Đăng ký / Gọi xe GrabBike nhanh</p>
+                    </div>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                    <i class="fa-solid fa-arrow-right text-sm"></i>
+                </div>
+            </a>
+
+            <!-- Nút Xe Ôm Xanh SM -->
+            <a href="https://www.xanhsm.com/" target="_blank" rel="noopener noreferrer" 
+               class="flex items-center justify-between p-4 bg-teal-500 hover:bg-teal-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 group">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl font-black">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-base leading-tight">Xe Ôm (Xanh SM)</h3>
+                        <p class="text-xs text-teal-100 font-medium mt-0.5">Đối tác / Đặt xe máy điện Green SM</p>
+                    </div>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                    <i class="fa-solid fa-arrow-right text-sm"></i>
+                </div>
+            </a>
+        `;
+
+        // Chèn vào đầu tab việc làm
+        tabJob.insertBefore(rideContainer, tabJob.firstChild);
+    }
+
+    renderRideHailingButtons();
+
     // --- QUẢN LÝ LOCALSTORAGE ---
     function getJobs() {
         try {
@@ -442,8 +495,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const titleVal = document.getElementById('jobTitleInput').value.trim();
             const phoneVal = document.getElementById('jobPhoneInput').value.trim();
             
-            // Nếu form của bạn chưa có ô nhập Tên người đăng, chúng ta sẽ hỏi prompt hoặc bạn có thể tạo thêm ô input trên HTML. 
-            // Ở đây tạm thời code sẽ tự động lấy prompt hỏi tên nếu chưa có input, hoặc bạn có thể nhập trực tiếp.
             const creatorNameVal = prompt("Nhập Tên của bạn (người đăng việc):");
 
             if (!creatorNameVal || !creatorNameVal.trim()) {
@@ -459,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 category: document.getElementById('jobCategoryInput').value,
                 salary: document.getElementById('jobSalaryInput').value.trim() || 'Thỏa thuận',
                 isUrgent: document.getElementById('jobUrgentInput').checked,
-                createdByName: creatorNameVal.trim(), // Lưu tên người đăng
+                createdByName: creatorNameVal.trim(),
                 createdBy: phoneVal
             };
 

@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Sinh Thái Grab - Xe Ôm & Dịch Vụ Grab</title>
+    <title>Hệ Sinh Thái Grab - Ứng dụng Việc Gấp</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
+    <!-- FontAwesome Icons (Đảm bảo hiển thị đầy đủ mọi hình ảnh/icon) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- File CSS riêng -->
+    <!-- File CSS riêng của hệ thống -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- Header -->
+    <!-- Header điều hướng -->
     <header class="bg-emerald-600 text-white px-6 py-4 flex items-center justify-between shadow-md sticky top-0 z-30">
         <div class="flex items-center space-x-3">
             <a href="index.html" class="w-9 h-9 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition">
@@ -26,10 +26,10 @@
         <span class="text-xs bg-emerald-700 px-3 py-1 rounded-full font-semibold">Siêu ứng dụng</span>
     </header>
 
-    <!-- Content -->
+    <!-- Nội dung chính -->
     <main class="flex-1 max-w-2xl w-full mx-auto p-5 space-y-6">
 
-        <!-- Banner -->
+        <!-- Banner minh họa -->
         <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-6 rounded-3xl shadow-lg relative overflow-hidden">
             <div class="relative z-10 space-y-2">
                 <span class="bg-white/20 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">Hệ Sinh Thái Đa Dịch Vụ</span>
@@ -39,169 +39,82 @@
             <i class="fa-solid fa-layer-group absolute -right-4 -bottom-6 text-9xl text-white/10 pointer-events-none"></i>
         </div>
 
-        <!-- HỆ SINH THÁI DỊCH VỤ GRAB (Grid Icons theo thực tế) -->
+        <!-- Lưới dịch vụ Grab (Icons trực quan) -->
         <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-4">
             <h3 class="font-bold text-slate-900 text-sm flex items-center justify-between">
                 <span><i class="fa-solid fa-grid-2 text-emerald-600 mr-1.5"></i> Dịch vụ Grab</span>
                 <span class="text-[11px] text-slate-400 font-normal">Chạm để trải nghiệm</span>
             </h3>
 
-            <!-- Grid 4 cột giống ứng dụng -->
+            <!-- Grid 4 cột icon -->
             <div class="grid grid-cols-4 gap-y-5 gap-x-2 text-center">
-                
-                <!-- Xe máy (GrabBike) -->
-                <a href="https://www.grab.com/vi/transport/bike/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
-                    <div class="w-13 h-13 w-12 h-12 bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
+                <a href="https://www.grab.com/vi/transport/bike/" target="_blank" data-service="Xe máy" class="grab-service-item group flex flex-col items-center">
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
                         <i class="fa-solid fa-motorcycle"></i>
                     </div>
                     <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-emerald-600">Xe máy</span>
                 </a>
 
-                <!-- Ô tô (GrabCar) -->
-                <a href="https://www.grab.com/vi/transport/car/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
+                <a href="https://www.grab.com/vi/transport/car/" target="_blank" data-service="Ô tô" class="grab-service-item group flex flex-col items-center">
                     <div class="w-12 h-12 bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
                         <i class="fa-solid fa-car"></i>
                     </div>
                     <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-emerald-600">Ô tô</span>
                 </a>
 
-                <!-- Đồ ăn (GrabFood) -->
-                <a href="https://www.grab.com/vi/food/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
+                <a href="https://www.grab.com/vi/food/" target="_blank" data-service="Đồ ăn" class="grab-service-item group flex flex-col items-center">
                     <div class="w-12 h-12 bg-orange-50 text-orange-500 group-hover:bg-orange-500 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
                         <i class="fa-solid fa-bowl-food"></i>
                     </div>
                     <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-orange-500">Đồ ăn</span>
                 </a>
 
-                <!-- Giao hàng (GrabExpress) -->
-                <a href="https://www.grab.com/vi/express/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
+                <a href="https://www.grab.com/vi/express/" target="_blank" data-service="Giao hàng" class="grab-service-item group flex flex-col items-center">
                     <div class="w-12 h-12 bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
                         <i class="fa-solid fa-box font-bold"></i>
                     </div>
                     <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-amber-600">Giao hàng</span>
                 </a>
 
-                <!-- Đi chợ (GrabMart) -->
-                <a href="https://www.grab.com/vi/mart/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
+                <a href="https://www.grab.com/vi/mart/" target="_blank" data-service="Đi chợ" class="grab-service-item group flex flex-col items-center">
                     <div class="w-12 h-12 bg-lime-50 text-lime-600 group-hover:bg-lime-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
                         <i class="fa-solid fa-basket-shopping"></i>
                     </div>
                     <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-lime-600">Đi chợ</span>
                 </a>
 
-                <!-- Đặt xe trước -->
-                <a href="https://www.grab.com/vi/transport/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
+                <a href="https://www.grab.com/vi/transport/" target="_blank" data-service="Đặt xe trước" class="grab-service-item group flex flex-col items-center">
                     <div class="w-12 h-12 bg-teal-50 text-teal-600 group-hover:bg-teal-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
                         <i class="fa-solid fa-calendar-check"></i>
                     </div>
                     <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-teal-600">Đặt xe trước</span>
                 </a>
 
-                <!-- Bản đồ -->
-                <a href="https://www.grab.com/vi/maps/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
+                <a href="https://www.grab.com/vi/maps/" target="_blank" data-service="Bản đồ" class="grab-service-item group flex flex-col items-center">
                     <div class="w-12 h-12 bg-blue-50 text-blue-500 group-hover:bg-blue-500 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
                         <i class="fa-solid fa-map-location-dot"></i>
                     </div>
                     <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-blue-500">Bản đồ</span>
                 </a>
 
-                <!-- Quà tặng (GrabGifts) -->
-                <a href="https://www.grab.com/vi/gifts/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
+                <a href="https://www.grab.com/vi/gifts/" target="_blank" data-service="Quà tặng" class="grab-service-item group flex flex-col items-center">
                     <div class="w-12 h-12 bg-rose-50 text-rose-500 group-hover:bg-rose-500 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
                         <i class="fa-solid fa-gift"></i>
                     </div>
                     <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-rose-500">Quà tặng</span>
                 </a>
-
-                <!-- Gói Hội Viên (GrabUnlimited) -->
-                <a href="https://www.grab.com/vi/unlimited/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
-                    <div class="w-12 h-12 bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
-                        <i class="fa-solid fa-crown"></i>
-                    </div>
-                    <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-indigo-600">Gói Hội Viên</span>
-                </a>
-
-                <!-- Khách sạn -->
-                <a href="https://www.grab.com/vi/hotels/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
-                    <div class="w-12 h-12 bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
-                        <i class="fa-solid fa-hotel"></i>
-                    </div>
-                    <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-purple-600">Khách sạn</span>
-                </a>
-
-                <!-- Bảo hiểm -->
-                <a href="https://www.grab.com/vi/insurance/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
-                    <div class="w-12 h-12 bg-cyan-50 text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-cyan-600">Bảo hiểm</span>
-                </a>
-
-                <!-- Ưu đãi / Thưởng -->
-                <a href="https://www.grab.com/vi/rewards/" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
-                    <div class="w-12 h-12 bg-amber-50 text-amber-500 group-hover:bg-amber-500 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm">
-                        <i class="fa-solid fa-coins"></i>
-                    </div>
-                    <span class="text-xs font-semibold text-slate-700 mt-1.5 group-hover:text-amber-500">Thưởng</span>
-                </a>
-
             </div>
-        </div>
-
-        <!-- LỰA CHỌN ĐĂNG KÝ VÀ TRẢI NGHIỆM -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Đăng ký tài xế -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3 flex flex-col justify-between">
-                <div class="space-y-2">
-                    <div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-xl font-bold">
-                        <i class="fa-solid fa-id-card"></i>
-                    </div>
-                    <h3 class="font-bold text-slate-900 text-base">Đăng ký Tài xế / Đối tác</h3>
-                    <p class="text-xs text-slate-500">Chạy xe máy, ô tô hoặc làm đối tác nhà hàng/giao hàng cùng Grab.</p>
-                </div>
-                <a href="https://www.grab.com/vi/driver/drive/" target="_blank" rel="noopener noreferrer" 
-                   class="block w-full text-center py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-sm">
-                    Đăng ký làm Đối tác Grab <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i>
-                </a>
-            </div>
-
-            <!-- Đặt xe / Sử dụng App -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3 flex flex-col justify-between">
-                <div class="space-y-2">
-                    <div class="w-10 h-10 bg-slate-100 text-slate-800 rounded-xl flex items-center justify-center text-xl font-bold">
-                        <i class="fa-solid fa-mobile-screen-button"></i>
-                    </div>
-                    <h3 class="font-bold text-slate-900 text-base">Tải ứng dụng Grab</h3>
-                    <p class="text-xs text-slate-500">Truy cập cửa hàng ứng dụng trên điện thoại để đặt dịch vụ nhanh chóng.</p>
-                </div>
-                <a href="https://www.grab.com/vi/download/" target="_blank" rel="noopener noreferrer" 
-                   class="block w-full text-center py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition shadow-sm">
-                    Tải App Grab Ngay <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- Yêu cầu hồ sơ đăng ký -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3">
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <i class="fa-solid fa-file-circle-check text-emerald-600"></i> Hồ sơ chuẩn bị khi đăng ký tài xế:
-            </h3>
-            <ul class="text-xs text-slate-600 space-y-2 list-disc pl-5">
-                <li>Thẻ căn cước công dân (CCCD) bản gốc còn giá trị sử dụng.</li>
-                <li>Bằng lái xe (A1/A2 đối với Xe máy, B2/B1 đối với Ô tô).</li>
-                <li>Giấy đăng ký xe (Cà vẹt xe) & Bảo hiểm TNDS còn hạn.</li>
-                <li>Giấy lý lịch tư pháp số 1 hoặc giấy xác nhận không tiền án tiền sự.</li>
-            </ul>
         </div>
 
     </main>
 
-    <!-- Footer -->
+    <!-- Chân trang -->
     <footer class="p-4 text-center text-xs text-slate-400 border-t border-slate-200 bg-white">
-        &copy; Tích hợp hệ thống Việc Gấp x Grab Ecosystem
+        &copy; Hệ thống Việc Gấp x Grab Ecosystem
     </footer>
 
-    <!-- Script điều khiển chính -->
+    <!-- Các file Script liên kết -->
     <script src="script.js"></script>
+    <script src="GrabScript.js"></script>
 </body>
 </html>

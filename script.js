@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const tabJob = document.getElementById('tabJob');
         if (!tabJob) return;
 
-        // Kiểm tra xem đã thêm chưa để tránh trùng lặp
         if (document.getElementById('rideHailingContainer')) return;
 
         const rideContainer = document.createElement('div');
@@ -60,8 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </a>
         `;
-
-        // Chèn vào đầu tab việc làm
         tabJob.insertBefore(rideContainer, tabJob.firstChild);
     }
 
@@ -83,29 +80,19 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('my_jobs_list', JSON.stringify(jobs));
     }
 
-    // Xóa việc: Yêu cầu nhập Tên người đăng để xác thực
+    // Đã xóa bỏ phần bắt buộc nhập tên người tạo, giờ chỉ hỏi xác nhận bằng thông báo đơn giản (hoặc xóa thẳng)
     function deleteJob(jobId) {
         let jobs = getJobs();
         const targetJob = jobs.find(j => j.id === jobId);
 
         if (!targetJob) return;
 
-        const inputName = prompt("Nhập TÊN người đã đăng công việc này để xác nhận xóa:");
-        if (!inputName) return; // Người dùng bấm Hủy
-
-        // Chuẩn hóa chuỗi so sánh (bỏ khoảng trắng thừa, không phân biệt hoa thường)
-        const trimmedInput = inputName.trim().toLowerCase();
-        const creatorName = (targetJob.createdByName || '').trim().toLowerCase();
-
-        if (trimmedInput !== creatorName) {
-            showToast('Tên người đăng không chính xác! Bạn không có quyền xóa.', 'error');
-            return;
+        if (confirm('Bạn có chắc chắn muốn xóa công việc này không?')) {
+            jobs = jobs.filter(j => j.id !== jobId);
+            localStorage.setItem('my_jobs_list', JSON.stringify(jobs));
+            renderJobs();
+            showToast('Đã xóa công việc thành công.');
         }
-
-        jobs = jobs.filter(j => j.id !== jobId);
-        localStorage.setItem('my_jobs_list', JSON.stringify(jobs));
-        renderJobs();
-        showToast('Đã xóa công việc thành công.');
     }
 
     function getAcceptedJobs() {
@@ -488,19 +475,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnCloseWorkerModal) btnCloseWorkerModal.addEventListener('click', () => { workerModal?.classList.add('hidden'); workerModal?.classList.remove('flex'); });
     if (btnCancelWorkerModal) btnCancelWorkerModal.addEventListener('click', () => { workerModal?.classList.add('hidden'); workerModal?.classList.remove('flex'); });
 
-    // Đăng việc mới (Lưu cả Tên người đăng và SĐT)
+    // Đăng việc mới (Đã loại bỏ bảng hỏi prompt nhập tên người tạo)
     if (postJobForm) {
         postJobForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const titleVal = document.getElementById('jobTitleInput').value.trim();
             const phoneVal = document.getElementById('jobPhoneInput').value.trim();
-            
-            const creatorNameVal = prompt("Nhập Tên của bạn (người đăng việc):");
-
-            if (!creatorNameVal || !creatorNameVal.trim()) {
-                showToast('Vui lòng nhập tên người đăng!', 'error');
-                return;
-            }
 
             const newJob = {
                 id: Date.now(),
@@ -510,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 category: document.getElementById('jobCategoryInput').value,
                 salary: document.getElementById('jobSalaryInput').value.trim() || 'Thỏa thuận',
                 isUrgent: document.getElementById('jobUrgentInput').checked,
-                createdByName: creatorNameVal.trim(),
+                createdByName: 'Người đăng',
                 createdBy: phoneVal
             };
 

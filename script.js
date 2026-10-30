@@ -464,16 +464,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { return []; }
     }
 
-    async function saveJobToCloud(newJob) {
-        try {
-            await fetch(`${SUPABASE_URL}/rest/v1/jobs`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(newJob)
-            });
-        } catch (e) { alert('Lỗi kết nối lưu việc làm lên đám mây.'); }
-    }
-
     function getAcceptedJobs() {
         try {
             return JSON.parse(localStorage.getItem('accepted_jobs_list') || '[]');
@@ -778,7 +768,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // XỬ LÝ SUBMIT ĐĂNG VIỆC (CÓ GIỚI HẠN 10 VIỆC / NGÀY & BẢO VỆ AN TOÀN LỖI)
+    // XỬ LÝ SUBMIT ĐĂNG VIỆC AN TOÀN & GIỚI HẠN 10 VIỆC/NGÀY
     postJobForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const currentUser = getCurrentUser();
@@ -791,23 +781,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Lấy tất cả việc làm hiện có trên hệ thống để đếm
+            // Kiểm tra số lượng việc đã đăng trong ngày
             const allJobs = await fetchJobsFromCloud();
             const todayStr = new Date().toISOString().split('T')[0];
 
             const jobsTodayCount = allJobs.filter(job => {
                 const isOwner = job.phone === currentUser.phone;
-                let isToday = false;
+                if (!isOwner) return false;
                 if (job.created_at) {
-                    isToday = job.created_at.startsWith(todayStr);
-                } else if (job.id) {
-                    const jobDate = new Date(Number(job.id)).toISOString().split('T')[0];
-                    isToday = jobDate === todayStr;
+                    return String(job.created_at).startsWith(todayStr);
                 }
-                return isOwner && isToday;
+                return true; // Nếu bảng chưa có created_at thì đếm tổng số bài của user để an toàn
             }).length;
 
-            // KIỂM TRA GIỚI HẠN TỐI ĐA 10 VIỆC / NGÀY
             if (jobsTodayCount >= 10) {
                 showToast('Bạn đã đạt giới hạn 10 việc/ngày!', 'error');
                 alert('Mỗi tài khoản chỉ được phép đăng tối đa 10 việc mỗi ngày. Vui lòng quay lại vào ngày mai!');
@@ -815,15 +801,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const newJob = {
-                id: Date.now(),
                 title: document.getElementById('jobTitleInput').value.trim(),
                 category: document.getElementById('jobCategoryInput').value,
                 location: document.getElementById('jobLocationInput').value,
                 salary: document.getElementById('jobSalaryInput').value.trim(),
                 is_urgent: document.getElementById('jobUrgentInput')?.checked || false,
                 created_by_name: currentUser.name,
-                phone: currentUser.phone,
-                created_at: new Date().toISOString()
+                phone: currentUser.phone
             };
 
             if (!newJob.title || !newJob.salary) {
@@ -831,14 +815,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            await saveJobToCloud(newJob);
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/jobs`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(newJob)
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                console.error("Supabase error:", errText);
+                throw new Error('Lỗi lưu vào cơ sở dữ liệu');
+            }
+
             closePostJobModal();
             postJobForm.reset();
             showToast(`Đăng việc thành công! (${jobsTodayCount + 1}/10 bài hôm nay)`);
             renderJobs();
         } catch (err) {
             console.error(err);
-            showToast('Có lỗi xảy ra khi kết nối hệ thống!', 'error');
+            showToast('Đăng việc thất bại, vui lòng thử lại!', 'error');
         }
     });
 

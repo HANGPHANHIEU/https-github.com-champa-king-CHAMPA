@@ -25,7 +25,13 @@
                     <span class="text-amber-500 text-lg ml-0.5">.</span>
                 </div>
             </div>
+            
             <div class="flex items-center gap-1.5">
+                <!-- NÚT ĐĂNG NHẬP THÀNH VIÊN -->
+                <button id="btnLoginAccount" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-2 rounded-xl text-xs flex items-center transition shadow-sm">
+                    <i class="fa-solid fa-user-circle mr-1 text-teal-600"></i> <span id="loginBtnText">Đăng nhập</span>
+                </button>
+
                 <!-- NÚT CHUYỂN SANG TRANG ADMIN -->
                 <a href="admin.html" class="bg-slate-900 hover:bg-slate-800 text-white font-medium px-2.5 py-2 rounded-xl text-xs flex items-center transition shadow-sm mr-1">
                     <i class="fa-solid fa-user-gear mr-1 text-teal-400"></i> Admin
@@ -388,6 +394,9 @@
             </form>
         </div>
     </div>
+
+    <!-- CONTAINER HIỂN THỊ MODAL AUTH (Được inject động từ auth.js) -->
+    <div id="authModalContainer"></div>
 
     <!-- Script điều khiển -->
     <script src="auth.js"></script>

@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.removeItem('current_logged_user');
         }
         updateAuthButtonUI();
-        renderJobs();
+        if (typeof renderJobs === 'function') renderJobs();
     };
 
     // Tự động tạo Modal Đăng nhập / Đăng ký nếu chưa có trong HTML
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 2. SỰ KIỆN CLICK NÚT ĐĂNG NHẬP / ĐĂNG XUẤT ---
+    // Sự kiện Click nút Đăng nhập / Đăng xuất
     const btnLoginAccount = document.getElementById('btnLoginAccount');
     const authModal = document.getElementById('authModal');
     const btnCloseAuthModal = document.getElementById('btnCloseAuthModal');
@@ -190,19 +190,156 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
+    // --- 2. XỬ LÝ ĐĂNG KÝ HỒ SƠ CÁ NHÂN & TỔ CHỨC ---
+    const workerModal = document.getElementById('workerModal');
+    const btnRegisterWorker = document.getElementById('btnRegisterWorker');
+    const btnCloseWorkerModal = document.getElementById('btnCloseWorkerModal');
+    const btnCancelWorkerModal = document.getElementById('btnCancelWorkerModal');
+    const workerForm = document.getElementById('workerForm');
+
+    function getWorkers() {
+        try {
+            const saved = localStorage.getItem('workers_list');
+            return saved ? JSON.parse(saved) : [
+                { id: 1, name: 'Trần Văn Bình', phone: '0988123456', location: 'Quận 3', skill: 'Giao hàng hỏa tốc, Tài xế công nghệ', status: 'approved' }
+            ];
+        } catch (e) { return []; }
+    }
+
+    function saveWorker(newWorker) {
+        const workers = getWorkers();
+        workers.unshift(newWorker);
+        localStorage.setItem('workers_list', JSON.stringify(workers));
+    }
+
+    if (btnRegisterWorker) {
+        btnRegisterWorker.addEventListener('click', () => {
+            const currentUser = getCurrentUser();
+            if (!currentUser) {
+                showToast('Vui lòng đăng nhập tài khoản trước khi đăng ký cá nhân!', 'error');
+                authModal?.classList.remove('hidden');
+                authModal?.classList.add('flex');
+                return;
+            }
+
+            const nameInput = document.getElementById('workerNameInput');
+            const phoneInput = document.getElementById('workerPhoneInput');
+            if (nameInput) nameInput.value = currentUser.name || '';
+            if (phoneInput) phoneInput.value = currentUser.phone || '';
+
+            workerModal?.classList.remove('hidden');
+            workerModal?.classList.add('flex');
+        });
+    }
+
+    function closeWorkerModal() {
+        workerModal?.classList.add('hidden');
+        workerModal?.classList.remove('flex');
+    }
+
+    btnCloseWorkerModal?.addEventListener('click', closeWorkerModal);
+    btnCancelWorkerModal?.addEventListener('click', closeWorkerModal);
+
+    workerForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newWorker = {
+            id: Date.now(),
+            name: document.getElementById('workerNameInput').value.trim(),
+            phone: document.getElementById('workerPhoneInput').value.trim(),
+            location: document.getElementById('workerLocationInput').value,
+            skill: document.getElementById('workerSkillInput').value.trim(),
+            status: 'pending'
+        };
+
+        if (!newWorker.name || !newWorker.phone || !newWorker.skill) {
+            showToast('Vui lòng điền đầy đủ thông tin!', 'error');
+            return;
+        }
+
+        saveWorker(newWorker);
+        closeWorkerModal();
+        workerForm.reset();
+        showToast('Đăng ký hồ sơ cá nhân thành công! Đang chờ Admin phê duyệt.');
+    });
+
+
+    // Tổ chức / Đối tác
+    const orgModal = document.getElementById('orgModal');
+    const btnJoinOrg = document.getElementById('btnJoinOrg');
+    const btnCloseOrgModal = document.getElementById('btnCloseOrgModal');
+    const btnCancelOrgModal = document.getElementById('btnCancelOrgModal');
+    const orgForm = document.getElementById('orgForm');
+
+    function getOrganizations() {
+        try {
+            const saved = localStorage.getItem('organizations_list');
+            return saved ? JSON.parse(saved) : [
+                { id: 1, name: 'Hợp tác xã Vận tải Sài Gòn', phone: '0903123456', address: '12 Cách Mạng Tháng 8', strength: 'Giao hàng nhanh', location: 'Quận 3', status: 'approved' }
+            ];
+        } catch (e) { return []; }
+    }
+
+    function saveOrg(newOrg) {
+        const orgs = getOrganizations();
+        orgs.unshift(newOrg);
+        localStorage.setItem('organizations_list', JSON.stringify(orgs));
+    }
+
+    if (btnJoinOrg) {
+        btnJoinOrg.addEventListener('click', () => {
+            const currentUser = getCurrentUser();
+            if (!currentUser) {
+                showToast('Vui lòng đăng nhập tài khoản trước khi đăng ký tổ chức!', 'error');
+                authModal?.classList.remove('hidden');
+                authModal?.classList.add('flex');
+                return;
+            }
+
+            const phoneInput = document.getElementById('orgPhoneInput');
+            if (phoneInput) phoneInput.value = currentUser.phone || '';
+
+            orgModal?.classList.remove('hidden');
+            orgModal?.classList.add('flex');
+        });
+    }
+
+    function closeOrgModal() {
+        orgModal?.classList.add('hidden');
+        orgModal?.classList.remove('flex');
+    }
+
+    btnCloseOrgModal?.addEventListener('click', closeOrgModal);
+    btnCancelOrgModal?.addEventListener('click', closeOrgModal);
+
+    orgForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newOrg = {
+            id: Date.now(),
+            name: document.getElementById('orgNameInput').value.trim(),
+            phone: document.getElementById('orgPhoneInput').value.trim(),
+            location: document.getElementById('orgLocationInput').value,
+            address: document.getElementById('orgAddressInput').value.trim(),
+            strength: document.getElementById('orgStrengthInput').value.trim(),
+            status: 'pending'
+        };
+
+        if (!newOrg.name || !newOrg.phone || !newOrg.address || !newOrg.strength) {
+            showToast('Vui lòng điền đầy đủ thông tin tổ chức!', 'error');
+            return;
+        }
+
+        saveOrg(newOrg);
+        closeOrgModal();
+        orgForm.reset();
+        showToast('Ghi danh tổ chức thành công! Đang chờ Admin phê duyệt.');
+    });
+
+
     // --- 3. QUẢN LÝ VIỆC LÀM & DỮ LIỆU ---
     const defaultJobs = [
         { id: 1, title: 'Một chuyến giao hàng hỏa tốc', phone: '0901112223', location: 'Quận 3', category: 'delivery', salary: '180.000đ / chuyến', isUrgent: true, createdByName: 'Nguyễn Văn A', createdBy: '0901112223' },
         { id: 2, title: 'Dọn dẹp căn hộ chung cư 2 phòng ngủ', phone: '0904445556', location: 'Quận 7', category: 'cleaning', salary: '300.000đ / buổi', isUrgent: false, createdByName: 'Trần Thị B', createdBy: '0904445556' },
         { id: 3, title: 'Sửa đường ống nước bị rò rỉ tại nhà', phone: '0907778889', location: 'Bình Thạnh', category: 'repair', salary: '250.000đ', isUrgent: true, createdByName: 'Lê Văn C', createdBy: '0907778889' }
-    ];
-
-    const defaultOrgs = [
-        { id: 1, name: 'Hợp tác xã Vận tải Sài Gòn', phone: '0903123456', address: '12 Cách Mạng Tháng 8', strength: 'Giao hàng nhanh, bảo quản tốt', location: 'Quận 3', status: 'approved' }
-    ];
-
-    const defaultWorkers = [
-        { id: 1, name: 'Trần Văn Bình', phone: '0988123456', skill: 'Giao hàng hỏa tốc, Tài xế công nghệ', location: 'Quận 3', status: 'approved' }
     ];
 
     function renderRideHailingButtons() {
@@ -318,7 +455,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast(`Đã đánh giá ${value} sao!`, 'success');
             }
             localStorage.setItem('accepted_jobs_list', JSON.stringify(accepted));
-            renderAcceptedJobs();
         }
     };
 

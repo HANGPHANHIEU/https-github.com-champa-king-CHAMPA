@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             authModal?.classList.add('hidden');
             authModal?.classList.remove('flex');
             loginForm.reset();
-            showToast(`Xin chào ${found.name}! Bạn có thể đăng và quản lý việc.`);
+            showToast(`Xin chào ${found.name}! Bạn đã đăng nhập thành công.`);
         } else {
             alert('Số điện thoại hoặc mật khẩu không chính xác!');
         }
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
         authModal?.classList.add('hidden');
         authModal?.classList.remove('flex');
         registerForm.reset();
-        showToast('Đăng ký thành viên thành công!');
+        showToast('Đăng ký tài khoản thành công!');
     });
 
 
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnRegisterWorker.addEventListener('click', () => {
             const currentUser = getCurrentUser();
             if (!currentUser) {
-                showToast('Vui lòng đăng nhập tài khoản trước khi đăng ký cá nhân!', 'error');
+                showToast('Vui lòng đăng ký / đăng nhập tài khoản trước!', 'error');
                 authModal?.classList.remove('hidden');
                 authModal?.classList.add('flex');
                 return;
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnJoinOrg.addEventListener('click', () => {
             const currentUser = getCurrentUser();
             if (!currentUser) {
-                showToast('Vui lòng đăng nhập tài khoản trước khi đăng ký tổ chức!', 'error');
+                showToast('Vui lòng đăng ký / đăng nhập tài khoản trước!', 'error');
                 authModal?.classList.remove('hidden');
                 authModal?.classList.add('flex');
                 return;
@@ -398,9 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!targetJob) return;
 
-        // Kiểm tra xem có phải tài khoản Admin hay không
         const isAdmin = localStorage.getItem('is_admin_logged') === 'true' || (currentUser && currentUser.role === 'admin');
-        // Kiểm tra xem có phải chính chủ bài đăng không
         const isOwner = currentUser && targetJob.createdBy === currentUser.phone;
 
         if (!isAdmin && !isOwner) {
@@ -422,26 +420,34 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { return []; }
     }
 
+    // --- PHÂN QUYỀN NHẬN VIỆC: CHỈ NGƯỜI ĐÃ ĐĂNG KÝ / ĐĂNG NHẬP MỚI ĐƯỢC NHẬN ---
     function acceptJob(jobId) {
+        const currentUser = getCurrentUser();
+
+        // 1. Kiểm tra nếu chưa đăng nhập thì bật modal đăng nhập và báo lỗi
+        if (!currentUser) {
+            showToast('Vui lòng đăng ký hoặc đăng nhập để nhận việc!', 'error');
+            const authModal = document.getElementById('authModal');
+            authModal?.classList.remove('hidden');
+            authModal?.classList.add('flex');
+            return false;
+        }
+
         const jobs = getJobs();
         const accepted = getAcceptedJobs();
         const target = jobs.find(j => j.id === jobId);
         
         if (target && !accepted.some(j => j.id === jobId)) {
-            const currentUser = getCurrentUser();
-            let workerName = currentUser ? currentUser.name : prompt("Nhập họ tên của bạn:");
-            let workerPhone = currentUser ? currentUser.phone : prompt("Nhập số điện thoại của bạn:");
-
-            if (!workerName || !workerPhone) {
-                showToast('Vui lòng nhập đầy đủ thông tin để nhận việc!', 'error');
-                return false;
-            }
-
+            // Tự động sử dụng thông tin từ tài khoản đã đăng nhập
             accepted.unshift({ 
                 ...target, 
                 checkedIn: false, 
                 rating: null,
-                acceptedBy: { name: workerName.trim(), phone: workerPhone.trim(), time: new Date().toLocaleString('vi-VN') }
+                acceptedBy: { 
+                    name: currentUser.name, 
+                    phone: currentUser.phone, 
+                    time: new Date().toLocaleString('vi-VN') 
+                }
             });
             localStorage.setItem('accepted_jobs_list', JSON.stringify(accepted));
             return true;
@@ -486,7 +492,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const urgentCheck = document.getElementById('urgentCheck');
     const jobListContainer = document.getElementById('jobList');
     const jobCountSpan = document.getElementById('jobCount');
-    const categoryBtns = document.querySelectorAll('.category-btn');
     let currentCategory = 'all';
 
     function renderJobs() {
@@ -519,7 +524,6 @@ document.addEventListener('DOMContentLoaded', () => {
         filtered.forEach(job => {
             const isAccepted = acceptedList.some(item => item.id === job.id);
             const isMyJob = currentUser && currentUser.phone === job.createdBy;
-            // Chỉ hiển thị nút xóa nếu là chủ bài viết HOẶC là Admin
             const canDelete = isMyJob || isAdmin;
 
             const card = document.createElement('div');

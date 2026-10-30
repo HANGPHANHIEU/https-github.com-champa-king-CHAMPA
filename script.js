@@ -677,60 +677,162 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Modal Đăng việc
+    searchInput?.addEventListener('input', renderJobs);
+    locationSelect?.addEventListener('change', renderJobs);
+    urgentCheck?.addEventListener('change', renderJobs);
+
+
+    // --- 6. XỬ LÝ MODAL ĐĂNG VIỆC & KHỎI TẠO TỰ ĐỘNG ---
+    if (!document.getElementById('postJobModal')) {
+        const postJobModalContainer = document.createElement('div');
+        postJobModalContainer.id = 'postJobModalContainer';
+        postJobModalContainer.innerHTML = `
+            <div id="postJobModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+                <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 p-6 space-y-4 relative">
+                    <button id="btnClosePostJobModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+                    
+                    <div class="text-center space-y-1">
+                        <h2 class="text-lg font-bold text-slate-900">Đăng việc mới</h2>
+                        <p class="text-xs text-slate-500">Mỗi tài khoản được đăng tối đa 10 việc/ngày</p>
+                    </div>
+
+                    <form id="postJobForm" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tiêu đề công việc</label>
+                            <input type="text" id="jobTitleInput" required placeholder="Ví dụ: Cần giao hàng hỏa tốc" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Danh mục</label>
+                                <select id="jobCategoryInput" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                                    <option value="shipper">Giao hàng</option>
+                                    <option value="driver">Tài xế</option>
+                                    <option value="housework">Giúp việc</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Khu vực</label>
+                                <select id="jobLocationInput" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                                    <option value="Châu Thành">Châu Thành</option>
+                                    <option value="Long Xuyên">Long Xuyên</option>
+                                    <option value="Châu Đốc">Châu Đốc</option>
+                                    <option value="Chợ Mới">Chợ Mới</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Mức lương / Thù lao</label>
+                            <input type="text" id="jobSalaryInput" required placeholder="Ví dụ: 200.000 VNĐ / ngày" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                        </div>
+                        <div class="flex items-center gap-2 pt-1">
+                            <input type="checkbox" id="jobUrgentInput" class="w-4 h-4 text-teal-600 rounded">
+                            <label for="jobUrgentInput" class="text-xs font-semibold text-red-600">Tuyển gấp (Đánh dấu nổi bật)</label>
+                        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button type="button" id="btnCancelPostJobModal" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-sm transition">Hủy</button>
+                            <button type="submit" class="w-1/2 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl text-sm transition shadow-sm">Đăng ngay</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(postJobModalContainer);
+    }
+
     const postJobModal = document.getElementById('postJobModal');
     const btnPostJob = document.getElementById('btnPostJob');
     const btnFloatingPostJob = document.getElementById('btnFloatingPostJob');
-    const btnCloseModal = document.getElementById('btnCloseModal');
-    const btnCancelModal = document.getElementById('btnCancelModal');
+    const btnClosePostJobModal = document.getElementById('btnClosePostJobModal');
+    const btnCancelPostJobModal = document.getElementById('btnCancelPostJobModal');
     const postJobForm = document.getElementById('postJobForm');
 
     function openPostJobModal() {
-        const user = getCurrentUser();
-        if (!user) {
+        const currentUser = getCurrentUser();
+        if (!currentUser) {
+            showToast('Vui lòng đăng nhập để đăng bài!', 'error');
+            authModal?.classList.remove('hidden');
+            authModal?.classList.add('flex');
+            return;
+        }
+        postJobModal?.classList.remove('hidden');
+        postJobModal?.classList.add('flex');
+    }
+
+    function closePostJobModal() {
+        postJobModal?.classList.add('hidden');
+        postJobModal?.classList.remove('flex');
+    }
+
+    btnPostJob?.addEventListener('click', openPostJobModal);
+    btnFloatingPostJob?.addEventListener('click', openPostJobModal);
+    btnClosePostJobModal?.addEventListener('click', closePostJobModal);
+    btnCancelPostJobModal?.addEventListener('click', closePostJobModal);
+
+    // 🔥 XỬ LÝ SUBMIT ĐĂNG VIỆC (CÓ GIỚI HẠN 10 VIỆC / NGÀY) 🔥
+    postJobForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const currentUser = getCurrentUser();
+
+        if (!currentUser) {
             showToast('Vui lòng đăng nhập để đăng việc!', 'error');
             authModal?.classList.remove('hidden');
             authModal?.classList.add('flex');
-        } else {
-            const phoneInput = document.getElementById('jobPhoneInput');
-            if (phoneInput) phoneInput.value = user.phone;
-            postJobModal?.classList.remove('hidden');
-            postJobModal?.classList.add('flex');
+            return;
         }
-    }
 
-    if (btnPostJob) btnPostJob.addEventListener('click', openPostJobModal);
-    if (btnFloatingPostJob) btnFloatingPostJob.addEventListener('click', openPostJobModal);
-    btnCloseModal?.addEventListener('click', () => postJobModal?.classList.add('hidden'));
-    btnCancelModal?.addEventListener('click', () => postJobModal?.classList.add('hidden'));
+        // Lấy tất cả việc làm hiện có trên hệ thống
+        const allJobs = await fetchJobsFromCloud();
+        
+        // Xác định chuỗi ngày hiện tại (YYYY-MM-DD)
+        const todayStr = new Date().toISOString().split('T')[0];
 
-    postJobForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const user = getCurrentUser();
+        // Đếm số việc làm mà tài khoản này đã đăng trong ngày
+        const jobsTodayCount = allJobs.filter(job => {
+            const isOwner = job.phone === currentUser.phone;
+            let isToday = false;
+            if (job.created_at) {
+                isToday = job.created_at.startsWith(todayStr);
+            } else if (job.id) {
+                const jobDate = new Date(Number(job.id)).toISOString().split('T')[0];
+                isToday = jobDate === todayStr;
+            }
+            return isOwner && isToday;
+        }).length;
+
+        // 🛑 KIỂM TRA GIỚI HẠN TỐI ĐA 10 VIỆC / NGÀY
+        if (jobsTodayCount >= 10) {
+            showToast('Bạn đã đạt giới hạn 10 việc/ngày!', 'error');
+            alert('Mỗi tài khoản chỉ được phép đăng tối đa 10 việc mỗi ngày. Vui lòng quay lại vào ngày mai!');
+            return;
+        }
+
+        // Tiến hành tạo đối tượng công việc mới
         const newJob = {
+            id: Date.now(),
             title: document.getElementById('jobTitleInput').value.trim(),
-            phone: document.getElementById('jobPhoneInput').value.trim(),
-            location: document.getElementById('jobLocationInput').value,
             category: document.getElementById('jobCategoryInput').value,
-            salary: document.getElementById('jobSalaryInput').value.trim() || 'Thỏa thuận',
+            location: document.getElementById('jobLocationInput').value,
+            salary: document.getElementById('jobSalaryInput').value.trim(),
             is_urgent: document.getElementById('jobUrgentInput')?.checked || false,
-            created_by_name: user ? user.name : 'Thành viên'
+            created_by_name: currentUser.name,
+            phone: currentUser.phone,
+            created_at: new Date().toISOString()
         };
 
-        if (!newJob.title) return;
+        if (!newJob.title || !newJob.salary) {
+            showToast('Vui lòng nhập tiêu đề và lương!', 'error');
+            return;
+        }
+
         await saveJobToCloud(newJob);
-        postJobModal?.classList.add('hidden');
+        closePostJobModal();
         postJobForm.reset();
-        showToast('Đăng việc thành công lên hệ thống chung!');
+        showToast(`Đăng việc thành công! (${jobsTodayCount + 1}/10 bài hôm nay)`);
         renderJobs();
     });
 
-    if (searchInput) searchInput.addEventListener('input', renderJobs);
-    if (locationSelect) locationSelect.addEventListener('change', renderJobs);
-    if (urgentCheck) urgentCheck.addEventListener('change', renderJobs);
-
+    // Khởi tạo trạng thái ban đầu khi trang web load
     updateAuthButtonUI();
     renderJobs();
-    renderOrganizations();
-    renderAcceptedJobs();
 });

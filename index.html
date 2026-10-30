@@ -58,7 +58,7 @@
             <div id="tabFindJob" class="tab-content space-y-5">
                 <div class="mb-5">
                     <h1 class="text-2xl font-bold text-slate-900">Việc gần bạn</h1>
-                    <p class="text-sm text-slate-500 mt-0.5">Chọn việc phù hợp tại Châu Thành & các vùng lân cận. Bắt đầu ngay.</p>
+                    <p class="text-sm text-slate-500 mt-0.5">Chọn việc phù hợp tại Châu Thành, Long Xuyên & các khu vực lân cận. Bắt đầu ngay.</p>
                 </div>
 
                 <!-- Banner nổi bật -->
@@ -68,10 +68,10 @@
                     </div>
                     <div class="relative z-10 max-w-lg">
                         <span class="bg-amber-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md inline-flex items-center mb-3 shadow-sm">
-                            <i class="fa-solid fa-bolt mr-1"></i> Cần người ngay tại Châu Thành
+                            <i class="fa-solid fa-bolt mr-1"></i> Cần người ngay
                         </span>
                         <h2 class="text-xl md:text-2xl font-bold leading-snug mb-2">Một chuyến giao hàng.<br>Một khoản thu nhập ngay.</h2>
-                        <p class="text-xs md:text-sm text-teal-100 mb-4 font-medium">Huyện Châu Thành &bull; Trong 30 phút &bull; 180.000đ / chuyến</p>
+                        <p class="text-xs md:text-sm text-teal-100 mb-4 font-medium">Trong 30 phút &bull; 180.000đ / chuyến</p>
                     </div>
                 </div>
 
@@ -79,7 +79,7 @@
                 <div class="space-y-3 mb-5">
                     <div class="relative">
                         <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400 text-sm"></i>
-                        <input type="text" id="searchInput" placeholder="Bạn muốn tìm việc gì ở Châu Thành, An Giang...?" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-600 transition">
+                        <input type="text" id="searchInput" placeholder="Bạn muốn tìm việc gì...?" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-600 transition">
                     </div>
                     <div class="relative">
                         <i class="fa-solid fa-location-dot absolute left-4 top-3.5 text-slate-500 text-sm"></i>
@@ -89,6 +89,8 @@
                             <option value="Long Xuyên">TP. Long Xuyên</option>
                             <option value="Quận 1">Quận 1</option>
                             <option value="Quận 3">Quận 3</option>
+                            <option value="Quận 7">Quận 7</option>
+                            <option value="Bình Thạnh">Bình Thạnh</option>
                         </select>
                         <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-xs text-slate-400 pointer-events-none"></i>
                     </div>
@@ -127,14 +129,13 @@
                 <div id="acceptedJobList" class="space-y-3"></div>
             </div>
 
-            <!-- TAB 3: TỔ CHỨC / ĐỐI TÁC (CÓ BỘ LỌC HUYỆN/TỈNH) -->
+            <!-- TAB 3: TỔ CHỨC / ĐỐI TÁC -->
             <div id="tabOrganization" class="tab-content hidden space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
                         <h1 class="text-2xl font-bold text-slate-900">Tổ chức & Đối tác</h1>
                         <p class="text-sm text-slate-500 mt-0.5">Danh sách các doanh nghiệp và đơn vị cung cấp dịch vụ tại địa bàn.</p>
                     </div>
-                    <!-- Thanh lọc khu vực nhanh -->
                     <div class="flex gap-2">
                         <select id="filterOrgDistrict" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:border-teal-600">
                             <option value="">Tất cả Quận / Huyện</option>
@@ -160,7 +161,7 @@
                     <div class="absolute bottom-4 left-4 right-4 bg-slate-800/90 backdrop-blur-md p-4 rounded-xl border border-slate-700 flex justify-between items-center text-white z-10">
                         <div>
                             <p class="text-xs text-teal-400 font-semibold uppercase tracking-wider">Trạm radar</p>
-                            <p id="mapSummaryText" class="text-sm font-bold">Đang quét khu vực Châu Thành...</p>
+                            <p id="mapSummaryText" class="text-sm font-bold">Đang quét khu vực...</p>
                         </div>
                         <span class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></span>
                     </div>
@@ -210,10 +211,6 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Số điện thoại liên hệ <span class="text-red-500">*</span></label>
-                        <input type="tel" id="jobPhoneInput" required placeholder="0901234567" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
-                    </div>
-                    <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Khu vực</label>
                         <select id="jobLocationInput" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
                             <option value="Châu Thành">Châu Thành</option>
@@ -222,8 +219,6 @@
                             <option value="Quận 3">Quận 3</option>
                         </select>
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Danh mục</label>
                         <select id="jobCategoryInput" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
@@ -233,10 +228,10 @@
                             <option value="service">Phục vụ</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Mức lương</label>
-                        <input type="text" id="jobSalaryInput" placeholder="180.000đ / chuyến" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
-                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mức lương <span class="text-red-500">*</span></label>
+                    <input type="text" id="jobSalaryInput" required placeholder="180.000đ / chuyến" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
                 </div>
                 <div class="flex items-center gap-2 pt-1">
                     <input type="checkbox" id="jobUrgentInput" class="w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500">
@@ -250,7 +245,7 @@
         </div>
     </div>
 
-    <!-- MODAL ĐĂNG KÝ TỔ CHỨC (PHÂN CẤP TỈNH -> HUYỆN -> XÃ) -->
+    <!-- MODAL ĐĂNG KÝ TỔ CHỨC -->
     <div id="orgModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
             <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
@@ -340,9 +335,6 @@
             </form>
         </div>
     </div>
-
-    <!-- CONTAINER MODAL ĐĂNG NHẬP -->
-    <div id="authModalContainer"></div>
 
     <!-- Script điều khiển chính -->
     <script src="script.js"></script>

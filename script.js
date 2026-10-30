@@ -689,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
         postJobModalContainer.innerHTML = `
             <div id="postJobModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
                 <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 p-6 space-y-4 relative">
-                    <button id="btnClosePostJobModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+                    <button type="button" id="btnClosePostJobModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
                     
                     <div class="text-center space-y-1">
                         <h2 class="text-lg font-bold text-slate-900">Đăng việc mới</h2>
@@ -760,8 +760,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function closePostJobModal() {
-        postJobModal?.classList.add('hidden');
-        postJobModal?.classList.remove('flex');
+        if (postJobModal) {
+            postJobModal.classList.add('hidden');
+            postJobModal.classList.remove('flex');
+        }
     }
 
     btnPostJob?.addEventListener('click', openPostJobModal);
@@ -769,7 +771,14 @@ document.addEventListener('DOMContentLoaded', () => {
     btnClosePostJobModal?.addEventListener('click', closePostJobModal);
     btnCancelPostJobModal?.addEventListener('click', closePostJobModal);
 
-    // 🔥 XỬ LÝ SUBMIT ĐĂNG VIỆC (CÓ GIỚI HẠN 10 VIỆC / NGÀY) 🔥
+    // Bấm ra ngoài vùng modal thì tự đóng
+    postJobModal?.addEventListener('click', (e) => {
+        if (e.target === postJobModal) {
+            closePostJobModal();
+        }
+    });
+
+    // XỬ LÝ SUBMIT ĐĂNG VIỆC (CÓ GIỚI HẠN 10 VIỆC / NGÀY & BẢO VỆ AN TOÀN LỖI)
     postJobForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const currentUser = getCurrentUser();
@@ -781,55 +790,56 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Lấy tất cả việc làm hiện có trên hệ thống
-        const allJobs = await fetchJobsFromCloud();
-        
-        // Xác định chuỗi ngày hiện tại (YYYY-MM-DD)
-        const todayStr = new Date().toISOString().split('T')[0];
+        try {
+            // Lấy tất cả việc làm hiện có trên hệ thống để đếm
+            const allJobs = await fetchJobsFromCloud();
+            const todayStr = new Date().toISOString().split('T')[0];
 
-        // Đếm số việc làm mà tài khoản này đã đăng trong ngày
-        const jobsTodayCount = allJobs.filter(job => {
-            const isOwner = job.phone === currentUser.phone;
-            let isToday = false;
-            if (job.created_at) {
-                isToday = job.created_at.startsWith(todayStr);
-            } else if (job.id) {
-                const jobDate = new Date(Number(job.id)).toISOString().split('T')[0];
-                isToday = jobDate === todayStr;
+            const jobsTodayCount = allJobs.filter(job => {
+                const isOwner = job.phone === currentUser.phone;
+                let isToday = false;
+                if (job.created_at) {
+                    isToday = job.created_at.startsWith(todayStr);
+                } else if (job.id) {
+                    const jobDate = new Date(Number(job.id)).toISOString().split('T')[0];
+                    isToday = jobDate === todayStr;
+                }
+                return isOwner && isToday;
+            }).length;
+
+            // KIỂM TRA GIỚI HẠN TỐI ĐA 10 VIỆC / NGÀY
+            if (jobsTodayCount >= 10) {
+                showToast('Bạn đã đạt giới hạn 10 việc/ngày!', 'error');
+                alert('Mỗi tài khoản chỉ được phép đăng tối đa 10 việc mỗi ngày. Vui lòng quay lại vào ngày mai!');
+                return;
             }
-            return isOwner && isToday;
-        }).length;
 
-        // 🛑 KIỂM TRA GIỚI HẠN TỐI ĐA 10 VIỆC / NGÀY
-        if (jobsTodayCount >= 10) {
-            showToast('Bạn đã đạt giới hạn 10 việc/ngày!', 'error');
-            alert('Mỗi tài khoản chỉ được phép đăng tối đa 10 việc mỗi ngày. Vui lòng quay lại vào ngày mai!');
-            return;
+            const newJob = {
+                id: Date.now(),
+                title: document.getElementById('jobTitleInput').value.trim(),
+                category: document.getElementById('jobCategoryInput').value,
+                location: document.getElementById('jobLocationInput').value,
+                salary: document.getElementById('jobSalaryInput').value.trim(),
+                is_urgent: document.getElementById('jobUrgentInput')?.checked || false,
+                created_by_name: currentUser.name,
+                phone: currentUser.phone,
+                created_at: new Date().toISOString()
+            };
+
+            if (!newJob.title || !newJob.salary) {
+                showToast('Vui lòng nhập tiêu đề và lương!', 'error');
+                return;
+            }
+
+            await saveJobToCloud(newJob);
+            closePostJobModal();
+            postJobForm.reset();
+            showToast(`Đăng việc thành công! (${jobsTodayCount + 1}/10 bài hôm nay)`);
+            renderJobs();
+        } catch (err) {
+            console.error(err);
+            showToast('Có lỗi xảy ra khi kết nối hệ thống!', 'error');
         }
-
-        // Tiến hành tạo đối tượng công việc mới
-        const newJob = {
-            id: Date.now(),
-            title: document.getElementById('jobTitleInput').value.trim(),
-            category: document.getElementById('jobCategoryInput').value,
-            location: document.getElementById('jobLocationInput').value,
-            salary: document.getElementById('jobSalaryInput').value.trim(),
-            is_urgent: document.getElementById('jobUrgentInput')?.checked || false,
-            created_by_name: currentUser.name,
-            phone: currentUser.phone,
-            created_at: new Date().toISOString()
-        };
-
-        if (!newJob.title || !newJob.salary) {
-            showToast('Vui lòng nhập tiêu đề và lương!', 'error');
-            return;
-        }
-
-        await saveJobToCloud(newJob);
-        closePostJobModal();
-        postJobForm.reset();
-        showToast(`Đăng việc thành công! (${jobsTodayCount + 1}/10 bài hôm nay)`);
-        renderJobs();
     });
 
     // Khởi tạo trạng thái ban đầu khi trang web load

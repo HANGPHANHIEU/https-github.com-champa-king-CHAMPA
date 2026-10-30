@@ -81,16 +81,25 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('my_jobs_list', JSON.stringify(jobs));
     }
 
+    // Kiểm tra và xóa công việc (Chỉ người tạo mới xóa được)
     function deleteJob(jobId) {
         let jobs = getJobs();
         const targetJob = jobs.find(j => j.id === jobId);
+        const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+
         if (!targetJob) return;
 
-        if (confirm('Bạn có chắc chắn muốn xóa công việc này không?')) {
+        // Kiểm tra quyền sở hữu bài đăng
+        if (!currentUser || targetJob.createdBy !== currentUser.phone) {
+            alert('Bạn chỉ có thể quản lý và xóa công việc do chính tài khoản của bạn đăng!');
+            return;
+        }
+
+        if (confirm(`Bạn có chắc muốn xóa công việc: "${targetJob.title}" không?`)) {
             jobs = jobs.filter(j => j.id !== jobId);
             localStorage.setItem('my_jobs_list', JSON.stringify(jobs));
             renderJobs();
-            showToast('Đã xóa công việc thành công.');
+            showToast('Đã xóa công việc khỏi danh sách.');
         }
     }
 
@@ -220,11 +229,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Render danh sách việc làm
+    // Hiển thị công việc trong danh sách
     function renderJobs() {
         if (!jobListContainer) return;
         const jobsList = getJobs();
         const acceptedList = getAcceptedJobs();
+        const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+        
         const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
         const selectedLocation = locationSelect ? locationSelect.value : '';
         const isUrgentOnly = urgentCheck ? urgentCheck.checked : false;
@@ -247,24 +258,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         filteredJobs.forEach(job => {
             const isAccepted = acceptedList.some(item => item.id === job.id);
+            const isMyJob = currentUser && currentUser.phone === job.createdBy;
+
             const card = document.createElement('div');
-            card.className = 'p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center transition hover:shadow-md';
+            card.className = `p-4 bg-white rounded-2xl border ${isMyJob ? 'border-teal-200 bg-teal-50/20' : 'border-slate-100'} shadow-sm flex justify-between items-center transition hover:shadow-md`;
             card.innerHTML = `
                 <div class="space-y-1">
                     <div class="flex items-center gap-2">
                         <h3 class="font-bold text-slate-800 text-sm md:text-base">${job.title}</h3>
                         ${job.isUrgent ? '<span class="px-2 py-0.5 text-[10px] bg-red-100 text-red-600 font-bold rounded-md">GẤP</span>' : ''}
+                        ${isMyJob ? '<span class="px-2 py-0.5 text-[10px] bg-teal-100 text-teal-700 font-bold rounded-md">CỦA BẠN</span>' : ''}
                     </div>
                     <p class="text-xs text-slate-500 font-medium">📍 ${job.location} &bull; 💰 ${job.salary}</p>
-                    <p class="text-xs text-teal-700 font-semibold">👤 Đăng bởi: ${job.createdByName || 'Ẩn danh'} &bull; 📞 ${job.phone || 'Chưa cập nhật'}</p>
+                    <p class="text-xs text-teal-700 font-semibold">👤 Đăng bởi: ${job.createdByName || 'Thành viên'} (${job.phone})</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button data-id="${job.id}" class="btn-accept px-3 py-1.5 text-xs font-semibold rounded-xl transition shadow-sm ${isAccepted ? 'bg-emerald-100 text-emerald-700 cursor-default' : 'bg-slate-900 hover:bg-slate-800 text-white'}">
-                        ${isAccepted ? 'Đã nhận' : 'Nhận việc'}
-                    </button>
-                    <button data-id="${job.id}" class="btn-delete-job px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs rounded-xl transition" title="Xóa việc">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                    ${isMyJob ? `
+                        <button data-id="${job.id}" class="btn-delete-job px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-600 text-xs font-bold rounded-xl transition flex items-center gap-1">
+                            <i class="fa-solid fa-trash"></i> Xóa bài
+                        </button>
+                    ` : `
+                        <button data-id="${job.id}" class="btn-accept px-3 py-1.5 text-xs font-semibold rounded-xl transition shadow-sm ${isAccepted ? 'bg-emerald-100 text-emerald-700 cursor-default' : 'bg-slate-900 hover:bg-slate-800 text-white'}">
+                            ${isAccepted ? 'Đã nhận' : 'Nhận việc'}
+                        </button>
+                    `}
                 </div>
             `;
             jobListContainer.appendChild(card);
@@ -444,7 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnJoinOrg = document.getElementById('btnJoinOrg');
     const btnCloseOrgModal = document.getElementById('btnCloseOrgModal');
     const btnCancelOrgModal = document.getElementById('btnCancelOrgModal');
-    const orgForm = document.getElementById('orgForm');
 
     const workerModal = document.getElementById('workerModal');
     const btnRegisterWorker = document.getElementById('btnRegisterWorker');

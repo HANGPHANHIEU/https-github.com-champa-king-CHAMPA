@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- ⚙️ CẤU HÌNH THÔNG SỐ KẾT NỐI SUPABASE CỦA BẠN ---
-    const SUPABASE_URL = 'https://DÚN_G_URL_CỦA_BẠN.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'DÁN_ANON_KEY_CỦA_BẠN_VÀO_ĐÂY';
+    const SUPABASE_URL = 'https://rznzypehvmwysxmjxxxp.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'Hangphanhieuhuucothienha7';
 
     const headers = {
         'apikey': SUPABASE_ANON_KEY,

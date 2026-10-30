@@ -391,11 +391,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedDistrict = document.getElementById('filterOrgDistrict')?.value || '';
         const cloudOrgs = await fetchOrgsFromCloud();
         
-        const orgs = cloudOrgs.filter(o => {
+        const orgs = Array.isArray(cloudOrgs) ? cloudOrgs.filter(o => {
             const matchStatus = o.status === 'approved';
             const matchDist = !selectedDistrict || (o.district && o.district.toLowerCase().includes(selectedDistrict.toLowerCase()));
             return matchStatus && matchDist;
-        });
+        }) : [];
 
         const workers = getWorkers().filter(w => {
             const matchStatus = w.status === 'approved';
@@ -460,7 +460,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchJobsFromCloud() {
         try {
             const res = await fetch(`${SUPABASE_URL}/rest/v1/jobs?select=*&order=id.desc`, { headers });
-            return await res.json();
+            const data = await res.json();
+            return Array.isArray(data) ? data : [];
         } catch (e) { return []; }
     }
 
@@ -768,7 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // XỬ LÝ SUBMIT ĐĂNG VIỆC AN TOÀN & GIỚI HẠN 10 VIỆC/NGÀY
+    // XỬ LÝ SUBMIT ĐĂNG VIỆC TỐI ƯU CHỐNG LỖI RLS SUPABASE
     postJobForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const currentUser = getCurrentUser();
@@ -781,18 +782,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Kiểm tra số lượng việc đã đăng trong ngày
+            // Kiểm tra số bài đã đăng trong ngày
             const allJobs = await fetchJobsFromCloud();
             const todayStr = new Date().toISOString().split('T')[0];
 
-            const jobsTodayCount = allJobs.filter(job => {
+            const jobsTodayCount = Array.isArray(allJobs) ? allJobs.filter(job => {
                 const isOwner = job.phone === currentUser.phone;
                 if (!isOwner) return false;
                 if (job.created_at) {
                     return String(job.created_at).startsWith(todayStr);
                 }
-                return true; // Nếu bảng chưa có created_at thì đếm tổng số bài của user để an toàn
-            }).length;
+                return true;
+            }).length : 0;
 
             if (jobsTodayCount >= 10) {
                 showToast('Bạn đã đạt giới hạn 10 việc/ngày!', 'error');
@@ -815,16 +816,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Gửi dữ liệu không yêu cầu phản hồi dữ liệu phức tạp để tránh lỗi định dạng
             const res = await fetch(`${SUPABASE_URL}/rest/v1/jobs`, {
                 method: 'POST',
-                headers,
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
                 body: JSON.stringify(newJob)
             });
 
             if (!res.ok) {
-                const errText = await res.text();
-                console.error("Supabase error:", errText);
-                throw new Error('Lỗi lưu vào cơ sở dữ liệu');
+                const errDetail = await res.text();
+                console.error("Supabase Error:", errDetail);
+                if (errDetail.includes("row-level security") || errDetail.includes("policy")) {
+                    alert("Lỗi Supabase: Bạn cần vào Supabase > Table Editor > bảng 'jobs' > Tắt chế độ RLS (Disable RLS).");
+                } else {
+                    alert("Lỗi lưu vào Supabase: " + errDetail);
+                }
+                return;
             }
 
             closePostJobModal();
@@ -832,8 +844,8 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(`Đăng việc thành công! (${jobsTodayCount + 1}/10 bài hôm nay)`);
             renderJobs();
         } catch (err) {
-            console.error(err);
-            showToast('Đăng việc thất bại, vui lòng thử lại!', 'error');
+            console.error("Fetch Exception:", err);
+            showToast('Không thể kết nối đến máy chủ!', 'error');
         }
     });
 

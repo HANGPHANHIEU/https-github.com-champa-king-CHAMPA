@@ -21,3 +21,11 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+/* Tùy chỉnh vùng lướt ngang mượt mà cho danh sách Tổ chức & Cá nhân */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

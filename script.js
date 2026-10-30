@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAuthButtonUI();
         renderJobs();
         renderAcceptedJobs();
+        updateTrashUI(); // Cập nhật giao diện thùng rác khi đổi user
     };
 
     // Tự động tạo Modal Đăng nhập / Đăng ký / Quên mật khẩu
@@ -253,7 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const userIndex = users.findIndex(u => u.phone === phone);
 
         if (userIndex !== -1) {
-            // Cập nhật mật khẩu mới cho tài khoản
             users[userIndex].password = newPassword;
             localStorage.setItem('app_registered_users', JSON.stringify(users));
 
@@ -631,7 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // --- 5. GIAO DIỆN & RENDER CHÍNH ---
+    // --- 5. GIAO DIỆN & RENDER CHÍNH (ĐÃ THÊM TÍNH NĂNG XÓA BÀI & THÙNG RÁC) ---
     const searchInput = document.getElementById('searchInput');
     const locationSelect = document.getElementById('locationSelect');
     const urgentCheck = document.getElementById('urgentCheck');
@@ -657,6 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!jobListContainer) return;
         const jobsList = await fetchJobsFromCloud();
         const acceptedList = getAcceptedJobs();
+        const deletedJobs = getDeletedJobs(); // Lấy danh sách thùng rác
         const currentUser = getCurrentUser();
 
         const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -664,6 +665,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const isUrgentOnly = urgentCheck ? urgentCheck.checked : false;
 
         const filtered = jobsList.filter(job => {
+            // Lọc bỏ các bài đã có trong thùng rác
+            if (deletedJobs.some(d => String(d.id) === String(job.id))) return false;
+
             const matchesKw = job.title?.toLowerCase().includes(keyword) || job.location?.toLowerCase().includes(keyword);
             const matchesLoc = !selectedLocation || job.location === selectedLocation;
             const matchesCat = currentCategory === 'all' || job.category === currentCategory;
@@ -675,7 +679,10 @@ document.addEventListener('DOMContentLoaded', () => {
         jobListContainer.innerHTML = '';
 
         if (filtered.length === 0) {
-            jobListContainer.innerHTML = `<div class="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200"><p class="text-slate-400 text-sm">Không tìm thấy công việc phù hợp trên hệ thống.</p></div>`;
+            jobListContainer.innerHTML = `
+                <div class="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    <p class="text-slate-400 text-sm">Không tìm thấy công việc phù hợp.</p>
+                </div>`;
             return;
         }
 
@@ -696,6 +703,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-xs text-teal-700 font-semibold">👤 Đăng bởi: ${job.created_by_name || 'Thành viên'} (${job.phone})</p>
                 </div>
                 <div class="flex items-center gap-2">
+                    ${isMyJob ? `
+                        <button data-id="${job.id}" class="btn-delete-job px-3 py-1.5 text-xs font-semibold rounded-xl bg-red-50 hover:bg-red-100 text-red-600 transition flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can"></i> Xóa
+                        </button>
+                    ` : ''}
                     <button data-id="${job.id}" class="btn-accept px-3 py-1.5 text-xs font-semibold rounded-xl transition ${isAccepted ? 'bg-emerald-100 text-emerald-700 cursor-default' : 'bg-slate-900 hover:bg-slate-800 text-white'}">
                         ${isAccepted ? 'Đã nhận' : 'Nhận việc'}
                     </button>
@@ -704,6 +716,41 @@ document.addEventListener('DOMContentLoaded', () => {
             jobListContainer.appendChild(card);
         });
 
+        // Xử lý nút Xóa bài đăng (Đưa vào Thùng rác)
+        document.querySelectorAll('.btn-delete-job').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const jobId = e.currentTarget.getAttribute('data-id');
+                
+                if (confirm('Bạn có chắc chắn muốn chuyển bài viết này vào Thùng rác không?')) {
+                    const targetJob = filtered.find(j => String(j.id) === String(jobId));
+
+                    if (targetJob) {
+                        const deleted = getDeletedJobs();
+                        deleted.unshift({
+                            ...targetJob,
+                            deletedAt: new Date().toLocaleString('vi-VN')
+                        });
+                        saveDeletedJobs(deleted);
+
+                        // Đồng thời xóa khỏi Supabase nếu cần
+                        try {
+                            await fetch(`${SUPABASE_URL}/rest/v1/jobs?id=eq.${jobId}`, {
+                                method: 'DELETE',
+                                headers: headers
+                            });
+                        } catch (err) {}
+
+                        showToast('Đã chuyển bài viết vào Thùng rác!');
+                        renderJobs();
+                    } else {
+                        alert('Không tìm thấy bài viết để xóa!');
+                    }
+                }
+            });
+        });
+
+        // Xử lý nút Nhận việc
         document.querySelectorAll('.btn-accept').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const id = Number(e.currentTarget.getAttribute('data-id'));
@@ -723,11 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ...target, 
                         checkedIn: false, 
                         rating: null,
-                        acceptedBy: { 
-                            name: currentUser.name, 
-                            phone: currentUser.phone, 
-                            time: new Date().toLocaleString('vi-VN') 
-                        }
+                        acceptedBy: { name: currentUser.name, phone: currentUser.phone, time: new Date().toLocaleString('vi-VN') }
                     });
                     localStorage.setItem('accepted_jobs_list', JSON.stringify(accepted));
                     showToast('Nhận việc thành công!');
@@ -738,186 +781,135 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
+    // --- 6. HỆ THỐNG QUẢN LÝ THÙNG RÁC (RECYCLE BIN) ---
+    function getDeletedJobs() {
+        try {
+            return JSON.parse(localStorage.getItem('app_deleted_jobs') || '[]');
+        } catch (e) { return []; }
+    }
+
+    function saveDeletedJobs(list) {
+        localStorage.setItem('app_deleted_jobs', JSON.stringify(list));
+        updateTrashUI();
+    }
+
+    function updateTrashUI() {
+        const currentUser = getCurrentUser();
+        const deleted = getDeletedJobs();
+        const myDeleted = currentUser ? deleted.filter(j => j.phone === currentUser.phone) : [];
+        const badge = document.getElementById('trashBadge');
+        if (badge) {
+            if (myDeleted.length > 0) {
+                badge.textContent = myDeleted.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+    }
+
+    const btnOpenTrash = document.getElementById('btnOpenTrash');
+    const trashModal = document.getElementById('trashModal');
+    const btnCloseTrashModal = document.getElementById('btnCloseTrashModal');
+    const trashList = document.getElementById('trashList');
+    const btnEmptyTrash = document.getElementById('btnEmptyTrash');
+
+    function renderTrashModal() {
+        const currentUser = getCurrentUser();
+        const deleted = getDeletedJobs();
+        const myDeleted = currentUser ? deleted.filter(j => j.phone === currentUser.phone) : [];
+
+        if (!trashList) return;
+        trashList.innerHTML = '';
+
+        if (!currentUser) {
+            trashList.innerHTML = `<p class="text-center text-slate-400 text-xs py-8">Vui lòng đăng nhập để xem thùng rác.</p>`;
+            return;
+        }
+
+        if (myDeleted.length === 0) {
+            trashList.innerHTML = `<p class="text-center text-slate-400 text-xs py-8">Thùng rác trống.</p>`;
+            return;
+        }
+
+        myDeleted.forEach(job => {
+            const item = document.createElement('div');
+            item.className = "p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center";
+            item.innerHTML = `
+                <div class="space-y-0.5">
+                    <h4 class="font-bold text-slate-800 text-sm">${job.title}</h4>
+                    <p class="text-[11px] text-slate-500">📍 ${job.location} &bull; 💰 ${job.salary}</p>
+                    <p class="text-[10px] text-red-500">Đã xóa: ${job.deletedAt || 'Gần đây'}</p>
+                </div>
+                <div class="flex gap-2">
+                    <button data-id="${job.id}" class="btn-restore-job px-2.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-lg transition">Khôi phục</button>
+                    <button data-id="${job.id}" class="btn-perm-delete px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg transition">Xóa hẳn</button>
+                </div>
+            `;
+            trashList.appendChild(item);
+        });
+
+        // Khôi phục bài viết
+        document.querySelectorAll('.btn-restore-job').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                let deleted = getDeletedJobs();
+                deleted = deleted.filter(j => String(j.id) !== String(id));
+                saveDeletedJobs(deleted);
+                showToast('Đã khôi phục bài viết thành công!');
+                renderTrashModal();
+                renderJobs();
+            });
+        });
+
+        // Xóa vĩnh viễn từng bài
+        document.querySelectorAll('.btn-perm-delete').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                if (confirm('Bạn có chắc muốn xóa VĨNH VIỄN bài này không?')) {
+                    let deleted = getDeletedJobs();
+                    deleted = deleted.filter(j => String(j.id) !== String(id));
+                    saveDeletedJobs(deleted);
+                    showToast('Đã xóa vĩnh viễn bài viết!');
+                    renderTrashModal();
+                    renderJobs();
+                }
+            });
+        });
+    }
+
+    btnOpenTrash?.addEventListener('click', () => {
+        renderTrashModal();
+        trashModal?.classList.remove('hidden');
+        trashModal?.classList.add('flex');
+    });
+
+    btnCloseTrashModal?.addEventListener('click', () => {
+        trashModal?.classList.add('hidden');
+        trashModal?.classList.remove('flex');
+    });
+
+    btnEmptyTrash?.addEventListener('click', () => {
+        const currentUser = getCurrentUser();
+        if (!currentUser) return;
+        if (confirm('Dọn sạch thùng rác của bạn?')) {
+            let deleted = getDeletedJobs();
+            deleted = deleted.filter(j => j.phone !== currentUser.phone);
+            saveDeletedJobs(deleted);
+            showToast('Đã dọn sạch thùng rác!');
+            renderTrashModal();
+            renderJobs();
+        }
+    });
+
+    // --- 7. LẮNG NGHE SỰ KIỆN TÌM KIẾM & BỘ LỌC ---
     searchInput?.addEventListener('input', renderJobs);
     locationSelect?.addEventListener('change', renderJobs);
     urgentCheck?.addEventListener('change', renderJobs);
 
-
-    // --- 6. XỬ LÝ MODAL ĐĂNG VIỆC & KHỎI TẠO TỰ ĐỘNG ---
-    if (!document.getElementById('postJobModal')) {
-        const postJobModalContainer = document.createElement('div');
-        postJobModalContainer.id = 'postJobModalContainer';
-        postJobModalContainer.innerHTML = `
-            <div id="postJobModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-                <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 p-6 space-y-4 relative">
-                    <button type="button" id="btnClosePostJobModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
-                    
-                    <div class="text-center space-y-1">
-                        <h2 class="text-lg font-bold text-slate-900">Đăng việc mới</h2>
-                        <p class="text-xs text-slate-500">Mỗi tài khoản được đăng tối đa 10 việc/ngày</p>
-                    </div>
-
-                    <form id="postJobForm" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tiêu đề công việc</label>
-                            <input type="text" id="jobTitleInput" required placeholder="Ví dụ: Cần giao hàng hỏa tốc" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Danh mục</label>
-                                <select id="jobCategoryInput" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
-                                    <option value="shipper">Giao hàng</option>
-                                    <option value="driver">Tài xế</option>
-                                    <option value="housework">Giúp việc</option>
-                                    <option value="other">Khác</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Khu vực</label>
-                                <select id="jobLocationInput" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
-                                    <option value="Châu Thành">Châu Thành</option>
-                                    <option value="Long Xuyên">Long Xuyên</option>
-                                    <option value="Châu Đốc">Châu Đốc</option>
-                                    <option value="Chợ Mới">Chợ Mới</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Mức lương / Thù lao</label>
-                            <input type="text" id="jobSalaryInput" required placeholder="Ví dụ: 200.000 VNĐ / ngày" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
-                        </div>
-                        <div class="flex items-center gap-2 pt-1">
-                            <input type="checkbox" id="jobUrgentInput" class="w-4 h-4 text-teal-600 rounded">
-                            <label for="jobUrgentInput" class="text-xs font-semibold text-red-600">Tuyển gấp (Đánh dấu nổi bật)</label>
-                        </div>
-                        <div class="flex gap-2 pt-2">
-                            <button type="button" id="btnCancelPostJobModal" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-sm transition">Hủy</button>
-                            <button type="submit" class="w-1/2 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl text-sm transition shadow-sm">Đăng ngay</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(postJobModalContainer);
-    }
-
-    const postJobModal = document.getElementById('postJobModal');
-    const btnPostJob = document.getElementById('btnPostJob');
-    const btnFloatingPostJob = document.getElementById('btnFloatingPostJob');
-    const btnClosePostJobModal = document.getElementById('btnClosePostJobModal');
-    const btnCancelPostJobModal = document.getElementById('btnCancelPostJobModal');
-    const postJobForm = document.getElementById('postJobForm');
-
-    function openPostJobModal() {
-        const currentUser = getCurrentUser();
-        if (!currentUser) {
-            showToast('Vui lòng đăng nhập để đăng bài!', 'error');
-            showLoginForm();
-            authModal?.classList.remove('hidden');
-            authModal?.classList.add('flex');
-            return;
-        }
-        postJobModal?.classList.remove('hidden');
-        postJobModal?.classList.add('flex');
-    }
-
-    function closePostJobModal() {
-        if (postJobModal) {
-            postJobModal.classList.add('hidden');
-            postJobModal.classList.remove('flex');
-        }
-    }
-
-    btnPostJob?.addEventListener('click', openPostJobModal);
-    btnFloatingPostJob?.addEventListener('click', openPostJobModal);
-    btnClosePostJobModal?.addEventListener('click', closePostJobModal);
-    btnCancelPostJobModal?.addEventListener('click', closePostJobModal);
-
-    postJobModal?.addEventListener('click', (e) => {
-        if (e.target === postJobModal) {
-            closePostJobModal();
-        }
-    });
-
-    postJobForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const currentUser = getCurrentUser();
-
-        if (!currentUser) {
-            showToast('Vui lòng đăng nhập để đăng việc!', 'error');
-            showLoginForm();
-            authModal?.classList.remove('hidden');
-            authModal?.classList.add('flex');
-            return;
-        }
-
-        try {
-            const allJobs = await fetchJobsFromCloud();
-            const todayStr = new Date().toISOString().split('T')[0];
-
-            const jobsTodayCount = Array.isArray(allJobs) ? allJobs.filter(job => {
-                const isOwner = job.phone === currentUser.phone;
-                if (!isOwner) return false;
-                if (job.created_at) {
-                    return String(job.created_at).startsWith(todayStr);
-                }
-                return true;
-            }).length : 0;
-
-            if (jobsTodayCount >= 10) {
-                showToast('Bạn đã đạt giới hạn 10 việc/ngày!', 'error');
-                alert('Mỗi tài khoản chỉ được phép đăng tối đa 10 việc mỗi ngày. Vui lòng quay lại vào ngày mai!');
-                return;
-            }
-
-            const newJob = {
-                title: document.getElementById('jobTitleInput').value.trim(),
-                category: document.getElementById('jobCategoryInput').value,
-                location: document.getElementById('jobLocationInput').value,
-                salary: document.getElementById('jobSalaryInput').value.trim(),
-                is_urgent: document.getElementById('jobUrgentInput')?.checked || false,
-                created_by_name: currentUser.name,
-                phone: currentUser.phone
-            };
-
-            if (!newJob.title || !newJob.salary) {
-                showToast('Vui lòng nhập tiêu đề và lương!', 'error');
-                return;
-            }
-
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/jobs`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify(newJob)
-            });
-
-            if (!res.ok) {
-                const errDetail = await res.text();
-                console.error("Supabase Error:", errDetail);
-                if (errDetail.includes("row-level security") || errDetail.includes("policy")) {
-                    alert("Lỗi Supabase: Bạn cần vào Supabase > Table Editor > bảng 'jobs' > Tắt chế độ RLS (Disable RLS).");
-                } else {
-                    alert("Lỗi lưu vào Supabase: " + errDetail);
-                }
-                return;
-            }
-
-            closePostJobModal();
-            postJobForm.reset();
-            showToast(`Đăng việc thành công! (${jobsTodayCount + 1}/10 bài hôm nay)`);
-            renderJobs();
-        } catch (err) {
-            console.error("Fetch Exception:", err);
-            showToast('Không thể kết nối đến máy chủ!', 'error');
-        }
-    });
-
-    // Khởi tạo trạng thái ban đầu khi trang web load
+    // Khởi tạo ban đầu
     updateAuthButtonUI();
+    updateTrashUI();
     renderJobs();
 });

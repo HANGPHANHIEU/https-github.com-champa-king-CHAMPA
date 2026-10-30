@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ⚙️ CẤU HÌNH THÔNG SỐ KẾT NỐI SUPABASE CỦA BẠN ---
     const SUPABASE_URL = 'https://rznzypehvmwysxmjxxxp.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6bnp5cGVodm13eXN4bWp4eHhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNTkxNTYsImV4cCI6MjEwODkzNTE1Nn0.B-5onxhT0EoqgtJ0ZP-ZbGSz4Gmo7xuRPEcsAYz65wA';
+    const SUPABASE_ANON_KEY = 'Hangphanhieuhuucothienha7';
 
     const headers = {
         'apikey': SUPABASE_ANON_KEY,
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAcceptedJobs();
     };
 
-    // Tự động tạo Modal Đăng nhập / Đăng ký nếu chưa có trong HTML
+    // Tự động tạo Modal Đăng nhập / Đăng ký / Quên mật khẩu
     if (!document.getElementById('authModal')) {
         const authContainer = document.createElement('div');
         authContainer.id = 'authModalContainer';
@@ -46,17 +46,20 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i class="fa-solid fa-user-gear"></i>
                         </div>
                         <h2 id="authTitle" class="text-lg font-bold text-slate-900">Đăng nhập tài khoản</h2>
-                        <p class="text-xs text-slate-500">Đăng nhập để nhận việc, đăng việc & quản lý bài</p>
+                        <p id="authSubtitle" class="text-xs text-slate-500">Đăng nhập để nhận việc, đăng việc & quản lý bài</p>
                     </div>
 
-                    <!-- Form Đăng Nhập -->
+                    <!-- 1. Form Đăng Nhập -->
                     <form id="loginForm" class="space-y-3">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Số điện thoại</label>
                             <input type="tel" id="loginPhoneInput" required placeholder="0901234567" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu</label>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-semibold text-slate-700">Mật khẩu</label>
+                                <a href="#" id="switchToForgot" class="text-[11px] text-teal-600 hover:underline">Quên mật khẩu?</a>
+                            </div>
                             <input type="password" id="loginPasswordInput" required placeholder="••••••••" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
                         </div>
                         <button type="submit" class="w-full py-2.5 bg-[#0d9488] hover:bg-teal-700 text-white font-medium rounded-xl transition text-sm shadow-sm">
@@ -67,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </p>
                     </form>
 
-                    <!-- Form Đăng Ký -->
+                    <!-- 2. Form Đăng Ký -->
                     <form id="registerForm" class="space-y-3 hidden">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Họ và tên</label>
@@ -78,14 +81,32 @@ document.addEventListener('DOMContentLoaded', () => {
                             <input type="tel" id="regPhoneInput" required placeholder="0901234567" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu</label>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
                             <input type="password" id="regPasswordInput" required placeholder="••••••••" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
                         </div>
                         <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition text-sm shadow-sm">
                             Tạo tài khoản mới
                         </button>
                         <p class="text-xs text-center text-slate-500 pt-1">
-                            Đã có tài khoản? <a href="#" id="switchToLogin" class="text-teal-600 font-bold hover:underline">Đăng nhập</a>
+                            Đã có tài khoản? <a href="#" id="switchToLoginFromReg" class="text-teal-600 font-bold hover:underline">Đăng nhập</a>
+                        </p>
+                    </form>
+
+                    <!-- 3. Form Quên / Đổi Mật Khẩu -->
+                    <form id="forgotForm" class="space-y-3 hidden">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Số điện thoại đăng ký</label>
+                            <input type="tel" id="forgotPhoneInput" required placeholder="0901234567" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
+                            <input type="password" id="forgotNewPasswordInput" required placeholder="Nhập mật khẩu mới" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                        </div>
+                        <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition text-sm shadow-sm">
+                            Đặt lại mật khẩu
+                        </button>
+                        <p class="text-xs text-center text-slate-500 pt-1">
+                            Nhớ mật khẩu? <a href="#" id="switchToLoginFromForgot" class="text-teal-600 font-bold hover:underline">Quay lại Đăng nhập</a>
                         </p>
                     </form>
                 </div>
@@ -101,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (btnLoginAccount && loginBtnText) {
             if (currentUser) {
-                loginBtnText.textContent = currentUser.name.split(' ').pop();
+                loginBtnText.textContent = currentUser.name ? currentUser.name.split(' ').pop() : 'Tài khoản';
                 btnLoginAccount.title = `Đang đăng nhập: ${currentUser.name}\nBấm để đăng xuất`;
                 btnLoginAccount.className = "bg-teal-50 text-teal-700 border border-teal-200 font-medium px-3 py-2 rounded-xl text-xs flex items-center transition shadow-sm";
             } else {
@@ -117,9 +138,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCloseAuthModal = document.getElementById('btnCloseAuthModal');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
+    const forgotForm = document.getElementById('forgotForm');
     const authTitle = document.getElementById('authTitle');
+    const authSubtitle = document.getElementById('authSubtitle');
+
     const switchToRegister = document.getElementById('switchToRegister');
-    const switchToLogin = document.getElementById('switchToLogin');
+    const switchToForgot = document.getElementById('switchToForgot');
+    const switchToLoginFromReg = document.getElementById('switchToLoginFromReg');
+    const switchToLoginFromForgot = document.getElementById('switchToLoginFromForgot');
 
     if (btnLoginAccount) {
         btnLoginAccount.addEventListener('click', (e) => {
@@ -131,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast('Đã đăng xuất tài khoản thành công.');
                 }
             } else {
+                showLoginForm();
                 authModal?.classList.remove('hidden');
                 authModal?.classList.add('flex');
             }
@@ -142,20 +169,37 @@ document.addEventListener('DOMContentLoaded', () => {
         authModal?.classList.remove('flex');
     });
 
-    switchToRegister?.addEventListener('click', (e) => {
-        e.preventDefault();
+    // Hàm chuyển đổi giữa các Form
+    function showLoginForm() {
+        loginForm?.classList.remove('hidden');
+        registerForm?.classList.add('hidden');
+        forgotForm?.classList.add('hidden');
+        if (authTitle) authTitle.textContent = 'Đăng nhập tài khoản';
+        if (authSubtitle) authSubtitle.textContent = 'Đăng nhập để nhận việc, đăng việc & quản lý bài';
+    }
+
+    function showRegisterForm() {
         loginForm?.classList.add('hidden');
         registerForm?.classList.remove('hidden');
+        forgotForm?.classList.add('hidden');
         if (authTitle) authTitle.textContent = 'Đăng ký tài khoản mới';
-    });
+        if (authSubtitle) authSubtitle.textContent = 'Tạo tài khoản nhanh để sử dụng dịch vụ';
+    }
 
-    switchToLogin?.addEventListener('click', (e) => {
-        e.preventDefault();
+    function showForgotForm() {
+        loginForm?.classList.add('hidden');
         registerForm?.classList.add('hidden');
-        loginForm?.classList.remove('hidden');
-        if (authTitle) authTitle.textContent = 'Đăng nhập tài khoản';
-    });
+        forgotForm?.classList.remove('hidden');
+        if (authTitle) authTitle.textContent = 'Khôi phục mật khẩu';
+        if (authSubtitle) authSubtitle.textContent = 'Nhập SĐT để thiết lập mật khẩu mới';
+    }
 
+    switchToRegister?.addEventListener('click', (e) => { e.preventDefault(); showRegisterForm(); });
+    switchToForgot?.addEventListener('click', (e) => { e.preventDefault(); showForgotForm(); });
+    switchToLoginFromReg?.addEventListener('click', (e) => { e.preventDefault(); showLoginForm(); });
+    switchToLoginFromForgot?.addEventListener('click', (e) => { e.preventDefault(); showLoginForm(); });
+
+    // Xử lý Đăng Nhập
     loginForm?.addEventListener('submit', (e) => {
         e.preventDefault();
         const phone = document.getElementById('loginPhoneInput').value.trim();
@@ -175,6 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Xử lý Đăng Ký
     registerForm?.addEventListener('submit', (e) => {
         e.preventDefault();
         const name = document.getElementById('regNameInput').value.trim();
@@ -196,6 +241,28 @@ document.addEventListener('DOMContentLoaded', () => {
         authModal?.classList.remove('flex');
         registerForm.reset();
         showToast('Đăng ký tài khoản thành công!');
+    });
+
+    // Xử lý Quên / Đặt lại mật khẩu
+    forgotForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const phone = document.getElementById('forgotPhoneInput').value.trim();
+        const newPassword = document.getElementById('forgotNewPasswordInput').value.trim();
+
+        const users = JSON.parse(localStorage.getItem('app_registered_users') || '[]');
+        const userIndex = users.findIndex(u => u.phone === phone);
+
+        if (userIndex !== -1) {
+            // Cập nhật mật khẩu mới cho tài khoản
+            users[userIndex].password = newPassword;
+            localStorage.setItem('app_registered_users', JSON.stringify(users));
+
+            alert(`Đặt lại mật khẩu thành công cho tài khoản ${users[userIndex].name}!\nVui lòng đăng nhập lại bằng mật khẩu mới.`);
+            forgotForm.reset();
+            showLoginForm();
+        } else {
+            alert('Số điện thoại này chưa được đăng ký thành viên trên hệ thống!');
+        }
     });
 
 
@@ -262,6 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentUser = getCurrentUser();
             if (!currentUser) {
                 showToast('Vui lòng đăng ký hoặc đăng nhập tài khoản trước!', 'error');
+                showLoginForm();
                 authModal?.classList.remove('hidden');
                 authModal?.classList.add('flex');
                 return;
@@ -318,7 +386,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchOrgsFromCloud() {
         try {
             const res = await fetch(`${SUPABASE_URL}/rest/v1/organizations?select=*&order=id.desc`, { headers });
-            return await res.json();
+            const data = await res.json();
+            return Array.isArray(data) ? data : [];
         } catch (e) { return []; }
     }
 
@@ -337,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentUser = getCurrentUser();
             if (!currentUser) {
                 showToast('Vui lòng đăng ký hoặc đăng nhập tài khoản trước!', 'error');
+                showLoginForm();
                 authModal?.classList.remove('hidden');
                 authModal?.classList.add('flex');
                 return;
@@ -383,7 +453,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderOrganizations();
     });
 
-    // Render Tab Tổ chức (Có lọc theo Quận/Huyện)
     window.renderOrganizations = async function() {
         const orgListContainer = document.getElementById('orgList');
         if (!orgListContainer) return;
@@ -642,6 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!currentUser) {
                     showToast('Vui lòng đăng nhập để nhận việc!', 'error');
+                    showLoginForm();
                     authModal?.classList.remove('hidden');
                     authModal?.classList.add('flex');
                     return;
@@ -742,6 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentUser = getCurrentUser();
         if (!currentUser) {
             showToast('Vui lòng đăng nhập để đăng bài!', 'error');
+            showLoginForm();
             authModal?.classList.remove('hidden');
             authModal?.classList.add('flex');
             return;
@@ -762,27 +833,25 @@ document.addEventListener('DOMContentLoaded', () => {
     btnClosePostJobModal?.addEventListener('click', closePostJobModal);
     btnCancelPostJobModal?.addEventListener('click', closePostJobModal);
 
-    // Bấm ra ngoài vùng modal thì tự đóng
     postJobModal?.addEventListener('click', (e) => {
         if (e.target === postJobModal) {
             closePostJobModal();
         }
     });
 
-    // XỬ LÝ SUBMIT ĐĂNG VIỆC TỐI ƯU CHỐNG LỖI RLS SUPABASE
     postJobForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const currentUser = getCurrentUser();
 
         if (!currentUser) {
             showToast('Vui lòng đăng nhập để đăng việc!', 'error');
+            showLoginForm();
             authModal?.classList.remove('hidden');
             authModal?.classList.add('flex');
             return;
         }
 
         try {
-            // Kiểm tra số bài đã đăng trong ngày
             const allJobs = await fetchJobsFromCloud();
             const todayStr = new Date().toISOString().split('T')[0];
 
@@ -816,7 +885,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Gửi dữ liệu không yêu cầu phản hồi dữ liệu phức tạp để tránh lỗi định dạng
             const res = await fetch(`${SUPABASE_URL}/rest/v1/jobs`, {
                 method: 'POST',
                 headers: {

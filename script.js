@@ -390,6 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('my_jobs_list', JSON.stringify(jobs));
     }
 
+    // --- PHÂN QUYỀN XÓA VIỆC: CHỈ ADMIN HOẶC CHÍNH CHỦ MỚI XÓA ĐƯỢC ---
     function deleteJob(jobId) {
         let jobs = getJobs();
         const targetJob = jobs.find(j => j.id === jobId);
@@ -397,8 +398,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!targetJob) return;
 
-        if (!currentUser || targetJob.createdBy !== currentUser.phone) {
-            alert('Bạn chỉ có thể xóa công việc do chính tài khoản của bạn đăng!');
+        // Kiểm tra xem có phải tài khoản Admin hay không
+        const isAdmin = localStorage.getItem('is_admin_logged') === 'true' || (currentUser && currentUser.role === 'admin');
+        // Kiểm tra xem có phải chính chủ bài đăng không
+        const isOwner = currentUser && targetJob.createdBy === currentUser.phone;
+
+        if (!isAdmin && !isOwner) {
+            alert('Bạn không có quyền xóa công việc này! Chỉ có Quản trị viên hoặc chính người đăng mới có quyền quản lý.');
             return;
         }
 
@@ -488,6 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const jobsList = getJobs();
         const acceptedList = getAcceptedJobs();
         const currentUser = getCurrentUser();
+        const isAdmin = localStorage.getItem('is_admin_logged') === 'true' || (currentUser && currentUser.role === 'admin');
 
         const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
         const selectedLocation = locationSelect ? locationSelect.value : '';
@@ -512,6 +519,8 @@ document.addEventListener('DOMContentLoaded', () => {
         filtered.forEach(job => {
             const isAccepted = acceptedList.some(item => item.id === job.id);
             const isMyJob = currentUser && currentUser.phone === job.createdBy;
+            // Chỉ hiển thị nút xóa nếu là chủ bài viết HOẶC là Admin
+            const canDelete = isMyJob || isAdmin;
 
             const card = document.createElement('div');
             card.className = `p-4 bg-white rounded-2xl border ${isMyJob ? 'border-teal-300 bg-teal-50/20' : 'border-slate-100'} shadow-sm flex justify-between items-center`;
@@ -526,15 +535,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-xs text-teal-700 font-semibold">👤 Đăng bởi: ${job.createdByName || 'Thành viên'} (${job.phone})</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    ${isMyJob ? `
+                    ${canDelete ? `
                         <button data-id="${job.id}" class="btn-delete-job px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-600 text-xs font-bold rounded-xl transition flex items-center gap-1">
                             <i class="fa-solid fa-trash"></i> Xóa
                         </button>
-                    ` : `
-                        <button data-id="${job.id}" class="btn-accept px-3 py-1.5 text-xs font-semibold rounded-xl transition ${isAccepted ? 'bg-emerald-100 text-emerald-700 cursor-default' : 'bg-slate-900 hover:bg-slate-800 text-white'}">
-                            ${isAccepted ? 'Đã nhận' : 'Nhận việc'}
-                        </button>
-                    `}
+                    ` : ''}
+                    <button data-id="${job.id}" class="btn-accept px-3 py-1.5 text-xs font-semibold rounded-xl transition ${isAccepted ? 'bg-emerald-100 text-emerald-700 cursor-default' : 'bg-slate-900 hover:bg-slate-800 text-white'}">
+                        ${isAccepted ? 'Đã nhận' : 'Nhận việc'}
+                    </button>
                 </div>
             `;
             jobListContainer.appendChild(card);

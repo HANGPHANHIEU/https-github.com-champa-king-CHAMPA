@@ -27,7 +27,7 @@
             </div>
             
             <div class="flex items-center gap-2">
-                <!-- NÚT THÙNG RÁC (MỚI THÊM) -->
+                <!-- NÚT THÙNG RÁC -->
                 <button id="btnOpenTrash" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-2 rounded-xl text-xs flex items-center transition shadow-sm relative" title="Thùng rác bài đã xóa">
                     <i class="fa-solid fa-trash-can text-red-500 mr-1 text-sm"></i>
                     <span>Thùng rác</span>
@@ -66,20 +66,6 @@
                 <div class="mb-5">
                     <h1 class="text-2xl font-bold text-slate-900">Việc gần bạn</h1>
                     <p class="text-sm text-slate-500 mt-0.5">Chọn việc phù hợp tại Châu Thành, Long Xuyên & các khu vực lân cận. Bắt đầu ngay.</p>
-                </div>
-
-                <!-- Banner nổi bật -->
-                <div class="bg-gradient-to-r from-teal-800 via-teal-700 to-teal-900 rounded-2xl p-6 text-white relative overflow-hidden mb-6 shadow-md">
-                    <div class="absolute right-[-20px] bottom-[-20px] opacity-15 text-white text-9xl pointer-events-none">
-                        <i class="fa-solid fa-bicycle"></i>
-                    </div>
-                    <div class="relative z-10 max-w-lg">
-                        <span class="bg-amber-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md inline-flex items-center mb-3 shadow-sm">
-                            <i class="fa-solid fa-bolt mr-1"></i> Cần người ngay
-                        </span>
-                        <h2 class="text-xl md:text-2xl font-bold leading-snug mb-2">Một chuyến giao hàng.<br>Một khoản thu nhập ngay.</h2>
-                        <p class="text-xs md:text-sm text-teal-100 mb-4 font-medium">Trong 30 phút &bull; 180.000đ / chuyến</p>
-                    </div>
                 </div>
 
                 <!-- Thanh tìm kiếm và bộ lọc khu vực -->
@@ -124,7 +110,21 @@
                 </div>
 
                 <!-- DANH SÁCH VIỆC LÀM -->
-                <div id="jobList" class="space-y-3"></div>
+                <div id="jobList" class="space-y-3 mb-6"></div>
+
+                <!-- BANNER NỔI BẬT (ĐÃ CHUYỂN XUỐNG DƯỚI ĐÁY TAB) -->
+                <div class="bg-gradient-to-r from-teal-800 via-teal-700 to-teal-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-md">
+                    <div class="absolute right-[-20px] bottom-[-20px] opacity-15 text-white text-9xl pointer-events-none">
+                        <i class="fa-solid fa-bicycle"></i>
+                    </div>
+                    <div class="relative z-10 max-w-lg">
+                        <span class="bg-amber-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md inline-flex items-center mb-3 shadow-sm">
+                            <i class="fa-solid fa-bolt mr-1"></i> Cần người ngay
+                        </span>
+                        <h2 class="text-xl md:text-2xl font-bold leading-snug mb-2">Một chuyến giao hàng.<br>Một khoản thu nhập ngay.</h2>
+                        <p class="text-xs md:text-sm text-teal-100 mb-1 font-medium">Trong 30 phút &bull; 180.000đ / chuyến</p>
+                    </div>
+                </div>
             </div>
 
             <!-- TAB 2: ĐÃ NHẬN VIỆC -->
@@ -343,7 +343,7 @@
         </div>
     </div>
 
-    <!-- MODAL THÙNG RÁC (MỚI THÊM) -->
+    <!-- MODAL THÙNG RÁC -->
     <div id="trashModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[80vh]">
             <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">

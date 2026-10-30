@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAuthButtonUI();
         renderJobs();
         renderAcceptedJobs();
-        updateTrashUI(); // Cập nhật giao diện thùng rác khi đổi user
+        updateTrashUI();
     };
 
     // Tự động tạo Modal Đăng nhập / Đăng ký / Quên mật khẩu
@@ -170,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
         authModal?.classList.remove('flex');
     });
 
-    // Hàm chuyển đổi giữa các Form
     function showLoginForm() {
         loginForm?.classList.remove('hidden');
         registerForm?.classList.add('hidden');
@@ -200,7 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
     switchToLoginFromReg?.addEventListener('click', (e) => { e.preventDefault(); showLoginForm(); });
     switchToLoginFromForgot?.addEventListener('click', (e) => { e.preventDefault(); showLoginForm(); });
 
-    // Xử lý Đăng Nhập
     loginForm?.addEventListener('submit', (e) => {
         e.preventDefault();
         const phone = document.getElementById('loginPhoneInput').value.trim();
@@ -220,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Xử lý Đăng Ký
     registerForm?.addEventListener('submit', (e) => {
         e.preventDefault();
         const name = document.getElementById('regNameInput').value.trim();
@@ -244,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Đăng ký tài khoản thành công!');
     });
 
-    // Xử lý Quên / Đặt lại mật khẩu
     forgotForm?.addEventListener('submit', (e) => {
         e.preventDefault();
         const phone = document.getElementById('forgotPhoneInput').value.trim();
@@ -256,7 +252,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userIndex !== -1) {
             users[userIndex].password = newPassword;
             localStorage.setItem('app_registered_users', JSON.stringify(users));
-
             alert(`Đặt lại mật khẩu thành công cho tài khoản ${users[userIndex].name}!\nVui lòng đăng nhập lại bằng mật khẩu mới.`);
             forgotForm.reset();
             showLoginForm();
@@ -302,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // --- 3. QUẢN LÝ HỒ SƠ CÁ NHÂN & TỔ CHỨC ---
+    // --- 3. QUẢN LÝ HỒ SƠ CÁ NHÂN & TỔ CHỨC (CÓ HỖ TRỢ LƯỚT NGANG CAROUSEL) ---
     const workerModal = document.getElementById('workerModal');
     const btnRegisterWorker = document.getElementById('btnRegisterWorker');
     const btnCloseWorkerModal = document.getElementById('btnCloseWorkerModal');
@@ -453,6 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderOrganizations();
     });
 
+    // Cập nhật renderOrganizations dạng trượt ngang (swipe/scroll ngang qua lại)
     window.renderOrganizations = async function() {
         const orgListContainer = document.getElementById('orgList');
         if (!orgListContainer) return;
@@ -482,41 +478,55 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Tạo khung chứa lướt ngang mượt mà
+        const wrapper = document.createElement('div');
+        wrapper.className = "flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-none snap-x";
+
         orgs.forEach(org => {
             const card = document.createElement('div');
-            card.className = "p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-2";
+            card.className = "min-w-[280px] max-w-[320px] flex-shrink-0 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-2 snap-start flex flex-col justify-between";
             card.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div>
+                <div>
+                    <div class="flex justify-between items-start mb-1">
                         <span class="px-2 py-0.5 text-[10px] bg-blue-100 text-blue-700 font-bold rounded-md">
                             ${org.ward ? `${org.ward}, ` : ''}${org.district || ''} - ${org.province || 'An Giang'}
                         </span>
-                        <h3 class="font-bold text-slate-800 text-base mt-1">${org.name}</h3>
                     </div>
-                    <a href="tel:${org.phone}" class="px-3 py-1.5 bg-teal-600 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm"><i class="fa-solid fa-phone"></i> Gọi ngay</a>
+                    <h3 class="font-bold text-slate-800 text-base line-clamp-1">${org.name}</h3>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2">📍 Địa chỉ: ${org.address}</p>
+                    <p class="text-xs text-slate-700 font-medium mt-1">⚡ Thế mạnh: ${org.strength}</p>
                 </div>
-                <p class="text-xs text-slate-500">📍 Địa chỉ: ${org.address}</p>
-                <p class="text-xs text-slate-700 font-medium">⚡ Thế mạnh: ${org.strength}</p>
+                <div class="pt-2">
+                    <a href="tel:${org.phone}" class="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 shadow-sm transition">
+                        <i class="fa-solid fa-phone"></i> Gọi ngay
+                    </a>
+                </div>
             `;
-            orgListContainer.appendChild(card);
+            wrapper.appendChild(card);
         });
 
         workers.forEach(w => {
             const card = document.createElement('div');
-            card.className = "p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-2";
+            card.className = "min-w-[280px] max-w-[320px] flex-shrink-0 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-2 snap-start flex flex-col justify-between";
             card.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div>
+                <div>
+                    <div class="flex justify-between items-start mb-1">
                         <span class="px-2 py-0.5 text-[10px] bg-amber-100 text-amber-700 font-bold rounded-md">CÁ NHÂN ĐỐI TÁC</span>
-                        <h3 class="font-bold text-slate-800 text-base mt-1">${w.name}</h3>
                     </div>
-                    <a href="tel:${w.phone}" class="px-3 py-1.5 bg-amber-500 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm"><i class="fa-solid fa-phone"></i> Liên hệ</a>
+                    <h3 class="font-bold text-slate-800 text-base line-clamp-1">${w.name}</h3>
+                    <p class="text-xs text-slate-500 mt-1">📍 Khu vực: ${w.location}</p>
+                    <p class="text-xs text-slate-700 font-medium mt-1">🛠️ Sở trường: ${w.skill}</p>
                 </div>
-                <p class="text-xs text-slate-500">📍 Khu vực: ${w.location}</p>
-                <p class="text-xs text-slate-700 font-medium">🛠️ Sở trường: ${w.skill}</p>
+                <div class="pt-2">
+                    <a href="tel:${w.phone}" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 shadow-sm transition">
+                        <i class="fa-solid fa-phone"></i> Liên hệ
+                    </a>
+                </div>
             `;
-            orgListContainer.appendChild(card);
+            wrapper.appendChild(card);
         });
+
+        orgListContainer.appendChild(wrapper);
     }
 
     const filterOrgDistrict = document.getElementById('filterOrgDistrict');
@@ -631,7 +641,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // --- 5. GIAO DIỆN & RENDER CHÍNH (ĐÃ THÊM TÍNH NĂNG XÓA BÀI & THÙNG RÁC) ---
+
+    // --- 5. GIAO DIỆN & RENDER CHÍNH (TÍCH HỢP XÓA BÀI & THÙNG RÁC) ---
     const searchInput = document.getElementById('searchInput');
     const locationSelect = document.getElementById('locationSelect');
     const urgentCheck = document.getElementById('urgentCheck');
@@ -657,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!jobListContainer) return;
         const jobsList = await fetchJobsFromCloud();
         const acceptedList = getAcceptedJobs();
-        const deletedJobs = getDeletedJobs(); // Lấy danh sách thùng rác
+        const deletedJobs = getDeletedJobs();
         const currentUser = getCurrentUser();
 
         const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -665,7 +676,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const isUrgentOnly = urgentCheck ? urgentCheck.checked : false;
 
         const filtered = jobsList.filter(job => {
-            // Lọc bỏ các bài đã có trong thùng rác
             if (deletedJobs.some(d => String(d.id) === String(job.id))) return false;
 
             const matchesKw = job.title?.toLowerCase().includes(keyword) || job.location?.toLowerCase().includes(keyword);
@@ -716,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
             jobListContainer.appendChild(card);
         });
 
-        // Xử lý nút Xóa bài đăng (Đưa vào Thùng rác)
+        // Xử lý nút Xóa bài đăng -> Chuyển vào Thùng rác
         document.querySelectorAll('.btn-delete-job').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -733,7 +743,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                         saveDeletedJobs(deleted);
 
-                        // Đồng thời xóa khỏi Supabase nếu cần
                         try {
                             await fetch(`${SUPABASE_URL}/rest/v1/jobs?id=eq.${jobId}`, {
                                 method: 'DELETE',

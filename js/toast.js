@@ -1,4 +1,4 @@
-//
+//Hiển thị thông báo Toast( Thông báo xuất hiện rồi biến mất )
 export function showToast(message, type = 'success') {
     const existing = document.getElementById('appToast');
     if (existing) existing.remove();

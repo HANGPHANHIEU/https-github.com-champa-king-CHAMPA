@@ -19,7 +19,7 @@ export function initAuthModal(onAuthChange) {
                         <p id="authSubtitle" class="text-xs text-slate-500">Đăng nhập để nhận việc, đăng việc & quản lý bài</p>
                     </div>
 
-                    <!-- FORM 1: ĐẮNG NHẬP -->
+                    <!-- FORM 1: ĐĂNG NHẬP -->
                     <form id="loginForm" class="space-y-3">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Số điện thoại</label>
@@ -30,7 +30,12 @@ export function initAuthModal(onAuthChange) {
                                 <label class="block text-xs font-semibold text-slate-700">Mật khẩu</label>
                                 <a href="#" id="switchToForgot" class="text-[11px] text-teal-600 hover:underline">Quên mật khẩu?</a>
                             </div>
-                            <input type="password" id="loginPasswordInput" required placeholder="••••••••" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                            <div class="relative">
+                                <input type="password" id="loginPasswordInput" required placeholder="••••••••" class="w-full px-3 py-2 pr-10 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                                <button type="button" class="toggle-password-btn absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer" data-target="loginPasswordInput">
+                                    <i class="fa-solid fa-eye text-sm"></i>
+                                </button>
+                            </div>
                         </div>
                         <button type="submit" class="w-full py-2.5 bg-[#0d9488] hover:bg-teal-700 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">Đăng nhập</button>
                         <p class="text-xs text-center text-slate-500 pt-1">
@@ -50,7 +55,12 @@ export function initAuthModal(onAuthChange) {
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
-                            <input type="password" id="regPasswordInput" required placeholder="••••••••" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                            <div class="relative">
+                                <input type="password" id="regPasswordInput" required placeholder="••••••••" class="w-full px-3 py-2 pr-10 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                                <button type="button" class="toggle-password-btn absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer" data-target="regPasswordInput">
+                                    <i class="fa-solid fa-eye text-sm"></i>
+                                </button>
+                            </div>
                         </div>
                         <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">Tạo tài khoản mới</button>
                         <p class="text-xs text-center text-slate-500 pt-1">
@@ -66,7 +76,12 @@ export function initAuthModal(onAuthChange) {
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
-                            <input type="password" id="forgotNewPasswordInput" required placeholder="Nhập mật khẩu mới" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                            <div class="relative">
+                                <input type="password" id="forgotNewPasswordInput" required placeholder="Nhập mật khẩu mới" class="w-full px-3 py-2 pr-10 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
+                                <button type="button" class="toggle-password-btn absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer" data-target="forgotNewPasswordInput">
+                                    <i class="fa-solid fa-eye text-sm"></i>
+                                </button>
+                            </div>
                         </div>
                         <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">Đặt lại mật khẩu</button>
                         <p class="text-xs text-center text-slate-500 pt-1">
@@ -84,6 +99,29 @@ export function initAuthModal(onAuthChange) {
     const forgotForm = document.getElementById('forgotForm');
     const authTitle = document.getElementById('authTitle');
     const authSubtitle = document.getElementById('authSubtitle');
+
+    // XỬ LÝ SỰ KIỆN NÚT MẮT THẦN (TOGGLE SHOW/HIDE PASSWORD)
+    document.querySelectorAll('.toggle-password-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            const icon = btn.querySelector('i');
+
+            if (input && icon) {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                    btn.classList.add('text-teal-600');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                    btn.classList.remove('text-teal-600');
+                }
+            }
+        });
+    });
 
     const showView = (view) => {
         loginForm?.classList.add('hidden');

@@ -1,4 +1,4 @@
-//Tái sử dụng storage từ storage.js & orgservice của orgservice.js)
+// Tái sử dụng storage từ storage.js & orgservice từ org-service.js
 import { Storage } from './storage.js';
 import { OrgService } from './org-service.js';
 import { showToast } from './toast.js';
@@ -228,15 +228,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     async function loadPendingData() {
+        // 1. Lấy danh sách cá nhân từ LocalStorage và tổ chức từ Cloud
         const workers = Storage.getWorkers();
         const orgs = await OrgService.fetchCloudOrgs();
 
+        // Lọc các hồ sơ có trạng thái 'pending' hoặc chưa có trạng thái
         const pendingWorkers = workers.filter(w => w.status === 'pending' || !w.status);
         const pendingOrgs = orgs.filter(o => o.status === 'pending' || !o.status);
 
-        document.getElementById('statPendingWorkers').textContent = pendingWorkers.length;
-        document.getElementById('statPendingOrgs').textContent = pendingOrgs.length;
+        // Hiển thị số lượng lên badge thống kê
+        const statPendingWorkers = document.getElementById('statPendingWorkers');
+        const statPendingOrgs = document.getElementById('statPendingOrgs');
+        if (statPendingWorkers) statPendingWorkers.textContent = pendingWorkers.length;
+        if (statPendingOrgs) statPendingOrgs.textContent = pendingOrgs.length;
 
+        // Render danh sách cá nhân chờ duyệt
         const workerContainer = document.getElementById('adminPendingWorkerList');
         if (workerContainer) {
             workerContainer.innerHTML = '';
@@ -261,6 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Render danh sách tổ chức chờ duyệt
         const orgContainer = document.getElementById('adminPendingOrgList');
         if (orgContainer) {
             orgContainer.innerHTML = '';

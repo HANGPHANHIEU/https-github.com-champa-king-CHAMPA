@@ -1,44 +1,49 @@
-import { initAuthModal } from './auth-modal.js';
-import { initPostJobModal } from './post-job-modal.js';
-import { initOrgModals } from './org-modal.js';
-import { initTrashModal } from './trash-modal.js';
-import { initJobModule } from './job-service.js';
-import { renderJobs, renderOrganizations } from './render.js';
-
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- KHỞI ĐỘNG HỆ THỐNG 'VIỆC GẤP' ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (SAFE MODE) ---");
 
-    // 1. Dọn dẹp triệt để các lớp phủ modal bị kẹt (nếu có)
-    document.querySelectorAll('[id$="Modal"], [id$="modal"]').forEach(modal => {
+    // 1. Dọn dẹp tất cả modal bị kẹt
+    document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     });
 
-    // 2. Khởi tạo các module dịch vụ nền
-    if (typeof initJobModule === 'function') initJobModule();
-
-    // 3. Khởi tạo các Modal tương ứng với các nút trên index.html
-    const trash = typeof initTrashModal === 'function' ? initTrashModal() : null;
-
-    // Nút đăng nhập/tài khoản (#btnLoginAccount)
-    if (typeof initAuthModal === 'function') {
-        initAuthModal(() => { 
-            renderJobs(); 
-            if (trash && typeof trash.updateUI === 'function') trash.updateUI(); 
-        });
-    }
+    // 2. Gán sự kiện mở modal trực tiếp cho các nút trên giao diện (Không sợ lỗi module)
     
-    // Nút đăng việc (#btnPostJob và #btnFloatingPostJob)
-    if (typeof initPostJobModal === 'function') {
-        initPostJobModal(() => renderJobs());
-    }
-    
-    // Nút tổ chức (#btnJoinOrg và tab Tổ chức)
-    if (typeof initOrgModals === 'function') {
-        initOrgModals(() => renderOrganizations());
-    }
+    // Nút Đăng việc (#btnPostJob và #btnFloatingPostJob)
+    const postJobModal = document.getElementById('postJobModal');
+    const openPostJob = () => postJobModal?.classList.remove('hidden') || postJobModal?.classList.add('flex');
+    document.getElementById('btnPostJob')?.addEventListener('click', openPostJob);
+    document.getElementById('btnFloatingPostJob')?.addEventListener('click', openPostJob);
+    document.getElementById('btnCloseModal')?.addEventListener('click', () => postJobModal?.classList.add('hidden'));
+    document.getElementById('btnCancelModal')?.addEventListener('click', () => postJobModal?.classList.add('hidden'));
 
-    // 4. Xử lý chuyển đổi các Tab dưới thanh Navigation
+    // Nút Tổ chức (#btnJoinOrg)
+    const orgModal = document.getElementById('orgModal');
+    document.getElementById('btnJoinOrg')?.addEventListener('click', () => {
+        orgModal?.classList.remove('hidden');
+        orgModal?.classList.add('flex');
+    });
+    document.getElementById('btnCloseOrgModal')?.addEventListener('click', () => orgModal?.classList.add('hidden'));
+    document.getElementById('btnCancelOrgModal')?.addEventListener('click', () => orgModal?.classList.add('hidden'));
+
+    // Nút Đăng ký cá nhân (#btnRegisterWorker)
+    const workerModal = document.getElementById('workerModal');
+    document.getElementById('btnRegisterWorker')?.addEventListener('click', () => {
+        workerModal?.classList.remove('hidden');
+        workerModal?.classList.add('flex');
+    });
+    document.getElementById('btnCloseWorkerModal')?.addEventListener('click', () => workerModal?.classList.add('hidden'));
+    document.getElementById('btnCancelWorkerModal')?.addEventListener('click', () => workerModal?.classList.add('hidden'));
+
+    // Nút Thùng rác (#btnOpenTrash)
+    const trashModal = document.getElementById('trashModal');
+    document.getElementById('btnOpenTrash')?.addEventListener('click', () => {
+        trashModal?.classList.remove('hidden');
+        trashModal?.classList.add('flex');
+    });
+    document.getElementById('btnCloseTrashModal')?.addEventListener('click', () => trashModal?.classList.add('hidden'));
+
+    // 3. Xử lý chuyển đổi Tab ở thanh menu dưới
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const tabId = btn.getAttribute('data-tab');
@@ -51,13 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     t.classList.add('hidden');
                 }
             });
-
-            if (tabId === 'tabOrganization' && typeof renderOrganizations === 'function') {
-                renderOrganizations();
-            }
         });
     });
-
-    // 5. Tải danh sách việc làm mặc định khi mở trang
-    if (typeof renderJobs === 'function') renderJobs();
 });

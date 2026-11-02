@@ -17,7 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn("Không tìm thấy khung #authModal trong HTML! Anh/chị nhớ thêm đoạn HTML modal đăng nhập vào cuối file index.html.");
         }
     };
-
+    document.getElementById('btnLoginAccount').addEventListener('click', () => {
+    alert("Nút đăng nhập đã nhận click!");
+    document.getElementById('authModal').classList.remove('hidden');
+    document.getElementById('authModal').classList.add('flex');
+});
     document.getElementById('btnLoginAccount')?.addEventListener('click', openAuthModal);
     document.getElementById('btnLogin')?.addEventListener('click', openAuthModal);
     document.getElementById('btnOpenAuthModal')?.addEventListener('click', openAuthModal);

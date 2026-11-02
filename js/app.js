@@ -35,6 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
         postJobModal?.classList.remove('hidden');
         postJobModal?.classList.add('flex');
     };
+    const closePostJobModal = () => {
+        postJobModal?.classList.add('hidden');
+        postJobModal?.classList.remove('flex');
+        postJobForm?.reset(); // Xóa sạch dữ liệu đã nhập khi bấm Hủy hoặc Đóng
+    };
     document.getElementById('btnPostJob')?.addEventListener('click', openPostJob);
     document.getElementById('btnFloatingPostJob')?.addEventListener('click', openPostJob);
     document.getElementById('btnCloseModal')?.addEventListener('click', () => postJobModal?.classList.add('hidden'));

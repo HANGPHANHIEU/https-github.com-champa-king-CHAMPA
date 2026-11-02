@@ -8,7 +8,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 2. Gán sự kiện mở modal trực tiếp cho các nút trên giao diện (Không sợ lỗi module)
-    
+    // Nút Đăng nhập (#btnLoginAccount)
+    const authModal = document.getElementById('authModal');
+    document.getElementById('btnLoginAccount')?.addEventListener('click', () => {
+        authModal?.classList.remove('hidden');
+        authModal?.classList.add('flex');
+    });
+    document.getElementById('btnCloseAuthModal')?.addEventListener('click', () => authModal?.classList.add('hidden'));
+    document.getElementById('btnCancelAuthModal')?.addEventListener('click', () => authModal?.classList.add('hidden'));
     // Nút Đăng việc (#btnPostJob và #btnFloatingPostJob)
     const postJobModal = document.getElementById('postJobModal');
     const openPostJob = () => postJobModal?.classList.remove('hidden') || postJobModal?.classList.add('flex');

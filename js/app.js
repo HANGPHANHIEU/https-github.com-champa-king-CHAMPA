@@ -5,19 +5,26 @@ import { initTrashModal } from './trash-modal.js';
 import { initJobModule } from './job-service.js';
 import { renderJobs, renderOrganizations } from './render.js';
 
-// Đợi cho toàn bộ HTML tải xong hoàn toàn mới gán sự kiện cho các nút
+// Đợi cho toàn bộ HTML tải xong hoàn toàn mới khởi chạy hệ thống
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM đã sẵn sàng, đang khởi tạo toàn bộ tính năng hệ thống...");
+    console.log("--- KIỂM TRA HỆ THỐNG & KHỞI TẠO ---");
     
-    // 1. Khởi tạo module dịch vụ việc làm nền
+    // 1. Bắt sự kiện click cho tất cả các thẻ button để theo dõi trên Console (F12)
+    document.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            console.log("Đã bấm vào nút có ID/Text:", btn.id || btn.innerText);
+        });
+    });
+
+    // 2. Khởi tạo module dịch vụ việc làm nền
     if (typeof initJobModule === 'function') {
         initJobModule();
     }
 
-    // 2. Khởi tạo tính năng thùng rác
+    // 3. Khởi tạo tính năng thùng rác
     const trash = typeof initTrashModal === 'function' ? initTrashModal() : null;
 
-    // 3. Khởi tạo các Modal xác thực và tương tác
+    // 4. Khởi tạo các Modal xác thực và tương tác
     initAuthModal(() => { 
         renderJobs(); 
         if (trash && typeof trash.updateUI === 'function') {
@@ -29,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initOrgModals(() => renderOrganizations());
 
-    // 4. Xử lý sự kiện chuyển đổi các Tab trên giao diện
+    // 5. Xử lý sự kiện chuyển đổi các Tab trên giao diện
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const tabId = btn.getAttribute('data-tab');
@@ -50,6 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 5. Tải dữ liệu việc làm hiển thị mặc định khi mở trang
+    // 6. Tải dữ liệu việc làm hiển thị mặc định khi mở trang
     renderJobs();
 });

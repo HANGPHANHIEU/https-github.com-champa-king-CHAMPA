@@ -6,47 +6,44 @@ import { initJobModule } from './job-service.js';
 import { renderJobs, renderOrganizations } from './render.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG ---");
+    console.log("--- KHỞI ĐỘNG HỆ THỐNG 'VIỆC GẤP' ---");
 
-    // 1. Dọn dẹp triệt để: Tự động ẩn mọi modal/lớp phủ bị kẹt từ trước để giải phóng các nút bấm
-    document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
+    // 1. Dọn dẹp triệt để các lớp phủ modal bị kẹt (nếu có)
+    document.querySelectorAll('[id$="Modal"], [id$="modal"]').forEach(modal => {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     });
 
-    // 2. Khởi tạo module dịch vụ việc làm nền
-    if (typeof initJobModule === 'function') {
-        initJobModule();
-    }
+    // 2. Khởi tạo các module dịch vụ nền
+    if (typeof initJobModule === 'function') initJobModule();
 
-    // 3. Khởi tạo tính năng thùng rác
+    // 3. Khởi tạo các Modal tương ứng với các nút trên index.html
     const trash = typeof initTrashModal === 'function' ? initTrashModal() : null;
 
-    // 4. Khởi tạo các Modal xác thực và tương tác
+    // Nút đăng nhập/tài khoản (#btnLoginAccount)
     if (typeof initAuthModal === 'function') {
         initAuthModal(() => { 
             renderJobs(); 
-            if (trash && typeof trash.updateUI === 'function') {
-                trash.updateUI(); 
-            }
+            if (trash && typeof trash.updateUI === 'function') trash.updateUI(); 
         });
     }
     
+    // Nút đăng việc (#btnPostJob và #btnFloatingPostJob)
     if (typeof initPostJobModal === 'function') {
         initPostJobModal(() => renderJobs());
     }
     
+    // Nút tổ chức (#btnJoinOrg và tab Tổ chức)
     if (typeof initOrgModals === 'function') {
         initOrgModals(() => renderOrganizations());
     }
 
-    // 5. Xử lý sự kiện chuyển đổi các Tab trên giao diện
+    // 4. Xử lý chuyển đổi các Tab dưới thanh Navigation
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const tabId = btn.getAttribute('data-tab');
             if (!tabId) return;
             
-            // Ẩn hiện nội dung các tab tương ứng
             document.querySelectorAll('.tab-content').forEach(t => {
                 if (t.id === tabId) {
                     t.classList.remove('hidden');
@@ -55,15 +52,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Nếu chuyển sang tab Tổ chức thì gọi hàm render dữ liệu tổ chức
             if (tabId === 'tabOrganization' && typeof renderOrganizations === 'function') {
                 renderOrganizations();
             }
         });
     });
 
-    // 6. Tải dữ liệu việc làm hiển thị mặc định khi mở trang
-    if (typeof renderJobs === 'function') {
-        renderJobs();
-    }
+    // 5. Tải danh sách việc làm mặc định khi mở trang
+    if (typeof renderJobs === 'function') renderJobs();
 });

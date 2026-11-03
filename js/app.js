@@ -100,23 +100,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authModalTitle) authModalTitle.innerText = "Đăng nhập tài khoản";
     });
 
-    // --- 4. XỬ LÝ MODAL TỔ CHỨC ---
+    // --- XỬ LÝ MODAL TỔ CHỨC ---
     const orgModal = document.getElementById('orgModal');
+    const orgForm = document.getElementById('orgForm');
+
+    const closeOrgModal = () => {
+        orgModal?.classList.add('hidden');
+        orgModal?.classList.remove('flex');
+        orgForm?.reset(); // Làm trống form khi hủy
+    };
+
     document.getElementById('btnJoinOrg')?.addEventListener('click', () => {
         orgModal?.classList.remove('hidden');
         orgModal?.classList.add('flex');
     });
-    document.getElementById('btnCloseOrgModal')?.addEventListener('click', () => orgModal?.classList.add('hidden'));
-    document.getElementById('btnCancelOrgModal')?.addEventListener('click', () => orgModal?.classList.add('hidden'));
+    document.getElementById('btnCloseOrgModal')?.addEventListener('click', closeOrgModal);
+    document.getElementById('btnCancelOrgModal')?.addEventListener('click', closeOrgModal);
 
-    // --- 5. XỬ LÝ MODAL ĐĂNG KÝ CÁ NHÂN ---
+    // --- XỬ LÝ MODAL ĐĂNG KÝ CÁ NHÂN ---
     const workerModal = document.getElementById('workerModal');
+    const workerForm = document.getElementById('workerForm');
+
+    const closeWorkerModal = () => {
+        workerModal?.classList.add('hidden');
+        workerModal?.classList.remove('flex');
+        workerForm?.reset(); // Làm trống form khi hủy
+    };
+
     document.getElementById('btnRegisterWorker')?.addEventListener('click', () => {
         workerModal?.classList.remove('hidden');
         workerModal?.classList.add('flex');
     });
-    document.getElementById('btnCloseWorkerModal')?.addEventListener('click', () => workerModal?.classList.add('hidden'));
-    document.getElementById('btnCancelWorkerModal')?.addEventListener('click', () => workerModal?.classList.add('hidden'));
+    document.getElementById('btnCloseWorkerModal')?.addEventListener('click', closeWorkerModal);
+    document.getElementById('btnCancelWorkerModal')?.addEventListener('click', closeWorkerModal);
 
     // --- 6. XỬ LÝ MODAL THÙNG RÁC ---
     const trashModal = document.getElementById('trashModal');

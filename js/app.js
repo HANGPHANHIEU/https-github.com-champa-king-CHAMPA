@@ -7,6 +7,54 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.classList.remove('flex');
     });
 
+    // --- HÀM RENDER DANH SÁCH VIỆC LÀM RA GIAO DIỆN ---
+    const renderJobs = () => {
+        const jobListContainer = document.getElementById('jobList');
+        const jobCountElement = document.getElementById('jobCount');
+        if (!jobListContainer) return;
+
+        const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
+        
+        // Cập nhật số lượng hiển thị
+        if (jobCountElement) {
+            jobCountElement.innerText = `${jobs.length} việc phù hợp`;
+        }
+
+        if (jobs.length === 0) {
+            jobListContainer.innerHTML = `
+                <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    Chưa có công việc nào được đăng. Hãy bấm "Đăng việc" ngay!
+                </div>
+            `;
+            return;
+        }
+
+        jobListContainer.innerHTML = jobs.map(job => `
+            <div class="bg-white border border-slate-100 hover:border-teal-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="bg-teal-50 text-teal-700 text-[11px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wide">${job.category}</span>
+                            ${job.urgent ? '<span class="bg-amber-100 text-amber-700 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1"><i class="fa-solid fa-bolt text-[10px]"></i> Gấp</span>' : ''}
+                        </div>
+                        <h3 class="font-bold text-slate-900 text-base">${job.title}</h3>
+                    </div>
+                    <span class="text-teal-600 font-bold text-sm bg-teal-50 px-2.5 py-1 rounded-xl">${job.salary}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-50">
+                    <div class="flex items-center gap-3">
+                        <span><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${job.location}</span>
+                        <span><i class="fa-regular fa-clock text-slate-400 mr-1"></i>${job.createdAt}</span>
+                    </div>
+                    <button class="text-teal-600 hover:text-teal-700 font-semibold transition">Nhận việc &rarr;</button>
+                </div>
+            </div>
+        `).join('');
+    };
+
+    // Tải danh sách việc ngay khi khởi động trang
+    renderJobs();
+
     // --- 2. XỬ LÝ MODAL ĐĂNG VIỆC ---
     const postJobModal = document.getElementById('postJobModal');
     const postJobForm = document.getElementById('postJobForm');
@@ -47,11 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         closePostJobModal();
 
-        if (typeof renderJobs === 'function') {
-            renderJobs();
-        } else {
-            location.reload();
-        }
+        // Vẽ lại danh sách ngay lập tức để việc xuất hiện ngoài màn hình
+        renderJobs();
     });
 
     // --- 3. XỬ LÝ MODAL ĐĂNG NHẬP & ĐỔI MẬT KHẨU ---
@@ -59,6 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const authForm = document.getElementById('authForm');
     const resetForm = document.getElementById('resetForm');
     const authModalTitle = document.getElementById('authModalTitle');
+    const authFooter = document.getElementById('authFooter');
+    const resetFooter = document.getElementById('resetFooter');
 
     const openAuthModal = () => {
         if (authModal) {
@@ -66,6 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
             authModal.classList.add('flex');
             authForm?.classList.remove('hidden');
             resetForm?.classList.add('hidden');
+            authFooter?.classList.remove('hidden');
+            resetFooter?.classList.add('hidden');
             if (authModalTitle) authModalTitle.innerText = "Đăng nhập tài khoản";
         }
     };
@@ -77,12 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
         resetForm?.reset();
     };
 
-    // Gắn sự kiện mở Modal Đăng nhập
     document.getElementById('btnLoginAccount')?.addEventListener('click', openAuthModal);
     document.getElementById('btnLogin')?.addEventListener('click', openAuthModal);
     document.getElementById('btnOpenAuthModal')?.addEventListener('click', openAuthModal);
 
-    // Gắn sự kiện đóng Modal Đăng nhập (Nút X và nút Hủy)
     document.getElementById('btnCloseAuthModal')?.addEventListener('click', closeAuthModal);
     document.getElementById('btnCancelAuthModal')?.addEventListener('click', closeAuthModal);
     document.getElementById('btnCancelReset')?.addEventListener('click', closeAuthModal);
@@ -90,13 +137,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Chuyển đổi qua lại giữa form Đăng nhập và Đổi mật khẩu
     document.getElementById('btnToggleReset')?.addEventListener('click', () => {
         authForm?.classList.add('hidden');
+        authFooter?.classList.add('hidden');
         resetForm?.classList.remove('hidden');
+        resetFooter?.classList.remove('hidden');
         if (authModalTitle) authModalTitle.innerText = "Đổi mật khẩu tài khoản";
     });
 
     document.getElementById('btnBackToLogin')?.addEventListener('click', () => {
         resetForm?.classList.add('hidden');
+        resetFooter?.classList.add('hidden');
         authForm?.classList.remove('hidden');
+        authFooter?.classList.remove('hidden');
         if (authModalTitle) authModalTitle.innerText = "Đăng nhập tài khoản";
     });
 
@@ -107,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeOrgModal = () => {
         orgModal?.classList.add('hidden');
         orgModal?.classList.remove('flex');
-        orgForm?.reset(); // Làm trống form khi hủy
+        orgForm?.reset();
     };
 
     document.getElementById('btnJoinOrg')?.addEventListener('click', () => {
@@ -124,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeWorkerModal = () => {
         workerModal?.classList.add('hidden');
         workerModal?.classList.remove('flex');
-        workerForm?.reset(); // Làm trống form khi hủy
+        workerForm?.reset();
     };
 
     document.getElementById('btnRegisterWorker')?.addEventListener('click', () => {

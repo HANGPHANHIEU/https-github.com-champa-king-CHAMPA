@@ -70,15 +70,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 2. Gán sự kiện mở/đóng Modal Đăng nhập
+    // Xử lý mở Modal Đăng nhập (Bắt toàn bộ các ID phổ biến)
     const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
+    const resetForm = document.getElementById('resetForm');
+    const authModalTitle = document.getElementById('authModalTitle');
+
     const openAuthModal = () => {
         if (authModal) {
             authModal.classList.remove('hidden');
             authModal.classList.add('flex');
+            authForm?.classList.remove('hidden');
+            resetForm?.classList.add('hidden');
+            if (authModalTitle) authModalTitle.innerText = "Đăng nhập tài khoản";
         } else {
-            console.warn("Không tìm thấy khung #authModal trong HTML! Anh/chị nhớ thêm đoạn HTML modal đăng nhập vào cuối file index.html.");
+            console.warn("Không tìm thấy khung #authModal trong file index.html!");
         }
     };
+
+    const closeAuthModal = () => {
+        authModal?.classList.add('hidden');
+        authModal?.classList.remove('flex');
+        authForm?.reset();
+        resetForm?.reset();
+    };
+
+    // Gắn sự kiện cho các nút mở đăng nhập
+    document.getElementById('btnLoginAccount')?.addEventListener('click', openAuthModal);
+    document.getElementById('btnLogin')?.addEventListener('click', openAuthModal);
+    document.getElementById('btnOpenAuthModal')?.addEventListener('click', openAuthModal);
+
+    // Gắn sự kiện đóng modal (Nút X và nút Hủy)
+    document.getElementById('btnCloseAuthModal')?.addEventListener('click', closeAuthModal);
+    document.getElementById('btnCancelAuthModal')?.addEventListener('click', closeAuthModal);
+    document.getElementById('btnCancelReset')?.addEventListener('click', closeAuthModal);
     document.getElementById('btnLoginAccount').addEventListener('click', () => {
     alert("Nút đăng nhập đã nhận click!");
     document.getElementById('authModal').classList.remove('hidden');

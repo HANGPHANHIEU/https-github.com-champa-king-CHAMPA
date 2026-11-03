@@ -14,6 +14,17 @@ document.addEventListener('DOMContentLoaded', () => {
         postJobModal?.classList.remove('hidden');
         postJobModal?.classList.add('flex');
     };
+    const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
+
+    const closeAuthModal = () => {
+        authModal?.classList.add('hidden');
+        authModal?.classList.remove('flex');
+        authForm?.reset(); // Xóa sạch thông tin đã gõ khi bấm hủy
+    };
+
+    document.getElementById('btnCloseAuthModal')?.addEventListener('click', closeAuthModal);
+    document.getElementById('btnCancelAuthModal')?.addEventListener('click', closeAuthModal);
 
     const closePostJobModal = () => {
         postJobModal?.classList.add('hidden');

@@ -386,10 +386,6 @@
                     <button type="button" id="btnToggleReset" class="text-teal-600 hover:underline font-medium">Quên / Đổi mật khẩu?</button>
                 </div>
             </form>
-            <div id="authFooter" class="p-3 border-t border-slate-100 bg-slate-50 flex gap-2 shrink-0">
-                <button type="button" id="btnCancelAuthModal" class="flex-1 py-2.5 bg-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-300 transition text-sm text-center">Hủy</button>
-                <button type="submit" form="authForm" class="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl transition shadow-sm text-sm text-center">Đăng nhập</button>
-            </div>
 
             <!-- Form Đổi mật khẩu (Ẩn mặc định) -->
             <form id="resetForm" class="p-4 space-y-3 overflow-y-auto flex-1 hidden">
@@ -406,6 +402,13 @@
                     <button type="button" id="btnBackToLogin" class="text-slate-600 hover:underline font-medium">&larr; Quay lại đăng nhập</button>
                 </div>
             </form>
+
+            <!-- Footer chứa nút Hủy và Đăng nhập (Dùng chung hoặc tách riêng cho Auth/Reset) -->
+            <div id="authFooter" class="p-3 border-t border-slate-100 bg-slate-50 flex gap-2 shrink-0">
+                <button type="button" id="btnCancelAuthModal" class="flex-1 py-2.5 bg-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-300 transition text-sm text-center">Hủy</button>
+                <button type="submit" form="authForm" class="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl transition shadow-sm text-sm text-center">Đăng nhập</button>
+            </div>
+
             <div id="resetFooter" class="p-3 border-t border-slate-100 bg-slate-50 flex gap-2 shrink-0 hidden">
                 <button type="button" id="btnCancelReset" class="flex-1 py-2.5 bg-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-300 transition text-sm text-center">Hủy</button>
                 <button type="submit" form="resetForm" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition shadow-sm text-sm text-center">Xác nhận đổi</button>

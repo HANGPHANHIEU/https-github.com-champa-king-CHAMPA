@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
         
-        // Cập nhật số lượng hiển thị
         if (jobCountElement) {
             jobCountElement.innerText = `${jobs.length} việc phù hợp`;
         }
@@ -23,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (jobs.length === 0) {
             jobListContainer.innerHTML = `
                 <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                    Chưa có công việc nào được đăng. Hãy bấm "Đăng việc" ngay!
+                    Chưa có công việc nào được đăng. Hãy đăng nhập và "Đăng việc" ngay!
                 </div>
             `;
             return;
@@ -52,14 +51,76 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     };
 
-    // Tải danh sách việc ngay khi khởi động trang
     renderJobs();
 
-    // --- 2. XỬ LÝ MODAL ĐĂNG VIỆC ---
+    // --- 3. XỬ LÝ MODAL ĐĂNG NHẬP & KIỂM TRA PHIÊN ĐĂNG NHẬP ---
+    const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
+    const resetForm = document.getElementById('resetForm');
+    const authModalTitle = document.getElementById('authModalTitle');
+    const authFooter = document.getElementById('authFooter');
+    const resetFooter = document.getElementById('resetFooter');
+    const loginBtnText = document.getElementById('loginBtnText');
+
+    // Kiểm tra trạng thái đăng nhập hiện tại từ LocalStorage
+    const checkLoginStatus = () => {
+        const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true';
+        if (isLoggedIn && loginBtnText) {
+            loginBtnText.innerText = "Đã đăng nhập";
+        }
+        return isLoggedIn;
+    };
+    checkLoginStatus();
+
+    const openAuthModal = () => {
+        if (authModal) {
+            authModal.classList.remove('hidden');
+            authModal.classList.add('flex');
+            authForm?.classList.remove('hidden');
+            resetForm?.classList.add('hidden');
+            authFooter?.classList.remove('hidden');
+            resetFooter?.classList.add('hidden');
+            if (authModalTitle) authModalTitle.innerText = "Đăng nhập tài khoản";
+        }
+    };
+
+    const closeAuthModal = () => {
+        authModal?.classList.add('hidden');
+        authModal?.classList.remove('flex');
+        authForm?.reset();
+        resetForm?.reset();
+    };
+
+    // Xử lý khi submit form đăng nhập thành công
+    authForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const phone = document.getElementById('loginPhone')?.value;
+        if (phone) {
+            localStorage.setItem('viecgap_logged_in', 'true');
+            localStorage.setItem('viecgap_user_phone', phone);
+            if (loginBtnText) loginBtnText.innerText = "Đã đăng nhập";
+            alert('Đăng nhập thành công!');
+            closeAuthModal();
+        }
+    });
+
+    document.getElementById('btnLoginAccount')?.addEventListener('click', openAuthModal);
+    document.getElementById('btnCloseAuthModal')?.addEventListener('click', closeAuthModal);
+    document.getElementById('btnCancelAuthModal')?.addEventListener('click', closeAuthModal);
+    document.getElementById('btnCancelReset')?.addEventListener('click', closeAuthModal);
+
+    // --- 2. XỬ LÝ MODAL ĐĂNG VIỆC (CÓ KIỂM TRA ĐĂNG NHẬP) ---
     const postJobModal = document.getElementById('postJobModal');
     const postJobForm = document.getElementById('postJobForm');
 
     const openPostJob = () => {
+        // KIỂM TRA TRẠNG THÁI ĐĂNG NHẬP TRƯỚC KHI CHO ĐĂNG VIỆC
+        if (!checkLoginStatus()) {
+            alert('Vui lòng đăng nhập trước khi đăng công việc mới!');
+            openAuthModal();
+            return;
+        }
+
         postJobModal?.classList.remove('hidden');
         postJobModal?.classList.add('flex');
     };
@@ -67,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closePostJobModal = () => {
         postJobModal?.classList.add('hidden');
         postJobModal?.classList.remove('flex');
-        postJobForm?.reset(); // Xóa sạch dữ liệu khi đóng hoặc hủy
+        postJobForm?.reset();
     };
 
     document.getElementById('btnPostJob')?.addEventListener('click', openPostJob);
@@ -94,45 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('viecgap_jobs', JSON.stringify(jobs));
 
         closePostJobModal();
-
-        // Vẽ lại danh sách ngay lập tức để việc xuất hiện ngoài màn hình
         renderJobs();
     });
-
-    // --- 3. XỬ LÝ MODAL ĐĂNG NHẬP & ĐỔI MẬT KHẨU ---
-    const authModal = document.getElementById('authModal');
-    const authForm = document.getElementById('authForm');
-    const resetForm = document.getElementById('resetForm');
-    const authModalTitle = document.getElementById('authModalTitle');
-    const authFooter = document.getElementById('authFooter');
-    const resetFooter = document.getElementById('resetFooter');
-
-    const openAuthModal = () => {
-        if (authModal) {
-            authModal.classList.remove('hidden');
-            authModal.classList.add('flex');
-            authForm?.classList.remove('hidden');
-            resetForm?.classList.add('hidden');
-            authFooter?.classList.remove('hidden');
-            resetFooter?.classList.add('hidden');
-            if (authModalTitle) authModalTitle.innerText = "Đăng nhập tài khoản";
-        }
-    };
-
-    const closeAuthModal = () => {
-        authModal?.classList.add('hidden');
-        authModal?.classList.remove('flex');
-        authForm?.reset();
-        resetForm?.reset();
-    };
-
-    document.getElementById('btnLoginAccount')?.addEventListener('click', openAuthModal);
-    document.getElementById('btnLogin')?.addEventListener('click', openAuthModal);
-    document.getElementById('btnOpenAuthModal')?.addEventListener('click', openAuthModal);
-
-    document.getElementById('btnCloseAuthModal')?.addEventListener('click', closeAuthModal);
-    document.getElementById('btnCancelAuthModal')?.addEventListener('click', closeAuthModal);
-    document.getElementById('btnCancelReset')?.addEventListener('click', closeAuthModal);
 
     // Chuyển đổi qua lại giữa form Đăng nhập và Đổi mật khẩu
     document.getElementById('btnToggleReset')?.addEventListener('click', () => {

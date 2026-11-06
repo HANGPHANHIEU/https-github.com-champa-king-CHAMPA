@@ -29,7 +29,7 @@ export function updateAuthUI() {
     }
 }
 
-// Gắn hàm updateAuthUI vào window để các module khác dễ dàng gọi gọi trực tiếp
+// Gắn hàm updateAuthUI vào window để các module khác dễ dàng gọi trực tiếp
 window.updateAuthUI = updateAuthUI;
 
 /**
@@ -67,7 +67,7 @@ export async function renderJobs() {
                 <p class="text-xs text-slate-400 mt-0.5">Đăng bởi: ${job.poster || job.phone}</p>
             </div>
             <div class="flex gap-2 items-center">
-                <!-- Nút Nhận việc (Hiển thị cho mọi người, JobService sẽ xử lý chặn tự nhận việc) -->
+                <!-- Nút Nhận việc -->
                 <button data-id="${job.id}" class="btn-take bg-black text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-slate-800 transition cursor-pointer">
                     Nhận việc
                 </button>
@@ -83,41 +83,41 @@ export async function renderJobs() {
         container.appendChild(jobCard);
     });
 
-    // Gắn sự kiện tương tác cho các nút vừa tạo
+    // Gắn sự kiện tương tác trực tiếp cho danh sách hiện tại
     attachEventListeners(filtered);
 }
 
 /**
- * 3. Gắn sự kiện cho các nút Nhận việc & Xóa việc
+ * 3. Gắn sự kiện cho các nút Nhận việc & Xóa việc (Hỗ trợ cả Event Delegation chống trùng lặp)
  */
 function attachEventListeners(filteredJobs) {
     // Sự kiện Nhận việc
     document.querySelectorAll('.btn-take').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
+        btn.onclick = async (e) => {
             const jobId = e.currentTarget.getAttribute('data-id');
             
-            // Gọi hàm takeJob nếu đã định nghĩa ở Service hoặc hiển thị cảnh báo
             if (typeof JobService.takeJob === 'function') {
                 await JobService.takeJob(jobId);
             } else {
                 console.warn("Hàm takeJob chưa được định nghĩa trong JobService.");
             }
             
-            // Reload lại danh sách sau khi thao tác
+            // Reload lại giao diện sau khi thao tác
             renderJobs();
             if (typeof window.reloadJobs === 'function') {
                 window.reloadJobs();
             }
-        });
+        };
     });
 
-    // Sự kiện Xóa việc (Chuyển vào thùng rác & xóa Cloud)
+    // Sự kiện Xóa việc (Chuyển vào thùng rác cục bộ & Xóa Cloud)
     document.querySelectorAll('.btn-del').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
+        btn.onclick = async (e) => {
             const id = e.currentTarget.getAttribute('data-id');
             const target = filteredJobs.find(j => String(j.id) === String(id));
             
             if (target && confirm('Bạn có chắc chắn muốn chuyển bài đăng này vào thùng rác không?')) {
+                // Đưa vào danh sách thùng rác Local Storage
                 const delList = Storage.getDeleted ? Storage.getDeleted() : [];
                 delList.unshift({ ...target, deletedAt: new Date().toLocaleString() });
                 
@@ -125,8 +125,12 @@ function attachEventListeners(filteredJobs) {
                     Storage.saveDeleted(delList);
                 }
 
-                // Xóa trên Cloud thông qua JobService
-                await JobService.deleteCloudJob(id, target.phone);
+                // Xóa trên Cloud thông qua JobService (hỗ trợ cả deleteJob hoặc deleteCloudJob)
+                if (typeof JobService.deleteJob === 'function') {
+                    await JobService.deleteJob(id, target.phone);
+                } else if (typeof JobService.deleteCloudJob === 'function') {
+                    await JobService.deleteCloudJob(id, target.phone);
+                }
                 
                 if (typeof showToast === 'function') {
                     showToast('Đã chuyển vào Thùng rác!');
@@ -140,7 +144,7 @@ function attachEventListeners(filteredJobs) {
                     window.reloadJobs();
                 }
             }
-        });
+        };
     });
 }
 

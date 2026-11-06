@@ -163,9 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span><i class="fa-solid fa-location-dot mr-1"></i>${job.location}</span>
                     <div class="flex items-center gap-2">
                         <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check-circle mr-1"></i>Đã nhận việc</span>
-                        <!-- Nút Hủy nhận có tích hợp icon Xmark -->
-                        <button onclick="window.handleRemoveAcceptedJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1">
-                            <i class="fa-solid fa-xmark"></i> Hủy nhận
+                        <!-- Nút Hủy nhận có tích hợp icon thùng rác (fa-trash-can) -->
+                        <button onclick="window.handleRemoveAcceptedJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5">
+                            <i class="fa-solid fa-trash-can"></i> Hủy nhận
                         </button>
                     </div>
                 </div>
@@ -447,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ward: document.getElementById('orgWardInput')?.value,
             address: document.getElementById('orgAddressInput')?.value,
             strength: document.getElementById('orgStrengthInput')?.value,
-            status: 'pending',[cite: 4]
+            status: 'pending',
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 
@@ -485,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
             phone: document.getElementById('workerPhoneInput')?.value,
             location: document.getElementById('workerLocationInput')?.value,
             skill: document.getElementById('workerSkillInput')?.value,
-            status: 'pending',[cite: 4]
+            status: 'pending',
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 

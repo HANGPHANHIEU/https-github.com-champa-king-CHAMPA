@@ -1,3 +1,4 @@
+
 // Tái sử dụng storage từ storage.js & orgservice từ org-service.js
 import { Storage } from './storage.js';
 import { OrgService } from './org-service.js';
@@ -228,8 +229,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     async function loadPendingData() {
-        // 1. Lấy danh sách cá nhân từ LocalStorage và tổ chức từ Cloud
-        const workers = Storage.getWorkers();
+        // 1. Lấy danh sách cá nhân từ Storage và tổ chức từ OrgService
+        const workers = Storage.getWorkers ? Storage.getWorkers() : JSON.parse(localStorage.getItem('workers_list') || '[]');
         const orgs = await OrgService.fetchCloudOrgs();
 
         // Lọc các hồ sơ có trạng thái 'pending' hoặc chưa có trạng thái
@@ -254,12 +255,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs';
                     item.innerHTML = `
                         <div>
-                            <h4 class="font-bold text-slate-800 text-sm">${w.name} - <span class="text-amber-600">${w.skill}</span></h4>
+                            <h4 class="font-bold text-slate-800 text-sm">${w.name} - <span class="text-amber-600">${w.skill || w.category || ''}</span></h4>
                             <p class="text-slate-600 mt-0.5">📞 ${w.phone} &bull; 📍 ${w.location}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="approveWorker(${w.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
-                            <button onclick="rejectWorker(${w.id})" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
+                            <button onclick="approveWorker('${w.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
+                            <button onclick="rejectWorker('${w.id}')" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
                         </div>
                     `;
                     workerContainer.appendChild(item);
@@ -280,12 +281,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.innerHTML = `
                         <div>
                             <h4 class="font-bold text-slate-800 text-sm">${o.name}</h4>
-                            <p class="text-slate-600 mt-0.5">📞 ${o.phone} &bull; 📍 ${o.district || o.location || ''}</p>
+                            <p class="text-slate-600 mt-0.5">📞 ${o.phone} &bull; 📍 ${o.district || o.province || ''}</p>
                             <p class="text-blue-700 font-medium mt-0.5">Thế mạnh: ${o.strength}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="approveOrg(${o.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
-                            <button onclick="rejectOrg(${o.id})" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
+                            <button onclick="approveOrg('${o.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
+                            <button onclick="rejectOrg('${o.id}')" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
                         </div>
                     `;
                     orgContainer.appendChild(item);
@@ -294,37 +295,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Gắn các hàm xử lý phê duyệt ra global window để sự kiện onclick trong HTML gọi được
     window.approveWorker = function(id) {
-        let workers = Storage.getWorkers();
-        workers = workers.map(w => w.id === id ? { ...w, status: 'approved' } : w);
-        localStorage.setItem('workers_list', JSON.stringify(workers));
+        let workers = Storage.getWorkers ? Storage.getWorkers() : JSON.parse(localStorage.getItem('workers_list') || '[]');
+        workers = workers.map(w => w.id == id ? { ...w, status: 'approved' } : w);
+        if (Storage.saveWorkers) {
+            Storage.saveWorkers(workers);
+        } else {
+            localStorage.setItem('workers_list', JSON.stringify(workers));
+        }
         loadPendingData();
-        showToast('Đã phê duyệt hồ sơ cá nhân!');
+        showToast('Đã phê duyệt hồ sơ cá nhân thành công!');
     };
 
     window.rejectWorker = function(id) {
-        if (confirm('Bạn có chắc chắn muốn từ chối và xóa hồ sơ này?')) {
-            let workers = Storage.getWorkers();
-            workers = workers.filter(w => w.id !== id);
-            localStorage.setItem('workers_list', JSON.stringify(workers));
+        if (confirm('Bạn có chắc chắn muốn từ chối và xóa hồ sơ cá nhân này?')) {
+            let workers = Storage.getWorkers ? Storage.getWorkers() : JSON.parse(localStorage.getItem('workers_list') || '[]');
+            workers = workers.filter(w => w.id != id);
+            if (Storage.saveWorkers) {
+                Storage.saveWorkers(workers);
+            } else {
+                localStorage.setItem('workers_list', JSON.stringify(workers));
+            }
             loadPendingData();
+            showToast('Đã từ chối hồ sơ cá nhân!');
         }
     };
 
     window.approveOrg = function(id) {
         let orgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
-        orgs = orgs.map(o => o.id === id ? { ...o, status: 'approved' } : o);
+        orgs = orgs.map(o => o.id == id ? { ...o, status: 'approved' } : o);
         localStorage.setItem('organizations_list', JSON.stringify(orgs));
         loadPendingData();
-        showToast('Đã phê duyệt tổ chức!');
+        showToast('Đã phê duyệt tổ chức thành công!');
     };
 
     window.rejectOrg = function(id) {
         if (confirm('Bạn có chắc chắn muốn từ chối và xóa tổ chức này?')) {
             let orgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
-            orgs = orgs.filter(o => o.id !== id);
+            orgs = orgs.filter(o => o.id != id);
             localStorage.setItem('organizations_list', JSON.stringify(orgs));
             loadPendingData();
+            showToast('Đã từ chối tổ chức!');
         }
     };
 });

@@ -2,69 +2,33 @@ import { takeJob, deleteJob } from './job-service.js';
 import { initTrashModal } from './trash-modal.js';
 import { updateAuthUI } from './auth-modal.js';
 
-// --- 1. BẮT SỰ KIỆN TOÀN CỤC (EVENT ĐELEGATION CHO NÚT NHẬN VIỆC & XÓA) ---
-document.addEventListener('click', (e) => {
-    // Bấm nút Nhận việc
-    const takeBtn = e.target.closest('.btn-take');
-    if (takeBtn) {
-        const jobId = takeBtn.getAttribute('data-id');
-        if (jobId) {
-            takeJob(jobId);
-            return;
-        }
+// --- HÀM RENDER DANH SÁCH VIỆC LÀM (Đưa ra ngoài để gọi lại linh hoạt) ---
+export const renderJobs = () => {
+    const jobListContainer = document.getElementById('jobList');
+    const jobCountElement = document.getElementById('jobCount');
+    if (!jobListContainer) return;
+
+    const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
+    const currentUserPhone = localStorage.getItem('viecgap_user_phone');
+    
+    if (jobCountElement) {
+        jobCountElement.innerText = `${jobs.length} việc phù hợp`;
     }
 
-    // Bấm nút Xóa
-    const deleteBtn = e.target.closest('.btn-delete');
-    if (deleteBtn) {
-        const jobId = deleteBtn.getAttribute('data-id');
-        if (jobId) {
-            deleteJob(jobId);
-            return;
-        }
-    }
-});
-
-// --- 2. KHỞI TẠO HỆ THỐNG KHI DOM ĐÃ TẢI XONG ---
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (SAFE MODE) ---");
-
-    // Khởi tạo các module modal chuyên biệt
-    initTrashModal();
-
-    // Tải lại giao diện tài khoản khi vừa mở trang
-    if (typeof updateAuthUI === 'function') {
-        updateAuthUI();
+    if (jobs.length === 0) {
+        jobListContainer.innerHTML = `
+            <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                Chưa có công việc nào được đăng. Hãy đăng nhập và "Đăng việc" ngay!
+            </div>
+        `;
+        return;
     }
 
-    // Dọn dẹp tất cả modal bị kẹt khi mới tải trang
-    document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    });
+    jobListContainer.innerHTML = jobs.map(job => {
+        // KIỂM TRA QUYỀN CHÍNH CHỦ: Chỉ hiển thị nút Xóa nếu số điện thoại đăng nhập khớp với số điện thoại tạo bài
+        const isOwner = currentUserPhone && job.phone === currentUserPhone;
 
-    // --- HÀM RENDER DANH SÁCH VIỆC LÀM RA GIAO DIỆN ---
-    const renderJobs = () => {
-        const jobListContainer = document.getElementById('jobList');
-        const jobCountElement = document.getElementById('jobCount');
-        if (!jobListContainer) return;
-
-        const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
-        
-        if (jobCountElement) {
-            jobCountElement.innerText = `${jobs.length} việc phù hợp`;
-        }
-
-        if (jobs.length === 0) {
-            jobListContainer.innerHTML = `
-                <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                    Chưa có công việc nào được đăng. Hãy đăng nhập và "Đăng việc" ngay!
-                </div>
-            `;
-            return;
-        }
-
-        jobListContainer.innerHTML = jobs.map(job => `
+        return `
             <div class="bg-white border border-slate-100 hover:border-teal-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-3">
                 <div class="flex justify-between items-start">
                     <div>
@@ -85,15 +49,89 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button data-id="${job.id}" class="btn-take bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer">
                             Nhận việc
                         </button>
-                        <button data-id="${job.id}" class="btn-delete bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer">
-                            Xóa
-                        </button>
+                        ${isOwner ? `
+                            <button data-id="${job.id}" class="btn-delete bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer">
+                                Xóa
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             </div>
-        `).join('');
-    };
+        `;
+    }).join('');
+};
 
+// --- 1. BẮT SỰ KIỆN TOÀN CỤC (Sử dụng event delegation chuẩn xác cho các nút động) ---
+document.addEventListener('click', (e) => {
+    // Bấm nút Nhận việc
+    const takeBtn = e.target.closest('.btn-take');
+    if (takeBtn) {
+        const jobId = takeBtn.getAttribute('data-id');
+        if (jobId) {
+            takeJob(jobId);
+            return;
+        }
+    }
+
+    // Bấm nút Xóa
+    const deleteBtn = e.target.closest('.btn-delete');
+    if (deleteBtn) {
+        const jobId = deleteBtn.getAttribute('data-id');
+        if (jobId) {
+            // Kiểm tra phân quyền chính chủ trước khi xóa trực tiếp trên giao diện
+            const currentUserPhone = localStorage.getItem('viecgap_user_phone');
+            const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
+            const job = jobs.find(j => j.id === jobId);
+
+            if (!currentUserPhone) {
+                alert('Vui lòng đăng nhập để thực hiện tính năng xóa!');
+                return;
+            }
+
+            if (job && job.phone !== currentUserPhone) {
+                alert('Bạn không có quyền xóa công việc do người khác đăng!');
+                return;
+            }
+
+            if (confirm('Bạn có chắc chắn muốn xóa bài đăng này không?')) {
+                // Gọi hàm deleteJob từ service hoặc xử lý trực tiếp xóa khỏi localStorage
+                const updatedJobs = jobs.filter(j => j.id !== jobId);
+                localStorage.setItem('viecgap_jobs', JSON.stringify(updatedJobs));
+                
+                // Lưu vào thùng rác nếu có
+                if (job) {
+                    const deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
+                    deletedJobs.push(job);
+                    localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
+                }
+
+                alert('Đã xóa thành công!');
+                renderJobs(); // Tải lại danh sách
+            }
+            return;
+        }
+    }
+});
+
+// --- 2. KHỞI TẠO HỆ THỐNG KHI DOM ĐÃ TẢI XONG ---
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG ---");
+
+    // Khởi tạo các module modal chuyên biệt
+    initTrashModal();
+
+    // Tải lại giao diện tài khoản khi vừa mở trang
+    if (typeof updateAuthUI === 'function') {
+        updateAuthUI();
+    }
+
+    // Dọn dẹp tất cả modal bị kẹt khi mới tải trang
+    document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    });
+
+    // Render danh sách việc làm lần đầu
     renderJobs();
 
     // --- 3. XỬ LÝ MODAL ĐĂNG NHẬP & KIỂM TRA PHIÊN ĐĂNG NHẬP ---
@@ -143,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Đăng nhập thành công!');
             closeAuthModal();
             if (typeof updateAuthUI === 'function') updateAuthUI();
+            renderJobs(); // Cập nhật lại danh sách để hiện nút xóa đúng với chủ bài
         }
     });
 
@@ -179,6 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
     postJobForm?.addEventListener('submit', (e) => {
         e.preventDefault();
 
+        const currentUserPhone = localStorage.getItem('viecgap_user_phone') || 'anonymous';
+
         const newJob = {
             id: 'job_' + Date.now(),
             title: document.getElementById('jobTitleInput')?.value || 'Công việc mới',
@@ -186,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
             category: document.getElementById('jobCategoryInput')?.value || 'delivery',
             salary: document.getElementById('jobSalaryInput')?.value || 'Thỏa thuận',
             urgent: document.getElementById('jobUrgentInput')?.checked || false,
+            phone: currentUserPhone, // Lưu lại số điện thoại người đăng để phân quyền chính chủ
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 

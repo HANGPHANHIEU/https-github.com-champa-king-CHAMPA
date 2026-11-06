@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const orgListContainer = document.getElementById('orgList');
         if (!orgListContainer) return;
 
-        const orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
+        const orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
         // Chỉ lấy các tổ chức có trạng thái 'approved' (Admin đã đồng ý)
         const approvedOrgs = orgs.filter(o => o.status === 'approved');
 
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between gap-2">
                 <div class="flex justify-between items-start">
                     <div>
-                        <span class="bg-teal-50 text-teal-700 text-[11px] font-semibold px-2 py-0.5 rounded-md uppercase">${org.province || 'An Giang'}</span>
+                        <span class="bg-teal-50 text-teal-700 text-[11px] font-semibold px-2 py-0.5 rounded-md uppercase">${org.province || org.district || 'An Giang'}</span>
                         <h3 class="font-bold text-slate-900 text-base mt-1">${org.name}</h3>
                     </div>
                     <!-- NHÃN ĐÃ XÁC MINH HIỂN THỊ KHI ĐÃ ĐƯỢC DUYỆT -->
@@ -75,11 +75,46 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fa-solid fa-circle-check text-emerald-500"></i> Đã xác minh
                     </span>
                 </div>
-                <p class="text-xs text-slate-600"><i class="fa-solid fa-star text-amber-500 mr-1"></i>Thế mạnh: ${org.strength}</p>
+                <p class="text-xs text-slate-600"><i class="fa-solid fa-star text-amber-500 mr-1"></i>Thế mạnh: ${org.strength || 'Chưa cập nhật'}</p>
                 <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-50">
-                    <span><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${org.address}, ${org.district}</span>
+                    <span><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${org.address || ''} ${org.district || ''}</span>
                     <a href="tel:${org.phone}" class="text-teal-600 font-bold hover:underline"><i class="fa-solid fa-phone mr-1"></i>${org.phone}</a>
                 </div>
+            </div>
+        `).join('');
+    };
+
+    // --- HÀM RENDER DANH SÁCH CÁ NHÂN ĐÃ ĐƯỢC DUYỆT ---
+    const renderApprovedWorkers = () => {
+        const workerListContainer = document.getElementById('workerList'); // ID container hiển thị danh sách cá nhân ở trang chủ (nếu có)
+        if (!workerListContainer) return;
+
+        const workers = JSON.parse(localStorage.getItem('viecgap_workers') || localStorage.getItem('workers_list') || '[]');
+        const approvedWorkers = workers.filter(w => w.status === 'approved');
+
+        if (approvedWorkers.length === 0) {
+            workerListContainer.innerHTML = `
+                <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    Chưa có hồ sơ cá nhân nào được xác minh.
+                </div>
+            `;
+            return;
+        }
+
+        workerListContainer.innerHTML = approvedWorkers.map(w => `
+            <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex justify-between items-center">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h4 class="font-bold text-slate-800 text-sm">${w.name}</h4>
+                        <span class="bg-emerald-50 text-emerald-600 text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
+                            <i class="fa-solid fa-circle-check text-emerald-500"></i> Đã xác minh
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Kỹ năng: ${w.skill || 'Đa năng'} &bull; Khu vực: ${w.location || 'An Giang'}</p>
+                </div>
+                <a href="tel:${w.phone}" class="bg-teal-50 hover:bg-teal-100 text-teal-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+                    <i class="fa-solid fa-phone mr-1"></i>Liên hệ
+                </a>
             </div>
         `).join('');
     };
@@ -187,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderAcceptedJobs();
         renderApprovedOrgs();
+        renderApprovedWorkers();
         renderTrashList();
     };
 
@@ -370,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
         orgs.unshift(newOrg);
         localStorage.setItem('viecgap_orgs', JSON.stringify(orgs));
+        localStorage.setItem('organizations_list', JSON.stringify(orgs)); // Đồng bộ cả 2 key
 
         alert("Ghi danh Tổ chức thành công! Hồ sơ của bạn đang chờ Admin phê duyệt.");
         closeOrgModal();
@@ -407,6 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let workers = JSON.parse(localStorage.getItem('viecgap_workers') || '[]');
         workers.unshift(newWorker);
         localStorage.setItem('viecgap_workers', JSON.stringify(workers));
+        localStorage.setItem('workers_list', JSON.stringify(workers)); // Đồng bộ cả 2 key
 
         alert("Đăng ký hồ sơ cá nhân thành công! Hồ sơ của bạn đang chờ Admin phê duyệt.");
         closeWorkerModal();
@@ -507,6 +545,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderAcceptedJobs();
             } else if (tabId === 'tabOrganization') {
                 renderApprovedOrgs();
+            } else if (tabId === 'tabWorker') {
+                renderApprovedWorkers();
             }
         });
     });

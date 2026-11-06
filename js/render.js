@@ -4,7 +4,36 @@ import { OrgService } from './org-service.js';
 import { showToast } from './toast.js';
 
 /**
- * 1. Hàm vẽ danh sách công việc (Jobs) - Tích hợp đầy đủ Nhận việc, Xóa, Thùng rác & Cloud
+ * 1. Hàm cập nhật giao diện xác thực người dùng (Auth UI)
+ */
+export function updateAuthUI() {
+    const user = Storage.getUser();
+    
+    // Tìm các phần tử hiển thị thông tin người dùng trên Header / UI
+    const btnRegisterPersonal = document.getElementById('btnRegisterPersonal'); // Nút "Đăng ký cá nhân"
+    const userInfoContainer = document.getElementById('userInfoContainer'); // Khu vực hiển thị tên user sau khi đăng nhập
+    const userNameEl = document.getElementById('userNameDisplay');
+
+    if (user) {
+        // Nếu ĐÃ ĐĂNG NHẬP: Ẩn nút đăng ký, hiện thông tin cá nhân
+        if (btnRegisterPersonal) btnRegisterPersonal.classList.add('hidden');
+        
+        if (userInfoContainer) {
+            userInfoContainer.classList.remove('hidden');
+            if (userNameEl) userNameEl.textContent = `Xin chào, ${user.name || user.phone}`;
+        }
+    } else {
+        // Nếu CHƯA ĐĂNG NHẬP: Hiện lại nút đăng ký
+        if (btnRegisterPersonal) btnRegisterPersonal.classList.remove('hidden');
+        if (userInfoContainer) userInfoContainer.classList.add('hidden');
+    }
+}
+
+// Gắn hàm updateAuthUI vào window để các module khác dễ dàng gọi gọi trực tiếp
+window.updateAuthUI = updateAuthUI;
+
+/**
+ * 2. Hàm vẽ danh sách công việc (Jobs) - Tích hợp đầy đủ Nhận việc, Xóa, Thùng rác & Cloud
  */
 export async function renderJobs() {
     // Hỗ trợ cả 2 ID container thường dùng ('jobList' hoặc 'jobListContainer')
@@ -39,13 +68,13 @@ export async function renderJobs() {
             </div>
             <div class="flex gap-2 items-center">
                 <!-- Nút Nhận việc (Hiển thị cho mọi người, JobService sẽ xử lý chặn tự nhận việc) -->
-                <button data-id="${job.id}" class="btn-take bg-black text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-slate-800 transition">
+                <button data-id="${job.id}" class="btn-take bg-black text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-slate-800 transition cursor-pointer">
                     Nhận việc
                 </button>
 
                 <!-- Nút Xóa: CHỈ HIỂN THỊ KHI ĐÚNG LÀ CHÍNH CHỦ ĐĂNG -->
                 ${isOwner ? `
-                    <button data-id="${job.id}" class="btn-del px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 transition">
+                    <button data-id="${job.id}" class="btn-del px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 transition cursor-pointer">
                         <i class="fa-solid fa-trash-can"></i> Xóa
                     </button>
                 ` : ''}
@@ -59,7 +88,7 @@ export async function renderJobs() {
 }
 
 /**
- * 2. Gắn sự kiện cho các nút Nhận việc & Xóa việc
+ * 3. Gắn sự kiện cho các nút Nhận việc & Xóa việc
  */
 function attachEventListeners(filteredJobs) {
     // Sự kiện Nhận việc
@@ -67,11 +96,10 @@ function attachEventListeners(filteredJobs) {
         btn.addEventListener('click', async (e) => {
             const jobId = e.currentTarget.getAttribute('data-id');
             
-            // Gọi hàm takeJob nếu đã định nghĩa ở Service hoặc viết trực tiếp logic nhận việc tại đây
+            // Gọi hàm takeJob nếu đã định nghĩa ở Service hoặc hiển thị cảnh báo
             if (typeof JobService.takeJob === 'function') {
                 await JobService.takeJob(jobId);
             } else {
-                // Logic dự phòng nếu takeJob nằm ở file khác
                 console.warn("Hàm takeJob chưa được định nghĩa trong JobService.");
             }
             
@@ -117,7 +145,7 @@ function attachEventListeners(filteredJobs) {
 }
 
 /**
- * 3. Hàm vẽ danh sách tổ chức/đơn vị (Organizations)
+ * 4. Hàm vẽ danh sách tổ chức/đơn vị (Organizations)
  */
 export async function renderOrganizations() {
     const container = document.getElementById('orgList');

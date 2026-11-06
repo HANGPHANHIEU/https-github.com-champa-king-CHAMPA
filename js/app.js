@@ -1,6 +1,63 @@
 import { initTrashModal } from './trash-modal.js';
 import { updateAuthUI } from './auth-modal.js';
 
+// --- HÀM XỬ LÝ NHẬN VIỆC ---
+window.handleTakeJob = (jobId) => {
+    const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true' || !!localStorage.getItem('user');
+    
+    if (!isLoggedIn) {
+        alert("Vui lòng đăng nhập tài khoản trước khi nhận việc!");
+        document.getElementById('authModal')?.classList.remove('hidden');
+        document.getElementById('authModal')?.classList.add('flex');
+        return;
+    }
+
+    const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
+    const job = jobs.find(j => j.id === jobId);
+    const currentUserPhone = localStorage.getItem('viecgap_user_phone');
+
+    if (job && job.phone === currentUserPhone) {
+        alert("Bạn không thể tự nhận công việc do chính mình đăng!");
+        return;
+    }
+
+    if (confirm(`Bạn có chắc chắn muốn nhận công việc này không?`)) {
+        alert("Nhận việc thành công! Chủ bài đăng sẽ liên hệ với bạn.");
+    }
+};
+
+// --- HÀM XỬ LÝ XÓA VIỆC (Chỉ chính chủ) ---
+window.handleDeleteJob = (jobId) => {
+    const currentUserPhone = localStorage.getItem('viecgap_user_phone');
+    const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
+    const job = jobs.find(j => j.id === jobId);
+
+    if (!currentUserPhone) {
+        alert('Vui lòng đăng nhập để thực hiện tính năng xóa!');
+        return;
+    }
+
+    if (job && job.phone !== currentUserPhone) {
+        alert('Bạn không có quyền xóa công việc do người khác đăng!');
+        return;
+    }
+
+    if (confirm('Bạn có chắc chắn muốn xóa bài đăng này không?')) {
+        const updatedJobs = jobs.filter(j => j.id !== jobId);
+        localStorage.setItem('viecgap_jobs', JSON.stringify(updatedJobs));
+
+        // Đưa vào thùng rác
+        if (job) {
+            const deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
+            deletedJobs.push(job);
+            localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
+        }
+
+        alert('Đã xóa thành công!');
+        renderJobs(); // Cập nhật lại giao diện ngay lập tức
+    }
+};
+
 // --- HÀM RENDER DANH SÁCH VIỆC LÀM ---
 export const renderJobs = () => {
     const jobListContainer = document.getElementById('jobList');
@@ -45,11 +102,12 @@ export const renderJobs = () => {
                         <span><i class="fa-regular fa-clock text-slate-400 mr-1"></i>${job.createdAt || ''}</span>
                     </div>
                     <div class="flex gap-2">
-                        <button data-id="${job.id}" class="btn-take bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer">
+                        <!-- Gắn trực tiếp hàm onclick giúp nút chắc chắn ăn sự kiện -->
+                        <button type="button" onclick="window.handleTakeJob('${job.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer">
                             Nhận việc
                         </button>
                         ${isOwner ? `
-                            <button data-id="${job.id}" class="btn-delete bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer">
+                            <button type="button" onclick="window.handleDeleteJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer">
                                 Xóa
                             </button>
                         ` : ''}
@@ -59,72 +117,6 @@ export const renderJobs = () => {
         `;
     }).join('');
 };
-
-// --- BẮT SỰ KIỆN TOÀN CỤC CHO NÚT NHẬN VIỆC VÀ XÓA ---
-document.addEventListener('click', (e) => {
-    // 1. Xử lý nút NHẬN VIỆC
-    const takeBtn = e.target.closest('.btn-take');
-    if (takeBtn) {
-        const jobId = takeBtn.getAttribute('data-id');
-        const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true' || !!localStorage.getItem('user');
-        
-        if (!isLoggedIn) {
-            alert("Vui lòng đăng nhập tài khoản trước khi nhận việc!");
-            document.getElementById('authModal')?.classList.remove('hidden');
-            document.getElementById('authModal')?.classList.add('flex');
-            return;
-        }
-
-        const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
-        const job = jobs.find(j => j.id === jobId);
-        const currentUserPhone = localStorage.getItem('viecgap_user_phone');
-
-        if (job && job.phone === currentUserPhone) {
-            alert("Bạn không thể tự nhận công việc do chính mình đăng!");
-            return;
-        }
-
-        if (confirm(`Bạn có chắc chắn muốn nhận công việc này không?`)) {
-            alert("Nhận việc thành công! Chủ bài đăng sẽ liên hệ với bạn.");
-        }
-        return;
-    }
-
-    // 2. Xử lý nút XÓA VIỆC (Chỉ chính chủ mới xóa được)
-    const deleteBtn = e.target.closest('.btn-delete');
-    if (deleteBtn) {
-        const jobId = deleteBtn.getAttribute('data-id');
-        const currentUserPhone = localStorage.getItem('viecgap_user_phone');
-        const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
-        const job = jobs.find(j => j.id === jobId);
-
-        if (!currentUserPhone) {
-            alert('Vui lòng đăng nhập để thực hiện tính năng xóa!');
-            return;
-        }
-
-        if (job && job.phone !== currentUserPhone) {
-            alert('Bạn không có quyền xóa công việc do người khác đăng!');
-            return;
-        }
-
-        if (confirm('Bạn có chắc chắn muốn xóa bài đăng này không?')) {
-            const updatedJobs = jobs.filter(j => j.id !== jobId);
-            localStorage.setItem('viecgap_jobs', JSON.stringify(updatedJobs));
-
-            // Đưa vào thùng rác
-            if (job) {
-                const deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
-                deletedJobs.push(job);
-                localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
-            }
-
-            alert('Đã xóa thành công!');
-            renderJobs(); // Cập nhật lại giao diện ngay lập tức
-        }
-        return;
-    }
-});
 
 // --- KHỞI TẠO KHI TẢI TRANG ---
 document.addEventListener('DOMContentLoaded', () => {

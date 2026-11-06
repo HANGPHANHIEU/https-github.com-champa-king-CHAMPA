@@ -1,5 +1,13 @@
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+// --- CẤU HÌNH SUPABASE ---
+const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Thay bằng URL dự án Supabase của bạn
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Thay bằng ANON KEY của bạn
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (HOÀN CHỈNH & ĐỒNG BỘ ADMIN) ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (HOÀN CHỈNH & REALTIME) ---");
 
     // 1. Dọn dẹp tất cả modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
@@ -174,7 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span><i class="fa-solid fa-location-dot mr-1"></i>${job.location}</span>
                     <div class="flex items-center gap-2">
                         <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check-circle mr-1"></i>Đã nhận việc</span>
-                        <!-- Nút Hủy nhận tích hợp icon thùng rác (fa-trash-can) -->
                         <button onclick="window.handleRemoveAcceptedJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5">
                             <i class="fa-solid fa-trash-can"></i> Hủy nhận
                         </button>
@@ -464,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
         orgs.unshift(newOrg);
         
-        // Lưu đồng bộ vào cả hai key để Admin nhận được dữ liệu
+        // Lưu đồng bộ vào cả hai key
         localStorage.setItem('viecgap_orgs', JSON.stringify(orgs));
         localStorage.setItem('organizations_list', JSON.stringify(orgs));
         window.dispatchEvent(new Event('storage'));
@@ -505,7 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let workers = JSON.parse(localStorage.getItem('viecgap_workers') || localStorage.getItem('workers_list') || '[]');
         workers.unshift(newWorker);
         
-        // Lưu đồng bộ vào cả hai key để Admin nhận được dữ liệu
+        // Lưu đồng bộ vào cả hai key
         localStorage.setItem('viecgap_workers', JSON.stringify(workers));
         localStorage.setItem('workers_list', JSON.stringify(workers));
         window.dispatchEvent(new Event('storage'));
@@ -608,8 +615,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Lắng nghe sự kiện storage từ cửa sổ admin (khi admin duyệt/thu hồi)
+    // Lắng nghe sự kiện storage từ cửa sổ admin
     window.addEventListener('storage', () => {
         window.renderJobs();
     });
+
+    // ==========================================
+    // --- TÍCH HỢP SUPABASE REALTIME CHÍNH THỨC ---
+    // ==========================================
+    supabase
+        .channel('public:viecgap_live_sync')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'organizations' }, payload => {
+            console.log('Realtime - Tổ chức thay đổi:', payload);
+            window.renderJobs();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'workers' }, payload => {
+            console.log('Realtime - Cá nhân thay đổi:', payload);
+            window.renderJobs();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, payload => {
+            console.log('Realtime - Việc làm thay đổi:', payload);
+            window.renderJobs();
+        })
+        .subscribe();
 });

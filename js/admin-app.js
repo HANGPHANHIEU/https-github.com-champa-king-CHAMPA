@@ -29,7 +29,7 @@ function saveAdminEmails(list) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' - ADMIN & REGISTRATION ĐÃ SẴN SÀNG ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' - ADMIN & REGISTRATION HOÀN CHỈNH ĐÃ SẴN SÀNG ---");
 
     // ==========================================
     // 1. XỬ LÝ FORM ĐĂNG KÝ (TỔ CHỨC & CÁ NHÂN)
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 
-        // Lưu đồng bộ vào cả hai khóa để tương thích ngược tuyệt đối
+        // Lưu đồng bộ vào cả hai khóa để tránh bỏ sót
         let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
         orgs.unshift(newOrg);
         localStorage.setItem('viecgap_orgs', JSON.stringify(orgs));
@@ -283,15 +283,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             if (googleErrorMsg) {
                 googleErrorMsg.textContent = 'Xác thực Google thất bại!';
-                googleErrorMsg.classList.add('hidden');
+                googleErrorMsg.classList.remove('hidden');
             }
         }
     };
 
+    // --- HÀM TẢI VÀ RENDER DỮ LIỆU CHỜ DUYỆT (ADMIN) ---
     async function loadPendingData() {
         const workers = JSON.parse(localStorage.getItem('viecgap_workers') || '[]');
         
-        // Đọc tổ chức từ cả hai nguồn để tránh bỏ sót
         let orgs = [];
         try {
             orgs = await OrgService.fetchCloudOrgs();
@@ -327,8 +327,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p class="text-slate-600 mt-0.5">📞 ${w.phone} &bull; 📍 ${w.location}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="approveWorker('${w.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
-                            <button onclick="rejectWorker('${w.id}')" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
+                            <button onclick="approveWorker('${w.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition cursor-pointer">Đồng ý</button>
+                            <button onclick="rejectWorker('${w.id}')" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition cursor-pointer">Từ chối</button>
                         </div>
                     `;
                     workerContainer.appendChild(item);
@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Các hàm xử lý phê duyệt cá nhân
+    // --- CÁC HÀM XỬ LÝ PHÊ DUYỆT (GẮN VÀO WINDOW) ---
     window.approveWorker = function(id) {
         let workers = JSON.parse(localStorage.getItem('viecgap_workers') || '[]');
         workers = workers.map(w => w.id === id ? { ...w, status: 'approved' } : w);
@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.rejectWorker = function(id) {
-        if (confirm('Bạn có chắc chắn muốn từ chối và xóa hồ sơ này?')) {
+        if (confirm('Bạn có chắc chắn muốn từ chối và xóa hồ sơ cá nhân này?')) {
             let workers = JSON.parse(localStorage.getItem('viecgap_workers') || '[]');
             workers = workers.filter(w => w.id !== id);
             localStorage.setItem('viecgap_workers', JSON.stringify(workers));
@@ -382,7 +382,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Các hàm xử lý phê duyệt tổ chức (Lưu đồng bộ cả 2 khóa LocalStorage)
     window.approveOrg = function(id) {
         let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
         orgs = orgs.map(o => o.id == id ? { ...o, status: 'approved' } : o);

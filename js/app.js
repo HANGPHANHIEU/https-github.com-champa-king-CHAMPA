@@ -1,9 +1,13 @@
+import { initTrashModal } from './trash-modal.js';
 import { updateAuthUI } from './auth-modal.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (SAFE MODE) ---");
 
-    // 1. Tải lại giao diện tài khoản khi vừa mở trang (Từ file 1)
+    // 0. Khởi tạo các module modal chuyên biệt
+    initTrashModal();
+
+    // 1. Tải lại giao diện tài khoản khi vừa mở trang
     if (typeof updateAuthUI === 'function') {
         updateAuthUI();
     }

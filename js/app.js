@@ -2,35 +2,42 @@ import { takeJob, deleteJob } from './job-service.js';
 import { initTrashModal } from './trash-modal.js';
 import { updateAuthUI } from './auth-modal.js';
 
-// --- BẮT SỰ KIỆN TOÀN CỤC (EVENT DELEGATION CHO NÚT NHẬN VIỆC & XÓA) ---
+// --- 1. BẮT SỰ KIỆN TOÀN CỤC (EVENT ĐELEGATION CHO NÚT NHẬN VIỆC & XÓA) ---
 document.addEventListener('click', (e) => {
-    // 1. Nếu bấm nút Nhận việc
-    if (e.target.classList.contains('btn-take') || e.target.closest('.btn-take')) {
-        const btn = e.target.closest('.btn-take') || e.target;
-        const jobId = btn.getAttribute('data-id');
-        if (jobId) takeJob(jobId);
+    // Bấm nút Nhận việc
+    const takeBtn = e.target.closest('.btn-take');
+    if (takeBtn) {
+        const jobId = takeBtn.getAttribute('data-id');
+        if (jobId) {
+            takeJob(jobId);
+            return;
+        }
     }
 
-    // 2. Nếu bấm nút Xóa
-    if (e.target.classList.contains('btn-delete') || e.target.closest('.btn-delete')) {
-        const btn = e.target.closest('.btn-delete') || e.target;
-        const jobId = btn.getAttribute('data-id');
-        if (jobId) deleteJob(jobId);
+    // Bấm nút Xóa
+    const deleteBtn = e.target.closest('.btn-delete');
+    if (deleteBtn) {
+        const jobId = deleteBtn.getAttribute('data-id');
+        if (jobId) {
+            deleteJob(jobId);
+            return;
+        }
     }
 });
 
+// --- 2. KHỞI TẠO HỆ THỐNG KHI DOM ĐÃ TẢI XONG ---
 document.addEventListener('DOMContentLoaded', () => {
     console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (SAFE MODE) ---");
 
-    // 0. Khởi tạo các module modal chuyên biệt
+    // Khởi tạo các module modal chuyên biệt
     initTrashModal();
 
-    // 1. Tải lại giao diện tài khoản khi vừa mở trang
+    // Tải lại giao diện tài khoản khi vừa mở trang
     if (typeof updateAuthUI === 'function') {
         updateAuthUI();
     }
 
-    // 2. Dọn dẹp tất cả modal bị kẹt khi mới tải trang
+    // Dọn dẹp tất cả modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
@@ -74,7 +81,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${job.location || 'Châu Thành'}</span>
                         <span><i class="fa-regular fa-clock text-slate-400 mr-1"></i>${job.createdAt || ''}</span>
                     </div>
-                    <button data-id="${job.id}" class="btn-take text-teal-600 hover:text-teal-700 font-semibold transition cursor-pointer">Nhận việc &rarr;</button>
+                    <div class="flex gap-2">
+                        <button data-id="${job.id}" class="btn-take bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer">
+                            Nhận việc
+                        </button>
+                        <button data-id="${job.id}" class="btn-delete bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer">
+                            Xóa
+                        </button>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -91,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetFooter = document.getElementById('resetFooter');
     const loginBtnText = document.getElementById('loginBtnText');
 
-    // Kiểm tra trạng thái đăng nhập hiện tại từ LocalStorage
     const checkLoginStatus = () => {
         const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true' || !!localStorage.getItem('user');
         if (isLoggedIn && loginBtnText) {
@@ -120,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
         resetForm?.reset();
     };
 
-    // Xử lý khi submit form đăng nhập thành công
     authForm?.addEventListener('submit', (e) => {
         e.preventDefault();
         const phone = document.getElementById('loginPhone')?.value;
@@ -139,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCancelAuthModal')?.addEventListener('click', closeAuthModal);
     document.getElementById('btnCancelReset')?.addEventListener('click', closeAuthModal);
 
-    // --- 4. XỬ LÝ MODAL ĐĂNG VIỆC (CÓ KIỂM TRA ĐĂNG NHẬP) ---
+    // --- 4. XỬ LÝ MODAL ĐĂNG VIỆC ---
     const postJobModal = document.getElementById('postJobModal');
     const postJobForm = document.getElementById('postJobForm');
 
@@ -149,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
             openAuthModal();
             return;
         }
-
         postJobModal?.classList.remove('hidden');
         postJobModal?.classList.add('flex');
     };
@@ -165,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCloseModal')?.addEventListener('click', closePostJobModal);
     document.getElementById('btnCancelModal')?.addEventListener('click', closePostJobModal);
 
-    // Bắt sự kiện khi bấm nút "Đăng ngay" trong form
     postJobForm?.addEventListener('submit', (e) => {
         e.preventDefault();
 

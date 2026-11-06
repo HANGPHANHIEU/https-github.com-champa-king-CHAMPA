@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Thay bằng ANON KEY củ
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (HOÀN CHỈNH & REALTIME) ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (SUPABASE & REALTIME) ---");
 
     // 1. Dọn dẹp tất cả modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.classList.remove('flex');
     });
 
-    // Các phần tử modal & giao diện chính
     const authModal = document.getElementById('authModal');
     const authForm = document.getElementById('authForm');
     const resetForm = document.getElementById('resetForm');
@@ -67,26 +66,18 @@ document.addEventListener('DOMContentLoaded', () => {
         resetForm?.reset();
     };
 
-    // --- CÁC HÀM HỖ TRỢ ĐỒNG BỘ VỚI HỆ THỐNG ADMIN ---
-    window.getPendingOrganizations = () => {
-        const orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
-        return orgs.filter(o => o && (o.status === 'pending' || !o.status));
-    };
-
-    window.getPendingWorkers = () => {
-        const workers = JSON.parse(localStorage.getItem('viecgap_workers') || localStorage.getItem('workers_list') || '[]');
-        return workers.filter(w => w && (w.status === 'pending' || !w.status));
-    };
-
     // --- HÀM RENDER DANH SÁCH TỔ CHỨC ĐÃ ĐƯỢC DUYỆT (TAB TỔ CHỨC) ---
-    const renderApprovedOrgs = () => {
+    const renderApprovedOrgs = async () => {
         const orgListContainer = document.getElementById('orgList');
         if (!orgListContainer) return;
 
-        const orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
-        const approvedOrgs = orgs.filter(o => o && o.status === 'approved');
+        const { data: approvedOrgs, error } = await supabase
+            .from('organizations')
+            .select('*')
+            .eq('status', 'approved')
+            .order('created_at', { ascending: false });
 
-        if (approvedOrgs.length === 0) {
+        if (error || !approvedOrgs || approvedOrgs.length === 0) {
             orgListContainer.innerHTML = `
                 <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                     Chưa có tổ chức/đối tác nào được phê duyệt.
@@ -116,49 +107,32 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- HÀM RENDER DANH SÁCH CÁ NHÂN ĐÃ ĐƯỢC DUYỆT ---
-    const renderApprovedWorkers = () => {
+    const renderApprovedWorkers = async () => {
         const workerListContainer = document.getElementById('workerList');
         if (!workerListContainer) return;
 
-        const workers = JSON.parse(localStorage.getItem('viecgap_workers') || localStorage.getItem('workers_list') || '[]');
-        const approvedWorkers = workers.filter(w => w && w.status === 'approved');
+        const { data: approvedWorkers, error } = await supabase
+            .from('workers')
+            .select('*')
+            .eq('status', 'approved')
+            .order('created_at', { ascending: false });
 
-        if (approvedWorkers.length === 0) {
-            workerListContainer.innerHTML = `
-                <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                    Chưa có hồ sơ cá nhân nào được xác minh.
-                </div>
-            `;
+        if (error || !approvedWorkers || approvedWorkers.length === 0) {
             return;
         }
-
-        workerListContainer.innerHTML = approvedWorkers.map(w => `
-            <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex justify-between items-center">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h4 class="font-bold text-slate-800 text-sm">${w.name}</h4>
-                        <span class="bg-emerald-50 text-emerald-600 text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
-                            <i class="fa-solid fa-circle-check text-emerald-500"></i> Đã xác minh
-                        </span>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1">Kỹ năng: ${w.skill || 'Đa năng'} &bull; Khu vực: ${w.location || 'An Giang'}</p>
-                </div>
-                <a href="tel:${w.phone}" class="bg-teal-50 hover:bg-teal-100 text-teal-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition">
-                    <i class="fa-solid fa-phone mr-1"></i>Liên hệ
-                </a>
-            </div>
-        `).join('');
     };
 
     // --- HÀM RENDER DANH SÁCH VIỆC LÀM ĐÃ NHẬN (TAB 2) ---
-    const renderAcceptedJobs = () => {
+    const renderAcceptedJobs = async () => {
         const acceptedContainer = document.getElementById('acceptedJobList');
         if (!acceptedContainer) return;
 
         const currentUserPhone = localStorage.getItem('viecgap_user_phone');
-        const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
+        const { data: jobs, error } = await supabase.from('jobs').select('*');
+
+        if (error || !jobs) return;
         
-        const myAcceptedJobs = jobs.filter(job => job.status === 'accepted' && job.acceptedBy === currentUserPhone);
+        const myAcceptedJobs = jobs.filter(job => job.status === 'accepted' && job.accepted_by === currentUserPhone);
 
         if (myAcceptedJobs.length === 0) {
             acceptedContainer.innerHTML = `
@@ -237,14 +211,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- HÀM RENDER DANH SÁCH VIỆC LÀM RA GIAO DIỆN CHÍNH ---
-    window.renderJobs = () => {
+    window.renderJobs = async () => {
         const jobListContainer = document.getElementById('jobList');
         const jobCountElement = document.getElementById('jobCount');
         if (!jobListContainer) return;
 
-        const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
+        const { data: jobs, error } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
         const currentUserPhone = localStorage.getItem('viecgap_user_phone');
         
+        if (error || !jobs) return;
+
         const availableJobs = jobs.filter(j => j.status !== 'accepted');
 
         if (jobCountElement) {
@@ -262,6 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         jobListContainer.innerHTML = availableJobs.map(job => {
             const isOwner = currentUserPhone && job.phone === currentUserPhone;
+            const dateStr = job.created_at ? new Date(job.created_at).toLocaleDateString('vi-VN') : 'Gần đây';
 
             return `
                 <div class="bg-white border border-slate-100 hover:border-teal-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-3">
@@ -278,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-50">
                         <div class="flex items-center gap-3">
                             <span><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${job.location}</span>
-                            <span><i class="fa-regular fa-clock text-slate-400 mr-1"></i>${job.createdAt}</span>
+                            <span><i class="fa-regular fa-clock text-slate-400 mr-1"></i>${dateStr}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="window.handleTakeJob('${job.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1">
@@ -302,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- LOGIC NHẬN VIỆC ---
-    window.handleTakeJob = (jobId) => {
+    window.handleTakeJob = async (jobId) => {
         if (!checkLoginStatus()) {
             alert("Vui lòng đăng nhập tài khoản trước khi nhận việc!");
             openAuthModal();
@@ -310,128 +287,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const currentUserPhone = localStorage.getItem('viecgap_user_phone');
-        let jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
-        const jobIndex = jobs.findIndex(j => j.id === jobId);
-
-        if (jobIndex === -1) {
+        const { data: jobs } = await supabase.from('jobs').select('*').eq('id', jobId);
+        if (!jobs || jobs.length === 0) {
             alert("Công việc không tồn tại hoặc đã bị xóa!");
             return;
         }
 
-        if (jobs[jobIndex].phone === currentUserPhone) {
+        const job = jobs[0];
+        if (job.phone === currentUserPhone) {
             alert("Bạn không thể tự nhận công việc do chính mình đăng!");
             return;
         }
 
-        if (confirm(`Bạn có chắc chắn muốn nhận công việc: "${jobs[jobIndex].title}"?`)) {
-            jobs[jobIndex].status = 'accepted';
-            jobs[jobIndex].acceptedBy = currentUserPhone;
-
-            localStorage.setItem('viecgap_jobs', JSON.stringify(jobs));
-            alert("Nhận việc thành công! Bạn có thể xem lại ở tab 'Đã nhận'.");
-            window.renderJobs();
+        if (confirm(`Bạn có chắc chắn muốn nhận công việc: "${job.title}"?`)) {
+            const { error } = await supabase.from('jobs').update({ status: 'accepted', accepted_by: currentUserPhone }).eq('id', jobId);
+            if (error) {
+                alert("Lỗi khi nhận việc: " + error.message);
+            } else {
+                alert("Nhận việc thành công! Bạn có thể xem lại ở tab 'Đã nhận'.");
+                window.renderJobs();
+            }
         }
     };
 
     // --- LOGIC HỦY NHẬN VIỆC ---
-    window.handleRemoveAcceptedJob = (jobId) => {
+    window.handleRemoveAcceptedJob = async (jobId) => {
         if (confirm("Bạn có chắc chắn muốn hủy nhận công việc này không? Công việc sẽ quay lại danh sách tìm việc.")) {
-            let jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
-            const jobIndex = jobs.findIndex(j => j.id === jobId);
-
-            if (jobIndex !== -1) {
-                jobs[jobIndex].status = 'active';
-                delete jobs[jobIndex].acceptedBy;
-
-                localStorage.setItem('viecgap_jobs', JSON.stringify(jobs));
+            const { error } = await supabase.from('jobs').update({ status: 'active', accepted_by: null }).eq('id', jobId);
+            if (!error) {
                 alert("Đã hủy nhận công việc thành công!");
                 window.renderJobs();
             }
         }
     };
 
-    // --- LOGIC XÓA BÀI ĐĂNG (ĐƯA VÀO THÙNG RÁC) ---
-    window.handleDeleteJob = (jobId) => {
-        const currentUserPhone = localStorage.getItem('viecgap_user_phone');
-        let jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
-        const job = jobs.find(j => j.id === jobId);
-
-        if (!job) return;
-
-        if (job.phone !== currentUserPhone) {
-            alert("Bạn không có quyền xóa công việc của người khác!");
-            return;
-        }
-
-        if (confirm("Bạn có chắc chắn muốn xóa bài đăng này không? Bài sẽ được chuyển vào Thùng rác.")) {
-            const updatedJobs = jobs.filter(j => j.id !== jobId);
-            localStorage.setItem('viecgap_jobs', JSON.stringify(updatedJobs));
-
-            let deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
-            deletedJobs.unshift({
-                ...job,
-                deletedAt: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-            });
-            localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
-
-            alert("Đã xóa công việc và chuyển vào Thùng rác thành công!");
-            window.renderJobs();
+    // --- LOGIC XÓA BÀI ĐĂNG ---
+    window.handleDeleteJob = async (jobId) => {
+        if (confirm("Bạn có chắc chắn muốn xóa bài đăng này không?")) {
+            const { error } = await supabase.from('jobs').delete().eq('id', jobId);
+            if (!error) {
+                alert("Đã xóa công việc thành công!");
+                window.renderJobs();
+            }
         }
     };
-
-    // --- LOGIC KHÔI PHỤC CÔNG VIỆC TỪ THÙNG RÁC ---
-    window.handleRestoreJob = (jobId) => {
-        let deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
-        const jobIndex = deletedJobs.findIndex(j => j.id === jobId);
-
-        if (jobIndex !== -1) {
-            const restoredJob = { ...deletedJobs[jobIndex] };
-            delete restoredJob.deletedAt;
-
-            deletedJobs.splice(jobIndex, 1);
-            localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
-
-            let jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
-            jobs.unshift(restoredJob);
-            localStorage.setItem('viecgap_jobs', JSON.stringify(jobs));
-
-            alert("Khôi phục công việc thành công!");
-            window.renderJobs();
-        }
-    };
-
-    // --- LOGIC XÓA VĨNH VIỄN ---
-    window.handlePermanentDeleteJob = (jobId) => {
-        if (confirm("Bạn có chắc chắn muốn xóa VĨNH VIỄN bài đăng này?")) {
-            let deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
-            deletedJobs = deletedJobs.filter(j => j.id !== jobId);
-            localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
-
-            alert("Đã xóa vĩnh viễn bài đăng!");
-            window.renderJobs();
-        }
-    };
-
-    // Xóa sạch thùng rác
-    document.getElementById('btnEmptyTrash')?.addEventListener('click', () => {
-        if (confirm("Bạn có chắc chắn muốn dọn sạch toàn bộ thùng rác không?")) {
-            localStorage.removeItem('viecgap_deleted_jobs');
-            window.renderJobs();
-            alert("Đã dọn sạch thùng rác!");
-        }
-    });
-
-    // Modal Thùng rác
-    const trashModal = document.getElementById('trashModal');
-    document.getElementById('btnOpenTrash')?.addEventListener('click', () => {
-        renderTrashList();
-        trashModal?.classList.remove('hidden');
-        trashModal?.classList.add('flex');
-    });
-    document.getElementById('btnCloseTrashModal')?.addEventListener('click', () => {
-        trashModal?.classList.add('hidden');
-        trashModal?.classList.remove('flex');
-    });
 
     // Render khởi tạo ban đầu
     window.renderJobs();
@@ -453,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCloseOrgModal')?.addEventListener('click', closeOrgModal);
     document.getElementById('btnCancelOrgModal')?.addEventListener('click', closeOrgModal);
 
-    orgForm?.addEventListener('submit', (e) => {
+    orgForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const newOrg = {
             id: 'org_' + Date.now(),
@@ -464,20 +363,16 @@ document.addEventListener('DOMContentLoaded', () => {
             ward: document.getElementById('orgWardInput')?.value,
             address: document.getElementById('orgAddressInput')?.value,
             strength: document.getElementById('orgStrengthInput')?.value,
-            status: 'pending',
-            createdAt: new Date().toLocaleDateString('vi-VN')
+            status: 'pending'
         };
 
-        let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
-        orgs.unshift(newOrg);
-        
-        // Lưu đồng bộ vào cả hai key
-        localStorage.setItem('viecgap_orgs', JSON.stringify(orgs));
-        localStorage.setItem('organizations_list', JSON.stringify(orgs));
-        window.dispatchEvent(new Event('storage'));
-
-        alert("Ghi danh Tổ chức thành công! Hồ sơ của bạn đang chờ Admin phê duyệt.");
-        closeOrgModal();
+        const { error } = await supabase.from('organizations').insert([newOrg]);
+        if (error) {
+            alert("Lỗi ghi danh: " + error.message);
+        } else {
+            alert("Ghi danh Tổ chức thành công! Hồ sơ đang chờ Admin phê duyệt.");
+            closeOrgModal();
+        }
     });
 
     // --- ĐĂNG KÝ CÁ NHÂN ---
@@ -497,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCloseWorkerModal')?.addEventListener('click', closeWorkerModal);
     document.getElementById('btnCancelWorkerModal')?.addEventListener('click', closeWorkerModal);
 
-    workerForm?.addEventListener('submit', (e) => {
+    workerForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const newWorker = {
             id: 'worker_' + Date.now(),
@@ -505,20 +400,16 @@ document.addEventListener('DOMContentLoaded', () => {
             phone: document.getElementById('workerPhoneInput')?.value,
             location: document.getElementById('workerLocationInput')?.value,
             skill: document.getElementById('workerSkillInput')?.value,
-            status: 'pending',
-            createdAt: new Date().toLocaleDateString('vi-VN')
+            status: 'pending'
         };
 
-        let workers = JSON.parse(localStorage.getItem('viecgap_workers') || localStorage.getItem('workers_list') || '[]');
-        workers.unshift(newWorker);
-        
-        // Lưu đồng bộ vào cả hai key
-        localStorage.setItem('viecgap_workers', JSON.stringify(workers));
-        localStorage.setItem('workers_list', JSON.stringify(workers));
-        window.dispatchEvent(new Event('storage'));
-
-        alert("Đăng ký hồ sơ cá nhân thành công! Hồ sơ của bạn đang chờ Admin phê duyệt.");
-        closeWorkerModal();
+        const { error } = await supabase.from('workers').insert([newWorker]);
+        if (error) {
+            alert("Lỗi đăng ký: " + error.message);
+        } else {
+            alert("Đăng ký hồ sơ cá nhân thành công! Hồ sơ đang chờ Admin phê duyệt.");
+            closeWorkerModal();
+        }
     });
 
     // --- ĐĂNG NHẬP ---
@@ -540,7 +431,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnLoginAccount')?.addEventListener('click', openAuthModal);
     document.getElementById('btnCloseAuthModal')?.addEventListener('click', closeAuthModal);
     document.getElementById('btnCancelAuthModal')?.addEventListener('click', closeAuthModal);
-    document.getElementById('btnCancelReset')?.addEventListener('click', closeAuthModal);
 
     // --- ĐĂNG VIỆC ---
     const postJobModal = document.getElementById('postJobModal');
@@ -567,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCloseModal')?.addEventListener('click', closePostJobModal);
     document.getElementById('btnCancelModal')?.addEventListener('click', closePostJobModal);
 
-    postJobForm?.addEventListener('submit', (e) => {
+    postJobForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const currentUserPhone = localStorage.getItem('viecgap_user_phone') || '';
 
@@ -579,16 +469,16 @@ document.addEventListener('DOMContentLoaded', () => {
             salary: document.getElementById('jobSalaryInput')?.value || 'Thỏa thuận',
             urgent: document.getElementById('jobUrgentInput')?.checked || false,
             phone: currentUserPhone,
-            status: 'active',
-            createdAt: new Date().toLocaleDateString('vi-VN')
+            status: 'active'
         };
 
-        let jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
-        jobs.unshift(newJob);
-        localStorage.setItem('viecgap_jobs', JSON.stringify(jobs));
-
-        closePostJobModal();
-        window.renderJobs();
+        const { error } = await supabase.from('jobs').insert([newJob]);
+        if (error) {
+            alert("Lỗi đăng việc: " + error.message);
+        } else {
+            closePostJobModal();
+            window.renderJobs();
+        }
     });
 
     // Chuyển đổi Tab điều hướng dưới cùng
@@ -615,27 +505,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Lắng nghe sự kiện storage từ cửa sổ admin
-    window.addEventListener('storage', () => {
-        window.renderJobs();
-    });
-
-    // ==========================================
-    // --- TÍCH HỢP SUPABASE REALTIME CHÍNH THỨC ---
-    // ==========================================
+    // --- LẮNG NGHE SUPABASE REALTIME (ĐỒNG BỘ ĐA THIẾT BỊ) ---
     supabase
         .channel('public:viecgap_live_sync')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'organizations' }, payload => {
-            console.log('Realtime - Tổ chức thay đổi:', payload);
-            window.renderJobs();
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'workers' }, payload => {
-            console.log('Realtime - Cá nhân thay đổi:', payload);
-            window.renderJobs();
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, payload => {
-            console.log('Realtime - Việc làm thay đổi:', payload);
-            window.renderJobs();
-        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'organizations' }, () => window.renderJobs())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'workers' }, () => window.renderJobs())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => window.renderJobs())
         .subscribe();
 });

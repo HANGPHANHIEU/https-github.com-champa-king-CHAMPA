@@ -2,6 +2,42 @@ import { Storage } from './storage.js';
 import { AuthService } from './auth-service.js';
 import { showToast } from './toast.js';
 
+/**
+ * Hàm xử lý đăng ký tài khoản cá nhân trực tiếp (nếu được gọi độc lập)
+ */
+export function handleRegisterPersonal(userData) {
+    // 1. Tạo đối tượng thông tin người dùng cá nhân
+    const newUser = {
+        id: Date.now().toString(),
+        name: userData.name,
+        phone: userData.phone,
+        role: 'personal', // Đánh dấu là tài khoản cá nhân
+        createdAt: new Date().toISOString()
+    };
+
+    // 2. Lưu vào Storage / localStorage
+    Storage.setUser(newUser); 
+
+    // Nếu có danh sách tất cả người dùng, lưu thêm vào danh sách đó
+    const users = Storage.getUsers ? Storage.getUsers() : [];
+    users.push(newUser);
+    if (Storage.saveUsers) Storage.saveUsers(users);
+
+    // 3. Đóng Modal đăng ký
+    const authModal = document.getElementById('authModal');
+    if (authModal) authModal.classList.add('hidden');
+
+    // 4. GỌI LẠI HÀM CẬP NHẬT GIAO DIỆN NGAY LẬP TỨC
+    if (typeof window.updateAuthUI === 'function') {
+        window.updateAuthUI();
+    }
+    
+    showToast("Đăng ký tài khoản cá nhân thành công!");
+}
+
+/**
+ * Hàm khởi tạo Modal xác thực (Đăng nhập, Đăng ký, Quên mật khẩu)
+ */
 export function initAuthModal(onAuthChange) {
     if (!document.getElementById('authModal')) {
         const div = document.createElement('div');
@@ -9,7 +45,7 @@ export function initAuthModal(onAuthChange) {
         div.innerHTML = `
             <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
                 <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-slate-100 p-6 space-y-4 relative">
-                    <button id="btnCloseAuthModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+                    <button id="btnCloseAuthModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
                     
                     <div class="text-center space-y-1">
                         <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-xl mx-auto mb-1">
@@ -143,9 +179,12 @@ export function initAuthModal(onAuthChange) {
         }
     };
 
-    document.getElementById('btnCloseAuthModal')?.addEventListener('click', () => modal?.classList.add('hidden'));
+    document.getElementById('btnCloseAuthModal')?.addEventListener('click', () => {
+        modal?.classList.remove('flex');
+        modal?.classList.add('hidden');
+    });
 
-    // Chuyển view
+    // Chuyển view qua lại giữa các form
     document.getElementById('switchToRegister')?.addEventListener('click', (e) => { e.preventDefault(); showView('register'); });
     document.getElementById('switchToForgot')?.addEventListener('click', (e) => { e.preventDefault(); showView('forgot'); });
     document.getElementById('switchToLoginFromReg')?.addEventListener('click', (e) => { e.preventDefault(); showView('login'); });
@@ -156,34 +195,43 @@ export function initAuthModal(onAuthChange) {
         e.preventDefault();
         const phone = document.getElementById('loginPhoneInput').value.trim();
         const pass = document.getElementById('loginPasswordInput').value.trim();
-        const user = AuthService.login(phone, pass);
+        const user = AuthService.login ? AuthService.login(phone, pass) : null;
 
         if (user) {
             Storage.setUser(user);
+            modal?.classList.remove('flex');
             modal?.classList.add('hidden');
             showToast(`Xin chào ${user.name}! Đăng nhập thành công.`);
-            onAuthChange();
+            if (typeof onAuthChange === 'function') onAuthChange();
         } else {
             alert('Số điện thoại hoặc mật khẩu không đúng!');
         }
     });
 
-    // Xử lý Đăng ký
+    // Xử lý Đăng ký thông qua AuthService kết hợp hàm hỗ trợ cá nhân
     registerForm?.addEventListener('submit', (e) => {
         e.preventDefault();
         const name = document.getElementById('regNameInput').value.trim();
         const phone = document.getElementById('regPhoneInput').value.trim();
         const pass = document.getElementById('regPasswordInput').value.trim();
 
-        const res = AuthService.register(name, phone, pass);
-        if (res.success) {
-            Storage.setUser(res.user);
-            modal?.classList.add('hidden');
-            registerForm.reset();
-            showToast('Tạo tài khoản thành công!');
-            onAuthChange();
+        if (AuthService.register) {
+            const res = AuthService.register(name, phone, pass);
+            if (res.success) {
+                Storage.setUser(res.user);
+                modal?.classList.remove('flex');
+                modal?.classList.add('hidden');
+                registerForm.reset();
+                showToast('Tạo tài khoản thành công!');
+                if (typeof onAuthChange === 'function') onAuthChange();
+            } else {
+                alert(res.message);
+            }
         } else {
-            alert(res.message);
+            // Dự phòng dùng trực tiếp hàm handleRegisterPersonal nếu AuthService không có sẵn hàm register
+            handleRegisterPersonal({ name, phone });
+            registerForm.reset();
+            if (typeof onAuthChange === 'function') onAuthChange();
         }
     });
 
@@ -193,14 +241,18 @@ export function initAuthModal(onAuthChange) {
         const phone = document.getElementById('forgotPhoneInput').value.trim();
         const newPass = document.getElementById('forgotNewPasswordInput').value.trim();
 
-        const res = AuthService.resetPassword(phone, newPass);
-        if (res.success) {
-            showToast(res.message);
-            forgotForm.reset();
-            showView('login');
-            onAuthChange();
+        if (AuthService.resetPassword) {
+            const res = AuthService.resetPassword(phone, newPass);
+            if (res.success) {
+                showToast(res.message);
+                forgotForm.reset();
+                showView('login');
+                if (typeof onAuthChange === 'function') onAuthChange();
+            } else {
+                alert(res.message);
+            }
         } else {
-            alert(res.message);
+            alert('Chức năng đặt lại mật khẩu chưa được cấu hình đầy đủ trong AuthService.');
         }
     });
 
@@ -211,7 +263,7 @@ export function initAuthModal(onAuthChange) {
             if (confirm(`Tài khoản: ${currentUser.name} (${currentUser.phone})\n\nBạn có muốn đăng xuất không?`)) {
                 Storage.setUser(null);
                 showToast('Đã đăng xuất tài khoản.');
-                onAuthChange();
+                if (typeof onAuthChange === 'function') onAuthChange();
             }
         } else {
             showView('login');

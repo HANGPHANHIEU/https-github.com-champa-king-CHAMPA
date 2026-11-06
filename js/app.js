@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (SAFE MODE & APPROVAL) ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (FULL FEATURES) ---");
 
     // 1. Dọn dẹp tất cả modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
@@ -177,6 +177,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderAcceptedJobs();
         renderApprovedOrgs();
+        renderTrashList();
+    };
+
+    // --- HÀM RENDER THÙNG RÁC ---
+    const renderTrashList = () => {
+        const trashContainer = document.getElementById('trashList');
+        const trashBadge = document.getElementById('trashBadge');
+        if (!trashContainer) return;
+
+        const deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
+
+        if (trashBadge) {
+            trashBadge.innerText = deletedJobs.length;
+            if (deletedJobs.length > 0) {
+                trashBadge.classList.remove('hidden');
+            } else {
+                trashBadge.classList.add('hidden');
+            }
+        }
+
+        if (deletedJobs.length === 0) {
+            trashContainer.innerHTML = `
+                <div class="text-center py-8 text-slate-400 text-sm">
+                    Thùng rác trống.
+                </div>
+            `;
+            return;
+        }
+
+        trashContainer.innerHTML = deletedJobs.map(job => `
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex justify-between items-center text-xs">
+                <div>
+                    <h4 class="font-bold text-slate-800">${job.title}</h4>
+                    <p class="text-slate-500">Khu vực: ${job.location} | Lương: ${job.salary}</p>
+                </div>
+                <button onclick="window.handleRestoreJob('${job.id}')" class="bg-teal-100 hover:bg-teal-200 text-teal-700 font-semibold px-2.5 py-1 rounded-lg transition">
+                    Khôi phục
+                </button>
+            </div>
+        `).join('');
     };
 
     // --- LOGIC NHẬN VIỆC ---
@@ -232,12 +272,40 @@ document.addEventListener('DOMContentLoaded', () => {
             deletedJobs.push(job);
             localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
 
-            alert("Đã xóa công việc thành công!");
+            alert("Đã xóa công việc thành công và chuyển vào thùng rác!");
             window.renderJobs();
         }
     };
 
-    // --- 4. HÀM XỬ LÝ PHÊ DUYỆT / TỪ CHỐI CHO ADMIN ---
+    // --- LOGIC KHÔI PHỤC CÔNG VIỆC TỪ THÙNG RÁC ---
+    window.handleRestoreJob = (jobId) => {
+        let deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
+        const jobIndex = deletedJobs.findIndex(j => j.id === jobId);
+
+        if (jobIndex !== -1) {
+            const restoredJob = deletedJobs[jobIndex];
+            deletedJobs.splice(jobIndex, 1);
+            localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
+
+            let jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
+            jobs.unshift(restoredJob);
+            localStorage.setItem('viecgap_jobs', JSON.stringify(jobs));
+
+            alert("Khôi phục công việc thành công!");
+            window.renderJobs();
+        }
+    };
+
+    // --- XÓA SẠCH THÙNG RÁC VĨNH VIỄN ---
+    document.getElementById('btnEmptyTrash')?.addEventListener('click', () => {
+        if (confirm("Bạn có chắc chắn muốn xóa vĩnh viễn toàn bộ bài trong thùng rác không?")) {
+            localStorage.removeItem('viecgap_deleted_jobs');
+            renderTrashList();
+            alert("Đã dọn sạch thùng rác!");
+        }
+    });
+
+    // --- PHÊ DUYỆT / TỪ CHỐI CHO ADMIN ---
     window.approveRegistration = (id, type) => {
         const key = type === 'worker' ? 'viecgap_workers' : 'viecgap_orgs';
         let list = JSON.parse(localStorage.getItem(key) || '[]');
@@ -266,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render khởi tạo ban đầu
     window.renderJobs();
 
-    // --- 5. ĐĂNG KÝ TỔ CHỨC (TẠO HỒ SƠ DẠNG PENDING - CHỜ DUYỆT) ---
+    // --- ĐĂNG KÝ TỔ CHỨC ---
     const orgModal = document.getElementById('orgModal');
     const orgForm = document.getElementById('orgForm');
 
@@ -294,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ward: document.getElementById('orgWardInput')?.value,
             address: document.getElementById('orgAddressInput')?.value,
             strength: document.getElementById('orgStrengthInput')?.value,
-            status: 'pending', // TRẠNG THÁI CHỜ ADMIN PHÊ DUYỆT
+            status: 'pending',
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 
@@ -306,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
         closeOrgModal();
     });
 
-    // --- 6. ĐĂNG KÝ CÁ NHÂN (TẠO HỒ SƠ DẠNG PENDING - CHỜ DUYỆT) ---
+    // --- ĐĂNG KÝ CÁ NHÂN ---
     const workerModal = document.getElementById('workerModal');
     const workerForm = document.getElementById('workerForm');
 
@@ -331,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
             phone: document.getElementById('workerPhoneInput')?.value,
             location: document.getElementById('workerLocationInput')?.value,
             skill: document.getElementById('workerSkillInput')?.value,
-            status: 'pending', // TRẠNG THÁI CHỜ ADMIN PHÊ DUYỆT
+            status: 'pending',
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 
@@ -414,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal Thùng rác
     const trashModal = document.getElementById('trashModal');
     document.getElementById('btnOpenTrash')?.addEventListener('click', () => {
+        renderTrashList();
         trashModal?.classList.remove('hidden');
         trashModal?.classList.add('flex');
     });

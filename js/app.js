@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (SINGLE FILE VERSION) ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (HOÀN CHỈNH & ĐỒNG BỘ ADMIN) ---");
 
     // 1. Dọn dẹp tất cả modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
@@ -59,18 +59,29 @@ document.addEventListener('DOMContentLoaded', () => {
         resetForm?.reset();
     };
 
+    // --- CÁC HÀM HỖ TRỢ ĐỒNG BỘ VỚI HỆ THỐNG ADMIN ---
+    window.getPendingOrganizations = () => {
+        const orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
+        return orgs.filter(o => o && (o.status === 'pending' || !o.status));
+    };
+
+    window.getPendingWorkers = () => {
+        const workers = JSON.parse(localStorage.getItem('viecgap_workers') || localStorage.getItem('workers_list') || '[]');
+        return workers.filter(w => w && (w.status === 'pending' || !w.status));
+    };
+
     // --- HÀM RENDER DANH SÁCH TỔ CHỨC ĐÃ ĐƯỢC DUYỆT (TAB TỔ CHỨC) ---
     const renderApprovedOrgs = () => {
         const orgListContainer = document.getElementById('orgList');
         if (!orgListContainer) return;
 
         const orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
-        const approvedOrgs = orgs.filter(o => o.status === 'approved');
+        const approvedOrgs = orgs.filter(o => o && o.status === 'approved');
 
         if (approvedOrgs.length === 0) {
             orgListContainer.innerHTML = `
                 <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                    Chưa có tổ chức/đối tác nào được phê duyệt[cite: 4].
+                    Chưa có tổ chức/đối tác nào được phê duyệt.
                 </div>
             `;
             return;
@@ -84,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h3 class="font-bold text-slate-900 text-base mt-1">${org.name}</h3>
                     </div>
                     <span class="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-xl font-semibold flex items-center gap-1 shadow-sm">
-                        <i class="fa-solid fa-circle-check text-emerald-500"></i> Đã xác minh[cite: 4]
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i> Đã xác minh
                     </span>
                 </div>
                 <p class="text-xs text-slate-600"><i class="fa-solid fa-star text-amber-500 mr-1"></i>Thế mạnh: ${org.strength || 'Chưa cập nhật'}</p>
@@ -102,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!workerListContainer) return;
 
         const workers = JSON.parse(localStorage.getItem('viecgap_workers') || localStorage.getItem('workers_list') || '[]');
-        const approvedWorkers = workers.filter(w => w.status === 'approved');
+        const approvedWorkers = workers.filter(w => w && w.status === 'approved');
 
         if (approvedWorkers.length === 0) {
             workerListContainer.innerHTML = `
@@ -119,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="flex items-center gap-2">
                         <h4 class="font-bold text-slate-800 text-sm">${w.name}</h4>
                         <span class="bg-emerald-50 text-emerald-600 text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
-                            <i class="fa-solid fa-circle-check text-emerald-500"></i> Đã xác minh[cite: 4]
+                            <i class="fa-solid fa-circle-check text-emerald-500"></i> Đã xác minh
                         </span>
                     </div>
                     <p class="text-xs text-slate-500 mt-1">Kỹ năng: ${w.skill || 'Đa năng'} &bull; Khu vực: ${w.location || 'An Giang'}</p>
@@ -144,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (myAcceptedJobs.length === 0) {
             acceptedContainer.innerHTML = `
                 <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                    Bạn chưa nhận công việc nào[cite: 4].
+                    Bạn chưa nhận công việc nào.
                 </div>
             `;
             return;
@@ -450,12 +461,15 @@ document.addEventListener('DOMContentLoaded', () => {
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 
-        let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
+        let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
         orgs.unshift(newOrg);
+        
+        // Lưu đồng bộ vào cả hai key để Admin nhận được dữ liệu
         localStorage.setItem('viecgap_orgs', JSON.stringify(orgs));
         localStorage.setItem('organizations_list', JSON.stringify(orgs));
+        window.dispatchEvent(new Event('storage'));
 
-        alert("Ghi danh Tổ chức thành công! Hồ sơ của bạn đang chờ Admin phê duyệt[cite: 4].");
+        alert("Ghi danh Tổ chức thành công! Hồ sơ của bạn đang chờ Admin phê duyệt.");
         closeOrgModal();
     });
 
@@ -488,12 +502,15 @@ document.addEventListener('DOMContentLoaded', () => {
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 
-        let workers = JSON.parse(localStorage.getItem('viecgap_workers') || '[]');
+        let workers = JSON.parse(localStorage.getItem('viecgap_workers') || localStorage.getItem('workers_list') || '[]');
         workers.unshift(newWorker);
+        
+        // Lưu đồng bộ vào cả hai key để Admin nhận được dữ liệu
         localStorage.setItem('viecgap_workers', JSON.stringify(workers));
         localStorage.setItem('workers_list', JSON.stringify(workers));
+        window.dispatchEvent(new Event('storage'));
 
-        alert("Đăng ký hồ sơ cá nhân thành công! Hồ sơ của bạn đang chờ Admin phê duyệt[cite: 4].");
+        alert("Đăng ký hồ sơ cá nhân thành công! Hồ sơ của bạn đang chờ Admin phê duyệt.");
         closeWorkerModal();
     });
 
@@ -589,5 +606,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderApprovedWorkers();
             }
         });
+    });
+
+    // Lắng nghe sự kiện storage từ cửa sổ admin (khi admin duyệt/thu hồi)
+    window.addEventListener('storage', () => {
+        window.renderJobs();
     });
 });

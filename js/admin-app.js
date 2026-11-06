@@ -1,180 +1,94 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xác Thực Quản Trị Viên - Việc Gấp Admin</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Identity Services SDK -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-</head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+// --- HÀM TẢI VÀ HIỂN THỊ DỮ LIỆU CHỜ DUYỆT (SỬ DỤNG STORAGE) ---
+    async function loadPendingData() {
+        // Lấy danh sách thông qua Storage
+        let workers = Storage.getWorkers();
+        let orgs = Storage.getOrgs();
 
-    <!-- Header Quản Trị -->
-    <header class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
-        <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-shield-halved text-teal-400 text-xl"></i>
-            <span class="font-bold text-lg tracking-tight">Hệ Thống Kiểm Duyệt An Toàn</span>
-        </div>
-        <div class="flex items-center gap-3">
-            <span id="adminSessionInfo" class="text-xs text-teal-300 font-medium hidden"></span>
-            <button id="btnOpenAdminManager" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition hidden cursor-pointer">
-                <i class="fa-solid fa-users-gear mr-1"></i> Quản lý Admin
-            </button>
-            <button id="btnOpenChangePassModal" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition hidden cursor-pointer">
-                <i class="fa-solid fa-key mr-1"></i> Đổi mật khẩu
-            </button>
-            <button id="btnLogout" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition hidden cursor-pointer">
-                <i class="fa-solid fa-right-from-bracket mr-1"></i> Đăng xuất
-            </button>
-            <a href="index.html" class="bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center shadow-sm">
-                <i class="fa-solid fa-arrow-left mr-1.5"></i> Về trang người dùng
-            </a>
-        </div>
-    </header>
+        // Lọc các hồ sơ ở trạng thái 'pending' hoặc chưa có status
+        const pendingWorkers = workers.filter(w => w && (w.status === 'pending' || !w.status));
+        const pendingOrgs = orgs.filter(o => o && (o.status === 'pending' || !o.status));
 
-    <!-- MÀN HÌNH XÁC THỰC QUẢN TRỊ VIÊN -->
-    <div id="adminLoginSection" class="flex-1 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-100 p-8 space-y-6">
-            <div class="text-center space-y-1">
-                <div class="w-14 h-14 bg-slate-900 text-teal-400 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 shadow-inner">
-                    <i class="fa-solid fa-fingerprint"></i>
-                </div>
-                <h2 class="text-xl font-extrabold text-slate-900">Xác thực Quản trị viên cấp cao</h2>
-                <p class="text-xs text-slate-500">Lựa chọn hình thức đăng nhập bảo mật để tiếp tục</p>
-            </div>
+        // Cập nhật số lượng hiển thị trên Badge
+        const statPendingWorkers = document.getElementById('statPendingWorkers');
+        const statPendingOrgs = document.getElementById('statPendingOrgs');
+        if (statPendingWorkers) statPendingWorkers.textContent = pendingWorkers.length;
+        if (statPendingOrgs) statPendingOrgs.textContent = pendingOrgs.length;
 
-            <!-- Tab lựa chọn phương thức xác thực -->
-            <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
-                <button type="button" id="tabGoogleBtn" class="py-2 rounded-lg bg-white text-slate-900 shadow-sm transition cursor-pointer">Tài khoản Google</button>
-                <button type="button" id="tabPassBtn" class="py-2 rounded-lg text-slate-500 hover:text-slate-900 transition cursor-pointer">Mật khẩu nội bộ</button>
-            </div>
+        // Render danh sách Cá nhân chờ duyệt
+        const workerContainer = document.getElementById('adminPendingWorkerList');
+        if (workerContainer) {
+            workerContainer.innerHTML = '';
+            if (pendingWorkers.length === 0) {
+                workerContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">Không có hồ sơ cá nhân nào đang chờ duyệt.</p>`;
+            } else {
+                pendingWorkers.forEach(w => {
+                    const item = document.createElement('div');
+                    item.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs mb-2';
+                    item.innerHTML = `
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">${w.name || 'Chưa có tên'} - <span class="text-amber-600">${w.skill || w.category || 'Cá nhân'}</span></h4>
+                            <p class="text-slate-600 mt-0.5">📞 ${w.phone || 'N/A'} &bull; 📍 ${w.location || 'Chưa cập nhật'}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="window.approveWorker('${w.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition cursor-pointer">Đồng ý</button>
+                            <button onclick="window.rejectWorker('${w.id}')" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition cursor-pointer">Từ chối</button>
+                        </div>
+                    `;
+                    workerContainer.appendChild(item);
+                });
+            }
+        }
 
-            <!-- Form đăng nhập bằng Google -->
-            <div id="googleAuthBox" class="space-y-4 pt-2">
-                <div class="bg-teal-50 border border-teal-100 rounded-xl p-3 text-center text-xs text-teal-800">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Hệ thống chỉ cấp quyền cho tài khoản Google đã được ủy quyền trong danh sách quản trị.
-                </div>
-                <div class="flex justify-center py-2">
-                    <div id="g_id_onload"
-                         data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-                         data-callback="handleGoogleLogin"
-                         data-auto_prompt="false">
-                    </div>
-                    <div class="g_id_signin"
-                         data-type="standard"
-                         data-shape="rectangular"
-                         data-theme="outline"
-                         data-text="sign_in_with"
-                         data-size="large"
-                         data-logo_alignment="center">
-                    </div>
-                </div>
-                <p id="googleErrorMsg" class="text-xs text-red-500 font-semibold hidden text-center bg-red-50 p-2 rounded-lg">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Tài khoản không có quyền truy cập!
-                </p>
-            </div>
+        // Render danh sách Tổ chức chờ duyệt
+        const orgContainer = document.getElementById('adminPendingOrgList');
+        if (orgContainer) {
+            orgContainer.innerHTML = '';
+            if (pendingOrgs.length === 0) {
+                orgContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">Không có tổ chức nào đang chờ duyệt.</p>`;
+            } else {
+                pendingOrgs.forEach(o => {
+                    const item = document.createElement('div');
+                    item.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs mb-2';
+                    item.innerHTML = `
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">${o.name || 'Chưa có tên tổ chức'}</h4>
+                            <p class="text-slate-600 mt-0.5">📞 ${o.phone || 'N/A'} &bull; 📍 ${o.district || o.province || o.address || ''}</p>
+                            <p class="text-blue-700 font-medium mt-0.5">Thế mạnh: ${o.strength || 'Chưa cập nhật'}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="window.approveOrg('${o.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition cursor-pointer">Đồng ý</button>
+                            <button onclick="window.rejectOrg('${o.id}')" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition cursor-pointer">Từ chối</button>
+                        </div>
+                    `;
+                    orgContainer.appendChild(item);
+                });
+            }
+        }
+    }
 
-            <!-- Form đăng nhập bằng Mật khẩu -->
-            <form id="adminLoginForm" class="space-y-4 hidden pt-2">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu bảo mật</label>
-                    <input type="password" id="adminPasswordInput" placeholder="Nhập mật khẩu quản trị..." class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600 transition">
-                </div>
-                <p id="loginErrorMsg" class="text-xs text-red-500 font-semibold hidden text-center bg-red-50 p-2 rounded-lg">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mật khẩu không chính xác!
-                </p>
-                <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">
-                    Xác thực Mật khẩu
-                </button>
-            </form>
+    // --- CÁC HÀM XỬ LÝ PHÊ DUYỆT / TỪ CHỐI GỌN GÀNG QUA STORAGE ---
+    window.approveOrg = function(id) {
+        Storage.updateOrgStatus(id, 'approved');
+        alert("Đã phê duyệt tổ chức thành công!");
+        loadPendingData();
+    };
 
-            <div class="pt-2 border-t border-slate-100 flex justify-end items-center text-[11px]">
-                <span class="text-teal-600 font-medium"><i class="fa-solid fa-shield-check mr-1"></i> Encrypted & SSL Secured</span>
-            </div>
-        </div>
-    </div>
+    window.rejectOrg = function(id) {
+        if (confirm("Bạn có chắc chắn muốn từ chối và xóa hồ sơ tổ chức này?")) {
+            Storage.deleteOrg(id);
+            loadPendingData();
+        }
+    };
 
-    <!-- KHU VỰC PHÊ DUYỆT ĐƠN -->
-    <main id="adminMainContent" class="flex-1 max-w-5xl w-full mx-auto p-6 space-y-6 hidden">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-slate-500 font-semibold uppercase">Cá nhân chờ duyệt</p>
-                    <h3 id="statPendingWorkers" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
-                </div>
-                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-user-clock"></i>
-                </div>
-            </div>
+    window.approveWorker = function(id) {
+        Storage.updateWorkerStatus(id, 'approved');
+        alert("Đã phê duyệt hồ sơ cá nhân thành công!");
+        loadPendingData();
+    };
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-slate-500 font-semibold uppercase">Tổ chức chờ duyệt</p>
-                    <h3 id="statPendingOrgs" class="text-2xl font-bold text-blue-600 mt-1">0</h3>
-                </div>
-                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-building-circle-exclamation"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-4 border-b border-slate-100 bg-slate-50">
-                <h3 class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-user-check mr-2 text-amber-500"></i> Phê duyệt Hồ sơ Cá nhân</h3>
-            </div>
-            <div id="adminPendingWorkerList" class="p-4 space-y-3"></div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-4 border-b border-slate-100 bg-slate-50">
-                <h3 class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-building-shield mr-2 text-blue-600"></i> Phê duyệt Tổ chức / Đối tác</h3>
-            </div>
-            <div id="adminPendingOrgList" class="p-4 space-y-3"></div>
-        </div>
-    </main>
-
-    <!-- Modal Đổi Mật Khẩu -->
-    <div id="changePassModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
-        <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-100 p-6 space-y-4">
-            <h3 class="font-bold text-slate-900 text-base"><i class="fa-solid fa-key text-teal-600 mr-2"></i> Đổi Mật Khẩu Quản Trị</h3>
-            <form id="changePassForm" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
-                    <input type="password" id="newPasswordInput" required placeholder="Nhập mật khẩu mới..." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button type="button" id="btnCloseChangePass" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-xs transition cursor-pointer">Hủy</button>
-                    <button type="submit" class="flex-1 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl text-xs transition cursor-pointer">Lưu thay đổi</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Quản Lý Danh Sách Admin -->
-    <div id="adminManagerModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
-        <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 p-6 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-900 text-base"><i class="fa-solid fa-users-gear text-teal-600 mr-2"></i> Quản Lý Danh Sách Admin Google</h3>
-                <button type="button" id="btnCloseAdminManager" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            
-            <form id="addAdminForm" class="flex gap-2">
-                <input type="email" id="newAdminEmailInput" required placeholder="Nhập email Google cấp quyền..." class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-teal-600">
-                <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Thêm Admin</button>
-            </form>
-
-            <div class="space-y-2">
-                <p class="text-xs font-semibold text-slate-500 uppercase">Danh sách email được ủy quyền:</p>
-                <div id="adminEmailsListContainer" class="max-h-48 overflow-y-auto space-y-2 border border-slate-100 p-2 rounded-xl bg-slate-50"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SCRIPT ĐIỀU PHỐI ADMIN -->
-    <script type="module" src="js/admin-app.js"></script>
-</body>
-</html>
+    window.rejectWorker = function(id) {
+        if (confirm("Bạn có chắc chắn muốn từ chối và xóa hồ sơ cá nhân này?")) {
+            Storage.deleteWorker(id);
+            loadPendingData();
+        }
+    };

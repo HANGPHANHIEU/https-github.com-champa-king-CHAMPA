@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (FULL FEATURES & TRASH ICON INTEGRATED) ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (FULL FEATURES & ICONS) ---");
 
     // 1. Dọn dẹp tất cả modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
@@ -16,17 +16,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetFooter = document.getElementById('resetFooter');
     const loginBtnText = document.getElementById('loginBtnText');
 
-    // Kiểm tra trạng thái đăng nhập từ LocalStorage
+    // Kiểm tra trạng thái đăng nhập từ LocalStorage & cập nhật icon đăng xuất
     const checkLoginStatus = () => {
         const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true';
         if (isLoggedIn && loginBtnText) {
-            loginBtnText.innerText = "Đã đăng nhập";
+            loginBtnText.innerHTML = `<i class="fa-solid fa-right-from-bracket mr-1.5"></i> Đăng xuất`;
         }
         return isLoggedIn;
     };
     checkLoginStatus();
 
     const openAuthModal = () => {
+        const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true';
+        if (isLoggedIn) {
+            if (confirm("Bạn có chắc chắn muốn đăng xuất tài khoản không?")) {
+                localStorage.removeItem('viecgap_logged_in');
+                localStorage.removeItem('viecgap_user_phone');
+                if (loginBtnText) {
+                    loginBtnText.innerHTML = `Đăng nhập`;
+                }
+                alert("Đã đăng xuất thành công!");
+                window.renderJobs();
+            }
+            return;
+        }
+
         if (authModal) {
             authModal.classList.remove('hidden');
             authModal.classList.add('flex');
@@ -149,8 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span><i class="fa-solid fa-location-dot mr-1"></i>${job.location}</span>
                     <div class="flex items-center gap-2">
                         <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check-circle mr-1"></i>Đã nhận việc</span>
+                        <!-- Nút Hủy nhận có tích hợp icon Xmark -->
                         <button onclick="window.handleRemoveAcceptedJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1">
-                            <i class="fa-solid fa-trash-can text-xs"></i> Hủy nhận
+                            <i class="fa-solid fa-xmark"></i> Hủy nhận
                         </button>
                     </div>
                 </div>
@@ -158,13 +173,12 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     };
 
-    // --- HÀM RENDER VÀ ĐẾM SỐ LƯỢNG TRONG THÙNG RÁC ---
+    // --- HÀM RENDER THÙNG RÁC ---
     const renderTrashList = () => {
         const trashContainer = document.getElementById('trashList');
         const trashBadge = document.getElementById('trashBadge');
         const deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
 
-        // Cập nhật số đếm trên badge Thùng rác (nếu có)
         if (trashBadge) {
             trashBadge.innerText = deletedJobs.length;
             if (deletedJobs.length > 0) {
@@ -196,8 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button onclick="window.handleRestoreJob('${job.id}')" class="bg-teal-100 hover:bg-teal-200 text-teal-700 font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer">
                         <i class="fa-solid fa-rotate-left"></i> Khôi phục
                     </button>
+                    <!-- Nút xóa vĩnh viễn với icon hủy/xóa -->
                     <button onclick="window.handlePermanentDeleteJob('${job.id}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer">
-                        <i class="fa-solid fa-trash-can"></i> Xóa hẳn
+                        <i class="fa-solid fa-xmark"></i> Xóa hẳn
                     </button>
                 </div>
             </div>
@@ -253,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 Nhận việc &rarr;
                             </button>
                             ${isOwner ? `
-                                <button onclick="window.handleDeleteJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1" title="Chuyển vào thùng rác">
+                                <button onclick="window.handleDeleteJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1" title="Xóa bài">
                                     <i class="fa-solid fa-trash-can"></i> Xóa
                                 </button>
                             ` : ''}
@@ -301,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- LOGIC HỦY / XÓA CÔNG VIỆC ĐÃ NHẬN ---
+    // --- LOGIC HỦY NHẬN VIỆC ---
     window.handleRemoveAcceptedJob = (jobId) => {
         if (confirm("Bạn có chắc chắn muốn hủy nhận công việc này không? Công việc sẽ quay lại danh sách tìm việc.")) {
             let jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
@@ -318,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- LOGIC XÓA BÀI ĐĂNG (CHUYỂN VÀO THÙNG RÁC) ---
+    // --- LOGIC XÓA BÀI ĐĂNG (ĐƯA VÀO THÙNG RÁC) ---
     window.handleDeleteJob = (jobId) => {
         const currentUserPhone = localStorage.getItem('viecgap_user_phone');
         let jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
@@ -368,9 +383,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- LOGIC XÓA VĨNH VIỄN 1 BÀI ĐĂNG TRONG THÙNG RÁC ---
+    // --- LOGIC XÓA VĨNH VIỄN ---
     window.handlePermanentDeleteJob = (jobId) => {
-        if (confirm("Bạn có chắc chắn muốn xóa VĨNH VIỄN bài đăng này? Hành động này không thể hoàn tác.")) {
+        if (confirm("Bạn có chắc chắn muốn xóa VĨNH VIỄN bài đăng này?")) {
             let deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
             deletedJobs = deletedJobs.filter(j => j.id !== jobId);
             localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
@@ -380,7 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- XÓA SẠCH THÙNG RÁC VĨNH VIỄN ---
+    // Xóa sạch thùng rác
     document.getElementById('btnEmptyTrash')?.addEventListener('click', () => {
         if (confirm("Bạn có chắc chắn muốn dọn sạch toàn bộ thùng rác không?")) {
             localStorage.removeItem('viecgap_deleted_jobs');
@@ -389,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Mở & Đóng Modal Thùng Rác
+    // Modal Thùng rác
     const trashModal = document.getElementById('trashModal');
     document.getElementById('btnOpenTrash')?.addEventListener('click', () => {
         renderTrashList();
@@ -490,7 +505,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (phone) {
             localStorage.setItem('viecgap_logged_in', 'true');
             localStorage.setItem('viecgap_user_phone', phone);
-            if (loginBtnText) loginBtnText.innerText = "Đã đăng nhập";
+            if (loginBtnText) {
+                loginBtnText.innerHTML = `<i class="fa-solid fa-right-from-bracket mr-1.5"></i> Đăng xuất`;
+            }
             alert('Đăng nhập thành công!');
             closeAuthModal();
             window.renderJobs();

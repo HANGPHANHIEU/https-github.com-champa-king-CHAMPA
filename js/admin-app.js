@@ -1,5 +1,3 @@
-
-// Tái sử dụng storage từ storage.js & orgservice từ org-service.js
 import { Storage } from './storage.js';
 import { OrgService } from './org-service.js';
 import { showToast } from './toast.js';
@@ -31,6 +29,70 @@ function saveAdminEmails(list) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ SẴN SÀNG & KHỞI ĐỘNG (ADMIN & REGISTRATION) ---");
+
+    // ==========================================
+    // 1. XỬ LÝ ĐĂNG KÝ TỔ CHỨC & CÁ NHÂN
+    // ==========================================
+
+    // --- Đăng ký Tổ chức ---
+    const orgForm = document.getElementById('orgForm');
+    orgForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newOrg = {
+            id: 'org_' + Date.now(),
+            name: document.getElementById('orgNameInput')?.value,
+            phone: document.getElementById('orgPhoneInput')?.value,
+            province: document.getElementById('orgProvinceInput')?.value,
+            district: document.getElementById('orgDistrictInput')?.value,
+            ward: document.getElementById('orgWardInput')?.value,
+            address: document.getElementById('orgAddressInput')?.value,
+            strength: document.getElementById('orgStrengthInput')?.value,
+            status: 'pending', // Trạng thái chờ duyệt
+            createdAt: new Date().toLocaleDateString('vi-VN')
+        };
+
+        let orgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
+        orgs.unshift(newOrg);
+        localStorage.setItem('organizations_list', JSON.stringify(orgs));
+
+        alert("Ghi danh Tổ chức thành công! Hồ sơ đang chờ Admin phê duyệt.");
+        orgForm.reset();
+        document.getElementById('orgModal')?.classList.add('hidden');
+    });
+
+    // --- Đăng ký Cá nhân ---
+    const workerForm = document.getElementById('workerForm');
+    workerForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newWorker = {
+            id: 'worker_' + Date.now(),
+            name: document.getElementById('workerNameInput')?.value,
+            phone: document.getElementById('workerPhoneInput')?.value,
+            location: document.getElementById('workerLocationInput')?.value,
+            skill: document.getElementById('workerSkillInput')?.value,
+            status: 'pending', // Trạng thái chờ duyệt
+            createdAt: new Date().toLocaleDateString('vi-VN')
+        };
+
+        let workers = Storage.getWorkers ? Storage.getWorkers() : JSON.parse(localStorage.getItem('workers_list') || '[]');
+        workers.unshift(newWorker);
+        if (Storage.saveWorkers) {
+            Storage.saveWorkers(workers);
+        } else {
+            localStorage.setItem('workers_list', JSON.stringify(workers));
+        }
+
+        alert("Đăng ký hồ sơ cá nhân thành công! Hồ sơ đang chờ Admin phê duyệt.");
+        workerForm.reset();
+        document.getElementById('workerModal')?.classList.add('hidden');
+    });
+
+
+    // ==========================================
+    // 2. XỬ LÝ HỆ THỐNG QUẢN TRỊ (ADMIN DASHBOARD)
+    // ==========================================
+
     const loginSection = document.getElementById('adminLoginSection');
     const mainContent = document.getElementById('adminMainContent');
     const loginForm = document.getElementById('adminLoginForm');
@@ -57,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newAdminEmailInput = document.getElementById('newAdminEmailInput');
     const adminEmailsListContainer = document.getElementById('adminEmailsListContainer');
 
-    // Tab switch
+    // Chuyển tab đăng nhập Admin (Google / Mật khẩu)
     tabGoogleBtn?.addEventListener('click', () => {
         tabGoogleBtn.className = 'py-2 rounded-lg bg-white text-slate-900 shadow-sm transition cursor-pointer';
         tabPassBtn.className = 'py-2 rounded-lg text-slate-500 hover:text-slate-900 transition cursor-pointer';
@@ -229,15 +291,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     async function loadPendingData() {
-        // 1. Lấy danh sách cá nhân từ Storage và tổ chức từ OrgService
         const workers = Storage.getWorkers ? Storage.getWorkers() : JSON.parse(localStorage.getItem('workers_list') || '[]');
         const orgs = await OrgService.fetchCloudOrgs();
 
-        // Lọc các hồ sơ có trạng thái 'pending' hoặc chưa có trạng thái
         const pendingWorkers = workers.filter(w => w.status === 'pending' || !w.status);
         const pendingOrgs = orgs.filter(o => o.status === 'pending' || !o.status);
 
-        // Hiển thị số lượng lên badge thống kê
         const statPendingWorkers = document.getElementById('statPendingWorkers');
         const statPendingOrgs = document.getElementById('statPendingOrgs');
         if (statPendingWorkers) statPendingWorkers.textContent = pendingWorkers.length;
@@ -295,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Gắn các hàm xử lý phê duyệt ra global window để sự kiện onclick trong HTML gọi được
+    // Các hàm xử lý phê duyệt gắn vào window để gọi từ thuộc tính onclick trong HTML
     window.approveWorker = function(id) {
         let workers = Storage.getWorkers ? Storage.getWorkers() : JSON.parse(localStorage.getItem('workers_list') || '[]');
         workers = workers.map(w => w.id == id ? { ...w, status: 'approved' } : w);

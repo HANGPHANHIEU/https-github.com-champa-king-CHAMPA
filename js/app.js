@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (MODULAR FULL FEATURES) ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (FULL FEATURES & TRASH ICON INTEGRATED) ---");
 
     // 1. Dọn dẹp tất cả modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
@@ -69,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="bg-teal-50 text-teal-700 text-[11px] font-semibold px-2 py-0.5 rounded-md uppercase">${org.province || org.district || 'An Giang'}</span>
                         <h3 class="font-bold text-slate-900 text-base mt-1">${org.name}</h3>
                     </div>
-                    <!-- Huy hiệu Đã xác minh -->
                     <span class="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-xl font-semibold flex items-center gap-1 shadow-sm">
                         <i class="fa-solid fa-circle-check text-emerald-500"></i> Đã xác minh[cite: 4]
                     </span>
@@ -105,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div>
                     <div class="flex items-center gap-2">
                         <h4 class="font-bold text-slate-800 text-sm">${w.name}</h4>
-                        <!-- Huy hiệu Đã xác minh -->
                         <span class="bg-emerald-50 text-emerald-600 text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
                             <i class="fa-solid fa-circle-check text-emerald-500"></i> Đã xác minh[cite: 4]
                         </span>
@@ -151,8 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span><i class="fa-solid fa-location-dot mr-1"></i>${job.location}</span>
                     <div class="flex items-center gap-2">
                         <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check-circle mr-1"></i>Đã nhận việc</span>
-                        <button onclick="window.handleRemoveAcceptedJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer">
-                            Hủy nhận
+                        <button onclick="window.handleRemoveAcceptedJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can text-xs"></i> Hủy nhận
                         </button>
                     </div>
                 </div>
@@ -160,14 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     };
 
-    // --- HÀM RENDER THÙNG RÁC XÓA BÀI ĐĂNG ---
+    // --- HÀM RENDER VÀ ĐẾM SỐ LƯỢNG TRONG THÙNG RÁC ---
     const renderTrashList = () => {
         const trashContainer = document.getElementById('trashList');
         const trashBadge = document.getElementById('trashBadge');
-        if (!trashContainer) return;
-
         const deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
 
+        // Cập nhật số đếm trên badge Thùng rác (nếu có)
         if (trashBadge) {
             trashBadge.innerText = deletedJobs.length;
             if (deletedJobs.length > 0) {
@@ -176,6 +173,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 trashBadge.classList.add('hidden');
             }
         }
+
+        if (!trashContainer) return;
 
         if (deletedJobs.length === 0) {
             trashContainer.innerHTML = `
@@ -198,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fa-solid fa-rotate-left"></i> Khôi phục
                     </button>
                     <button onclick="window.handlePermanentDeleteJob('${job.id}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer">
-                        <i class="fa-solid fa-xmark"></i> Xóa hẳn
+                        <i class="fa-solid fa-trash-can"></i> Xóa hẳn
                     </button>
                 </div>
             </div>
@@ -254,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 Nhận việc &rarr;
                             </button>
                             ${isOwner ? `
-                                <button onclick="window.handleDeleteJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1">
+                                <button onclick="window.handleDeleteJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1" title="Chuyển vào thùng rác">
                                     <i class="fa-solid fa-trash-can"></i> Xóa
                                 </button>
                             ` : ''}
@@ -319,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- LOGIC XÓA BÀI ĐĂNG (CHỈ CHÍNH CHỦ) -> ĐƯA VÀO THÙNG RÁC ---
+    // --- LOGIC XÓA BÀI ĐĂNG (CHUYỂN VÀO THÙNG RÁC) ---
     window.handleDeleteJob = (jobId) => {
         const currentUserPhone = localStorage.getItem('viecgap_user_phone');
         let jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
@@ -390,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Modal Thùng rác
+    // Mở & Đóng Modal Thùng Rác
     const trashModal = document.getElementById('trashModal');
     document.getElementById('btnOpenTrash')?.addEventListener('click', () => {
         renderTrashList();
@@ -433,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ward: document.getElementById('orgWardInput')?.value,
             address: document.getElementById('orgAddressInput')?.value,
             strength: document.getElementById('orgStrengthInput')?.value,
-            status: 'pending', // Trạng thái chờ Admin duyệt[cite: 4]
+            status: 'pending',[cite: 4]
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 
@@ -471,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
             phone: document.getElementById('workerPhoneInput')?.value,
             location: document.getElementById('workerLocationInput')?.value,
             skill: document.getElementById('workerSkillInput')?.value,
-            status: 'pending', // Trạng thái chờ Admin duyệt[cite: 4]
+            status: 'pending',[cite: 4]
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 

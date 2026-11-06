@@ -3,40 +3,69 @@ import { AuthService } from './auth-service.js';
 import { showToast } from './toast.js';
 
 /**
- * Hàm xử lý đăng ký tài khoản cá nhân trực tiếp (nếu được gọi độc lập)
+ * 1. Hàm cập nhật giao diện xác thực người dùng (Auth UI)
+ */
+export function updateAuthUI() {
+    const user = Storage.getUser();
+    const registerBtn = document.getElementById('btnRegisterPersonal'); // Nút đăng ký cá nhân trên header
+    const userDisplay = document.getElementById('userDisplay'); // Vùng hiển thị tên sau khi đăng nhập
+
+    if (user) {
+        if (registerBtn) registerBtn.classList.add('hidden');
+        if (userDisplay) {
+            userDisplay.classList.remove('hidden');
+            userDisplay.textContent = `Xin chào, ${user.name || user.phone}`;
+        }
+    } else {
+        if (registerBtn) registerBtn.classList.remove('hidden');
+        if (userDisplay) {
+            userDisplay.classList.add('hidden');
+            userDisplay.textContent = '';
+        }
+    }
+}
+
+// Gắn hàm updateAuthUI vào window để các module khác gọi trực tiếp
+window.updateAuthUI = updateAuthUI;
+
+// Gọi tự động khi load trang
+document.addEventListener('DOMContentLoaded', updateAuthUI);
+
+/**
+ * 2. Hàm xử lý đăng ký tài khoản cá nhân độc lập
  */
 export function handleRegisterPersonal(userData) {
-    // 1. Tạo đối tượng thông tin người dùng cá nhân
     const newUser = {
         id: Date.now().toString(),
         name: userData.name,
         phone: userData.phone,
-        role: 'personal', // Đánh dấu là tài khoản cá nhân
+        role: 'personal',
         createdAt: new Date().toISOString()
     };
 
-    // 2. Lưu vào Storage / localStorage
     Storage.setUser(newUser); 
 
-    // Nếu có danh sách tất cả người dùng, lưu thêm vào danh sách đó
+    // Lưu bổ sung vào danh sách users nếu Storage hỗ trợ
     const users = Storage.getUsers ? Storage.getUsers() : [];
     users.push(newUser);
     if (Storage.saveUsers) Storage.saveUsers(users);
 
-    // 3. Đóng Modal đăng ký
     const authModal = document.getElementById('authModal');
-    if (authModal) authModal.classList.add('hidden');
+    if (authModal) {
+        authModal.classList.remove('flex');
+        authModal.classList.add('hidden');
+    }
 
-    // 4. GỌI LẠI HÀM CẬP NHẬT GIAO DIỆN NGAY LẬP TỨC
-    if (typeof window.updateAuthUI === 'function') {
-        window.updateAuthUI();
+    updateAuthUI();
+    if (typeof window.reloadJobs === 'function') {
+        window.reloadJobs();
     }
     
     showToast("Đăng ký tài khoản cá nhân thành công!");
 }
 
 /**
- * Hàm khởi tạo Modal xác thực (Đăng nhập, Đăng ký, Quên mật khẩu)
+ * 3. Hàm khởi tạo Modal xác thực (Đăng nhập, Đăng ký, Quên mật khẩu)
  */
 export function initAuthModal(onAuthChange) {
     if (!document.getElementById('authModal')) {
@@ -138,7 +167,7 @@ export function initAuthModal(onAuthChange) {
 
     // XỬ LÝ SỰ KIỆN NÚT MẮT THẦN (TOGGLE SHOW/HIDE PASSWORD)
     document.querySelectorAll('.toggle-password-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.onclick = () => {
             const targetId = btn.getAttribute('data-target');
             const input = document.getElementById(targetId);
             const icon = btn.querySelector('i');
@@ -156,7 +185,7 @@ export function initAuthModal(onAuthChange) {
                     btn.classList.remove('text-teal-600');
                 }
             }
-        });
+        };
     });
 
     const showView = (view) => {
@@ -185,13 +214,13 @@ export function initAuthModal(onAuthChange) {
     });
 
     // Chuyển view qua lại giữa các form
-    document.getElementById('switchToRegister')?.addEventListener('click', (e) => { e.preventDefault(); showView('register'); });
-    document.getElementById('switchToForgot')?.addEventListener('click', (e) => { e.preventDefault(); showView('forgot'); });
-    document.getElementById('switchToLoginFromReg')?.addEventListener('click', (e) => { e.preventDefault(); showView('login'); });
-    document.getElementById('switchToLoginFromForgot')?.addEventListener('click', (e) => { e.preventDefault(); showView('login'); });
+    document.getElementById('switchToRegister')?.onclick = (e) => { e.preventDefault(); showView('register'); };
+    document.getElementById('switchToForgot')?.onclick = (e) => { e.preventDefault(); showView('forgot'); };
+    document.getElementById('switchToLoginFromReg')?.onclick = (e) => { e.preventDefault(); showView('login'); };
+    document.getElementById('switchToLoginFromForgot')?.onclick = (e) => { e.preventDefault(); showView('login'); };
 
     // Xử lý Đăng nhập
-    loginForm?.addEventListener('submit', (e) => {
+    loginForm.onsubmit = (e) => {
         e.preventDefault();
         const phone = document.getElementById('loginPhoneInput').value.trim();
         const pass = document.getElementById('loginPasswordInput').value.trim();
@@ -201,15 +230,16 @@ export function initAuthModal(onAuthChange) {
             Storage.setUser(user);
             modal?.classList.remove('flex');
             modal?.classList.add('hidden');
+            updateAuthUI();
             showToast(`Xin chào ${user.name}! Đăng nhập thành công.`);
             if (typeof onAuthChange === 'function') onAuthChange();
         } else {
             alert('Số điện thoại hoặc mật khẩu không đúng!');
         }
-    });
+    };
 
-    // Xử lý Đăng ký thông qua AuthService kết hợp hàm hỗ trợ cá nhân
-    registerForm?.addEventListener('submit', (e) => {
+    // Xử lý Đăng ký thông qua AuthService kết hợp fallback sang hàm cá nhân
+    registerForm.onsubmit = (e) => {
         e.preventDefault();
         const name = document.getElementById('regNameInput').value.trim();
         const phone = document.getElementById('regPhoneInput').value.trim();
@@ -222,21 +252,21 @@ export function initAuthModal(onAuthChange) {
                 modal?.classList.remove('flex');
                 modal?.classList.add('hidden');
                 registerForm.reset();
+                updateAuthUI();
                 showToast('Tạo tài khoản thành công!');
                 if (typeof onAuthChange === 'function') onAuthChange();
             } else {
                 alert(res.message);
             }
         } else {
-            // Dự phòng dùng trực tiếp hàm handleRegisterPersonal nếu AuthService không có sẵn hàm register
             handleRegisterPersonal({ name, phone });
             registerForm.reset();
             if (typeof onAuthChange === 'function') onAuthChange();
         }
-    });
+    };
 
-    // Xử lý Đổi / Quên Mật khẩu
-    forgotForm?.addEventListener('submit', (e) => {
+    // Xử lý Quên mật khẩu
+    forgotForm.onsubmit = (e) => {
         e.preventDefault();
         const phone = document.getElementById('forgotPhoneInput').value.trim();
         const newPass = document.getElementById('forgotNewPasswordInput').value.trim();
@@ -254,21 +284,25 @@ export function initAuthModal(onAuthChange) {
         } else {
             alert('Chức năng đặt lại mật khẩu chưa được cấu hình đầy đủ trong AuthService.');
         }
-    });
+    };
 
-    // Nút tài khoản ở Header
-    document.getElementById('btnLoginAccount')?.addEventListener('click', () => {
-        const currentUser = Storage.getUser();
-        if (currentUser) {
-            if (confirm(`Tài khoản: ${currentUser.name} (${currentUser.phone})\n\nBạn có muốn đăng xuất không?`)) {
-                Storage.setUser(null);
-                showToast('Đã đăng xuất tài khoản.');
-                if (typeof onAuthChange === 'function') onAuthChange();
+    // Xử lý nút tài khoản trên Header (Đăng nhập / Đăng xuất nhanh)
+    const btnLoginAccount = document.getElementById('btnLoginAccount');
+    if (btnLoginAccount) {
+        btnLoginAccount.onclick = () => {
+            const currentUser = Storage.getUser();
+            if (currentUser) {
+                if (confirm(`Tài khoản: ${currentUser.name} (${currentUser.phone})\n\nBạn có muốn đăng xuất không?`)) {
+                    Storage.setUser(null);
+                    updateAuthUI();
+                    showToast('Đã đăng xuất tài khoản.');
+                    if (typeof onAuthChange === 'function') onAuthChange();
+                }
+            } else {
+                showView('login');
+                modal?.classList.remove('hidden');
+                modal?.classList.add('flex');
             }
-        } else {
-            showView('login');
-            modal?.classList.remove('hidden');
-            modal?.classList.add('flex');
-        }
-    });
+        };
+    }
 }

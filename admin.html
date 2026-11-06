@@ -3,178 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xác Thực Quản Trị Viên - Việc Gấp Admin</title>
+    <title>Quản trị hệ thống - Việc Gấp Admin</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
+    <!-- FontAwesome cho Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Identity Services SDK -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- File CSS riêng nếu có -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- Header Quản Trị -->
-    <header class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
-        <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-shield-halved text-teal-400 text-xl"></i>
-            <span class="font-bold text-lg tracking-tight">Hệ Thống Kiểm Duyệt An Toàn</span>
+    <!-- HEADER TRANG ADMIN -->
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+        <div class="flex items-center space-x-3">
+            <div class="text-teal-600 text-2xl font-bold flex items-center">
+                <i class="fa-solid fa-shield-halved mr-2"></i>
+                <span class="text-slate-900 font-extrabold tracking-tight">việcgấp</span>
+                <span class="text-teal-600 text-sm ml-1 bg-teal-50 px-2 py-0.5 rounded-md font-semibold border border-teal-100">Admin</span>
+            </div>
         </div>
         <div class="flex items-center gap-3">
-            <span id="adminSessionInfo" class="text-xs text-teal-300 font-medium hidden"></span>
-            <button id="btnOpenAdminManager" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition hidden cursor-pointer">
-                <i class="fa-solid fa-users-gear mr-1"></i> Quản lý Admin
-            </button>
-            <button id="btnOpenChangePassModal" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition hidden cursor-pointer">
-                <i class="fa-solid fa-key mr-1"></i> Đổi mật khẩu
-            </button>
-            <button id="btnLogout" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition hidden cursor-pointer">
-                <i class="fa-solid fa-right-from-bracket mr-1"></i> Đăng xuất
-            </button>
-            <a href="index.html" class="bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center shadow-sm">
+            <a href="index.html" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2 rounded-xl text-xs flex items-center transition cursor-pointer">
                 <i class="fa-solid fa-arrow-left mr-1.5"></i> Về trang người dùng
             </a>
         </div>
     </header>
 
-    <!-- MÀN HÌNH XÁC THỰC QUẢN TRỊ VIÊN -->
-    <div id="adminLoginSection" class="flex-1 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-100 p-8 space-y-6">
-            <div class="text-center space-y-1">
-                <div class="w-14 h-14 bg-slate-900 text-teal-400 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 shadow-inner">
-                    <i class="fa-solid fa-fingerprint"></i>
+    <!-- NỘI DUNG CHÍNH TRANG QUẢN TRỊ -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
+        
+        <!-- Tiêu đề trang & Thống kê nhanh -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-900">Trung tâm Phê duyệt Hồ sơ</h1>
+                <p class="text-sm text-slate-500 mt-0.5">Kiểm duyệt và quản lý các đơn vị Tổ chức & Cá nhân đăng ký tham gia hệ thống.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse"></span>
+                    <span class="text-xs font-semibold text-slate-600">Cá nhân chờ duyệt: <strong id="statPendingWorkers" class="text-slate-900">0</strong></span>
                 </div>
-                <h2 class="text-xl font-extrabold text-slate-900">Xác thực Quản trị viên cấp cao</h2>
-                <p class="text-xs text-slate-500">Lựa chọn hình thức đăng nhập bảo mật để tiếp tục</p>
+                <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse"></span>
+                    <span class="text-xs font-semibold text-slate-600">Tổ chức chờ duyệt: <strong id="statPendingOrgs" class="text-slate-900">0</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHẦN 1: HỒ SƠ ĐANG CHỜ DUYỆT (PENDING) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Danh sách Cá nhân chờ duyệt -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                    <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-user-clock text-amber-500"></i> Cá nhân chờ phê duyệt
+                    </h2>
+                </div>
+                <div id="adminPendingWorkerList" class="space-y-3 flex-1 overflow-y-auto max-h-[400px]">
+                    <p class="text-xs text-slate-400 text-center py-4">Đang tải dữ liệu...</p>
+                </div>
             </div>
 
-            <!-- Tab lựa chọn phương thức xác thực -->
-            <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
-                <button type="button" id="tabGoogleBtn" class="py-2 rounded-lg bg-white text-slate-900 shadow-sm transition cursor-pointer">Tài khoản Google</button>
-                <button type="button" id="tabPassBtn" class="py-2 rounded-lg text-slate-500 hover:text-slate-900 transition cursor-pointer">Mật khẩu nội bộ</button>
+            <!-- Danh sách Tổ chức chờ duyệt -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                    <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-building-circle-exclamation text-amber-500"></i> Tổ chức chờ phê duyệt
+                    </h2>
+                </div>
+                <div id="adminPendingOrgList" class="space-y-3 flex-1 overflow-y-auto max-h-[400px]">
+                    <p class="text-xs text-slate-400 text-center py-4">Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHẦN 2: HỒ SƠ ĐÃ PHÊ DUYỆT (APPROVED) -->
+        <div class="mt-8">
+            <div class="mb-4">
+                <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i> Danh sách hồ sơ đã được phê duyệt
+                </h2>
+                <p class="text-xs text-slate-500">Các đơn vị và cá nhân đã vượt qua kiểm duyệt và hiển thị công khai trên ứng dụng.</p>
             </div>
 
-            <!-- Form đăng nhập bằng Google -->
-            <div id="googleAuthBox" class="space-y-4 pt-2">
-                <div class="bg-teal-50 border border-teal-100 rounded-xl p-3 text-center text-xs text-teal-800">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Hệ thống chỉ cấp quyền cho tài khoản Google đã được ủy quyền trong danh sách quản trị.
-                </div>
-                <div class="flex justify-center py-2">
-                    <div id="g_id_onload"
-                         data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-                         data-callback="handleGoogleLogin"
-                         data-auto_prompt="false">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Tổ chức đã duyệt -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-building text-teal-600"></i> Tổ chức đã duyệt (<span id="countApprovedOrgs">0</span>)
+                        </h3>
                     </div>
-                    <div class="g_id_signin"
-                         data-type="standard"
-                         data-shape="rectangular"
-                         data-theme="outline"
-                         data-text="sign_in_with"
-                         data-size="large"
-                         data-logo_alignment="center">
+                    <div id="adminApprovedOrgList" class="space-y-2 max-h-[350px] overflow-y-auto">
+                        <p class="text-xs text-slate-400 text-center py-3">Đang tải...</p>
                     </div>
                 </div>
-                <p id="googleErrorMsg" class="text-xs text-red-500 font-semibold hidden text-center bg-red-50 p-2 rounded-lg">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Tài khoản không có quyền truy cập!
-                </p>
-            </div>
 
-            <!-- Form đăng nhập bằng Mật khẩu -->
-            <form id="adminLoginForm" class="space-y-4 hidden pt-2">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu bảo mật</label>
-                    <input type="password" id="adminPasswordInput" placeholder="Nhập mật khẩu quản trị..." class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600 transition">
-                </div>
-                <p id="loginErrorMsg" class="text-xs text-red-500 font-semibold hidden text-center bg-red-50 p-2 rounded-lg">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mật khẩu không chính xác!
-                </p>
-                <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">
-                    Xác thực Mật khẩu
-                </button>
-            </form>
-
-            <div class="pt-2 border-t border-slate-100 flex justify-end items-center text-[11px]">
-                <span class="text-teal-600 font-medium"><i class="fa-solid fa-shield-check mr-1"></i> Encrypted & SSL Secured</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- KHU VỰC PHÊ DUYỆT ĐƠN -->
-    <main id="adminMainContent" class="flex-1 max-w-5xl w-full mx-auto p-6 space-y-6 hidden">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-slate-500 font-semibold uppercase">Cá nhân chờ duyệt</p>
-                    <h3 id="statPendingWorkers" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
-                </div>
-                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-user-clock"></i>
-                </div>
-            </div>
-
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-slate-500 font-semibold uppercase">Tổ chức chờ duyệt</p>
-                    <h3 id="statPendingOrgs" class="text-2xl font-bold text-blue-600 mt-1">0</h3>
-                </div>
-                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-building-circle-exclamation"></i>
+                <!-- Cá nhân đã duyệt -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-users text-teal-600"></i> Cá nhân đã duyệt (<span id="countApprovedWorkers">0</span>)
+                        </h3>
+                    </div>
+                    <div id="adminApprovedWorkerList" class="space-y-2 max-h-[350px] overflow-y-auto">
+                        <p class="text-xs text-slate-400 text-center py-3">Đang tải...</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-4 border-b border-slate-100 bg-slate-50">
-                <h3 class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-user-check mr-2 text-amber-500"></i> Phê duyệt Hồ sơ Cá nhân</h3>
-            </div>
-            <div id="adminPendingWorkerList" class="p-4 space-y-3"></div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-4 border-b border-slate-100 bg-slate-50">
-                <h3 class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-building-shield mr-2 text-blue-600"></i> Phê duyệt Tổ chức / Đối tác</h3>
-            </div>
-            <div id="adminPendingOrgList" class="p-4 space-y-3"></div>
-        </div>
     </main>
 
-    <!-- Modal Đổi Mật Khẩu -->
-    <div id="changePassModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
-        <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-100 p-6 space-y-4">
-            <h3 class="font-bold text-slate-900 text-base"><i class="fa-solid fa-key text-teal-600 mr-2"></i> Đổi Mật Khẩu Quản Trị</h3>
-            <form id="changePassForm" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
-                    <input type="password" id="newPasswordInput" required placeholder="Nhập mật khẩu mới..." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600">
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button type="button" id="btnCloseChangePass" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-xs transition cursor-pointer">Hủy</button>
-                    <button type="submit" class="flex-1 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl text-xs transition cursor-pointer">Lưu thay đổi</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Quản Lý Danh Sách Admin -->
-    <div id="adminManagerModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
-        <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 p-6 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-900 text-base"><i class="fa-solid fa-users-gear text-teal-600 mr-2"></i> Quản Lý Danh Sách Admin Google</h3>
-                <button type="button" id="btnCloseAdminManager" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            
-            <form id="addAdminForm" class="flex gap-2">
-                <input type="email" id="newAdminEmailInput" required placeholder="Nhập email Google cấp quyền..." class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-teal-600">
-                <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Thêm Admin</button>
-            </form>
-
-            <div class="space-y-2">
-                <p class="text-xs font-semibold text-slate-500 uppercase">Danh sách email được ủy quyền:</p>
-                <div id="adminEmailsListContainer" class="max-h-48 overflow-y-auto space-y-2 border border-slate-100 p-2 rounded-xl bg-slate-50"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- NHỦNG MODULE ĐIỀU PHỐI ADMIN -->
+    <!-- Script điều khiển Admin (kết nối Supabase & Realtime) -->
     <script type="module" src="js/admin-app.js"></script>
 </body>
 </html>

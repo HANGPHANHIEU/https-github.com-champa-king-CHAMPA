@@ -1,5 +1,23 @@
+import { takeJob, deleteJob } from './job-service.js';
 import { initTrashModal } from './trash-modal.js';
 import { updateAuthUI } from './auth-modal.js';
+
+// --- BẮT SỰ KIỆN TOÀN CỤC (EVENT DELEGATION CHO NÚT NHẬN VIỆC & XÓA) ---
+document.addEventListener('click', (e) => {
+    // 1. Nếu bấm nút Nhận việc
+    if (e.target.classList.contains('btn-take') || e.target.closest('.btn-take')) {
+        const btn = e.target.closest('.btn-take') || e.target;
+        const jobId = btn.getAttribute('data-id');
+        if (jobId) takeJob(jobId);
+    }
+
+    // 2. Nếu bấm nút Xóa
+    if (e.target.classList.contains('btn-delete') || e.target.closest('.btn-delete')) {
+        const btn = e.target.closest('.btn-delete') || e.target;
+        const jobId = btn.getAttribute('data-id');
+        if (jobId) deleteJob(jobId);
+    }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (SAFE MODE) ---");
@@ -56,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${job.location || 'Châu Thành'}</span>
                         <span><i class="fa-regular fa-clock text-slate-400 mr-1"></i>${job.createdAt || ''}</span>
                     </div>
-                    <button class="text-teal-600 hover:text-teal-700 font-semibold transition cursor-pointer">Nhận việc &rarr;</button>
+                    <button data-id="${job.id}" class="btn-take text-teal-600 hover:text-teal-700 font-semibold transition cursor-pointer">Nhận việc &rarr;</button>
                 </div>
             </div>
         `).join('');

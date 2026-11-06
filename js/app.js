@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (FULL FEATURES) ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (FULL FEATURES & VERIFICATION) ---");
 
     // 1. Dọn dẹp tất cả modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!orgListContainer) return;
 
         const orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
+        // Chỉ lấy các tổ chức có trạng thái 'approved' (Admin đã đồng ý)
         const approvedOrgs = orgs.filter(o => o.status === 'approved');
 
         if (approvedOrgs.length === 0) {
@@ -69,7 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="bg-teal-50 text-teal-700 text-[11px] font-semibold px-2 py-0.5 rounded-md uppercase">${org.province || 'An Giang'}</span>
                         <h3 class="font-bold text-slate-900 text-base mt-1">${org.name}</h3>
                     </div>
-                    <span class="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-xl font-semibold"><i class="fa-solid fa-circle-check mr-1"></i>Đã xác minh</span>
+                    <!-- NHÃN ĐÃ XÁC MINH HIỂN THỊ KHI ĐÃ ĐƯỢC DUYỆT -->
+                    <span class="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-xl font-semibold flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i> Đã xác minh
+                    </span>
                 </div>
                 <p class="text-xs text-slate-600"><i class="fa-solid fa-star text-amber-500 mr-1"></i>Thế mạnh: ${org.strength}</p>
                 <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-50">
@@ -110,7 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-50">
                     <span><i class="fa-solid fa-location-dot mr-1"></i>${job.location}</span>
-                    <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check-circle mr-1"></i>Đã nhận việc</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check-circle mr-1"></i>Đã nhận việc</span>
+                        <!-- Nút Hủy nhận công việc -->
+                        <button onclick="window.handleRemoveAcceptedJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer">
+                            Hủy nhận
+                        </button>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -251,6 +261,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // --- LOGIC HỦY / XÓA CÔNG VIỆC ĐÃ NHẬN ---
+    window.handleRemoveAcceptedJob = (jobId) => {
+        if (confirm("Bạn có chắc chắn muốn hủy nhận công việc này không? Công việc sẽ quay lại danh sách tìm việc.")) {
+            let jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
+            const jobIndex = jobs.findIndex(j => j.id === jobId);
+
+            if (jobIndex !== -1) {
+                jobs[jobIndex].status = 'active';
+                delete jobs[jobIndex].acceptedBy;
+
+                localStorage.setItem('viecgap_jobs', JSON.stringify(jobs));
+                alert("Đã hủy nhận công việc thành công!");
+                window.renderJobs();
+            }
+        }
+    };
+
     // --- LOGIC XÓA VIỆC (CHỈ CHÍNH CHỦ MỚI ĐƯỢC XÓA) ---
     window.handleDeleteJob = (jobId) => {
         const currentUserPhone = localStorage.getItem('viecgap_user_phone');
@@ -336,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ward: document.getElementById('orgWardInput')?.value,
             address: document.getElementById('orgAddressInput')?.value,
             strength: document.getElementById('orgStrengthInput')?.value,
-            status: 'pending',
+            status: 'pending', // Chờ kiểm duyệt từ Admin
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 
@@ -373,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
             phone: document.getElementById('workerPhoneInput')?.value,
             location: document.getElementById('workerLocationInput')?.value,
             skill: document.getElementById('workerSkillInput')?.value,
-            status: 'pending',
+            status: 'pending', // Chờ kiểm duyệt từ Admin
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 

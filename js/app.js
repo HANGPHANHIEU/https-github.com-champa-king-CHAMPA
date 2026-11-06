@@ -1,7 +1,14 @@
+import { updateAuthUI } from './auth-modal.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (SAFE MODE) ---");
 
-    // 1. Dọn dẹp tất cả modal bị kẹt khi mới tải trang
+    // 1. Tải lại giao diện tài khoản khi vừa mở trang (Từ file 1)
+    if (typeof updateAuthUI === 'function') {
+        updateAuthUI();
+    }
+
+    // 2. Dọn dẹp tất cả modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
@@ -33,19 +40,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
-                            <span class="bg-teal-50 text-teal-700 text-[11px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wide">${job.category}</span>
+                            <span class="bg-teal-50 text-teal-700 text-[11px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wide">${job.category || 'Khác'}</span>
                             ${job.urgent ? '<span class="bg-amber-100 text-amber-700 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1"><i class="fa-solid fa-bolt text-[10px]"></i> Gấp</span>' : ''}
                         </div>
                         <h3 class="font-bold text-slate-900 text-base">${job.title}</h3>
                     </div>
-                    <span class="text-teal-600 font-bold text-sm bg-teal-50 px-2.5 py-1 rounded-xl">${job.salary}</span>
+                    <span class="text-teal-600 font-bold text-sm bg-teal-50 px-2.5 py-1 rounded-xl">${job.salary || 'Thỏa thuận'}</span>
                 </div>
                 <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-50">
                     <div class="flex items-center gap-3">
-                        <span><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${job.location}</span>
-                        <span><i class="fa-regular fa-clock text-slate-400 mr-1"></i>${job.createdAt}</span>
+                        <span><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${job.location || 'Châu Thành'}</span>
+                        <span><i class="fa-regular fa-clock text-slate-400 mr-1"></i>${job.createdAt || ''}</span>
                     </div>
-                    <button class="text-teal-600 hover:text-teal-700 font-semibold transition">Nhận việc &rarr;</button>
+                    <button class="text-teal-600 hover:text-teal-700 font-semibold transition cursor-pointer">Nhận việc &rarr;</button>
                 </div>
             </div>
         `).join('');
@@ -64,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Kiểm tra trạng thái đăng nhập hiện tại từ LocalStorage
     const checkLoginStatus = () => {
-        const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true';
+        const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true' || !!localStorage.getItem('user');
         if (isLoggedIn && loginBtnText) {
             loginBtnText.innerText = "Đã đăng nhập";
         }
@@ -101,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (loginBtnText) loginBtnText.innerText = "Đã đăng nhập";
             alert('Đăng nhập thành công!');
             closeAuthModal();
+            if (typeof updateAuthUI === 'function') updateAuthUI();
         }
     });
 
@@ -109,12 +117,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCancelAuthModal')?.addEventListener('click', closeAuthModal);
     document.getElementById('btnCancelReset')?.addEventListener('click', closeAuthModal);
 
-    // --- 2. XỬ LÝ MODAL ĐĂNG VIỆC (CÓ KIỂM TRA ĐĂNG NHẬP) ---
+    // --- 4. XỬ LÝ MODAL ĐĂNG VIỆC (CÓ KIỂM TRA ĐĂNG NHẬP) ---
     const postJobModal = document.getElementById('postJobModal');
     const postJobForm = document.getElementById('postJobForm');
 
     const openPostJob = () => {
-        // KIỂM TRA TRẠNG THÁI ĐĂNG NHẬP TRƯỚC KHI CHO ĐĂNG VIỆC
         if (!checkLoginStatus()) {
             alert('Vui lòng đăng nhập trước khi đăng công việc mới!');
             openAuthModal();
@@ -175,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authModalTitle) authModalTitle.innerText = "Đăng nhập tài khoản";
     });
 
-    // --- XỬ LÝ MODAL TỔ CHỨC ---
+    // --- 5. XỬ LÝ MODAL TỔ CHỨC ---
     const orgModal = document.getElementById('orgModal');
     const orgForm = document.getElementById('orgForm');
 
@@ -192,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCloseOrgModal')?.addEventListener('click', closeOrgModal);
     document.getElementById('btnCancelOrgModal')?.addEventListener('click', closeOrgModal);
 
-    // --- XỬ LÝ MODAL ĐĂNG KÝ CÁ NHÂN ---
+    // --- 6. XỬ LÝ MODAL ĐĂNG KÝ CÁ NHÂN ---
     const workerModal = document.getElementById('workerModal');
     const workerForm = document.getElementById('workerForm');
 
@@ -209,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCloseWorkerModal')?.addEventListener('click', closeWorkerModal);
     document.getElementById('btnCancelWorkerModal')?.addEventListener('click', closeWorkerModal);
 
-    // --- 6. XỬ LÝ MODAL THÙNG RÁC ---
+    // --- 7. XỬ LÝ MODAL THÙNG RÁC ---
     const trashModal = document.getElementById('trashModal');
     document.getElementById('btnOpenTrash')?.addEventListener('click', () => {
         trashModal?.classList.remove('hidden');
@@ -217,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('btnCloseTrashModal')?.addEventListener('click', () => trashModal?.classList.add('hidden'));
 
-    // --- 7. XỬ LÝ CHUYỂN ĐỔI TAB DƯỚI THANH NAVIGATION ---
+    // --- 8. XỬ LÝ CHUYỂN ĐỔI TAB DƯỚI THANH NAVIGATION ---
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const tabId = btn.getAttribute('data-tab');

@@ -305,32 +305,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- PHÊ DUYỆT / TỪ CHỐI CHO ADMIN ---
-    window.approveRegistration = (id, type) => {
-        const key = type === 'worker' ? 'viecgap_workers' : 'viecgap_orgs';
-        let list = JSON.parse(localStorage.getItem(key) || '[]');
-        const index = list.findIndex(item => item.id === id);
-
-        if (index !== -1) {
-            list[index].status = 'approved';
-            localStorage.setItem(key, JSON.stringify(list));
-            alert(`Đã phê duyệt ${type === 'worker' ? 'cá nhân' : 'tổ chức'} thành công!`);
-            window.renderJobs();
-        }
-    };
-
-    window.rejectRegistration = (id, type) => {
-        const key = type === 'worker' ? 'viecgap_workers' : 'viecgap_orgs';
-        let list = JSON.parse(localStorage.getItem(key) || '[]');
-        const updatedList = list.filter(item => item.id !== id);
-
-        if (confirm(`Bạn có chắc chắn muốn từ chối đăng ký này?`)) {
-            localStorage.setItem(key, JSON.stringify(updatedList));
-            alert(`Đã từ chối đăng ký!`);
-            window.renderJobs();
-        }
-    };
-
     // Render khởi tạo ban đầu
     window.renderJobs();
 

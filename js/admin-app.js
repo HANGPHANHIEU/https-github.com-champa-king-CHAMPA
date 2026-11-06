@@ -52,9 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
             createdAt: new Date().toLocaleDateString('vi-VN')
         };
 
-        let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
+        // Lưu đồng bộ vào cả hai khóa để tương thích ngược tuyệt đối
+        let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
         orgs.unshift(newOrg);
         localStorage.setItem('viecgap_orgs', JSON.stringify(orgs));
+        localStorage.setItem('organizations_list', JSON.stringify(orgs));
 
         alert("Ghi danh Tổ chức thành công! Hồ sơ đang chờ Admin phê duyệt.");
         orgForm.reset();
@@ -281,27 +283,29 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             if (googleErrorMsg) {
                 googleErrorMsg.textContent = 'Xác thực Google thất bại!';
-                googleErrorMsg.classList.remove('hidden');
+                googleErrorMsg.classList.add('hidden');
             }
         }
     };
 
     async function loadPendingData() {
         const workers = JSON.parse(localStorage.getItem('viecgap_workers') || '[]');
-        // Hỗ trợ lấy danh sách tổ chức đồng bộ từ cả Storage/LocalStorage hoặc OrgService
+        
+        // Đọc tổ chức từ cả hai nguồn để tránh bỏ sót
         let orgs = [];
         try {
             orgs = await OrgService.fetchCloudOrgs();
         } catch(e) {
-            orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
+            orgs = [];
         }
         if (!orgs || orgs.length === 0) {
-            orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
+            orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
         }
 
         const pendingWorkers = workers.filter(w => w.status === 'pending' || !w.status);
         const pendingOrgs = orgs.filter(o => o.status === 'pending' || !o.status);
 
+        // Hiển thị số lượng lên Badge thống kê
         const statPendingWorkers = document.getElementById('statPendingWorkers');
         const statPendingOrgs = document.getElementById('statPendingOrgs');
         if (statPendingWorkers) statPendingWorkers.textContent = pendingWorkers.length;
@@ -341,16 +345,16 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 pendingOrgs.forEach(o => {
                     const item = document.createElement('div');
-                    item.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs';
+                    item.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs mb-2';
                     item.innerHTML = `
                         <div>
                             <h4 class="font-bold text-slate-800 text-sm">${o.name}</h4>
-                            <p class="text-slate-600 mt-0.5">📞 ${o.phone} &bull; 📍 ${o.district || o.province || o.location || ''}</p>
-                            <p class="text-blue-700 font-medium mt-0.5">Thế mạnh: ${o.strength}</p>
+                            <p class="text-slate-600 mt-0.5">📞 ${o.phone} &bull; 📍 ${o.district || o.province || o.address || ''}</p>
+                            <p class="text-blue-700 font-medium mt-0.5">Thế mạnh: ${o.strength || 'Chưa cập nhật'}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="approveOrg('${o.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
-                            <button onclick="rejectOrg('${o.id}')" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
+                            <button onclick="approveOrg('${o.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition cursor-pointer">Đồng ý</button>
+                            <button onclick="rejectOrg('${o.id}')" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition cursor-pointer">Từ chối</button>
                         </div>
                     `;
                     orgContainer.appendChild(item);
@@ -359,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Các hàm xử lý phê duyệt gắn vào window để gọi từ thuộc tính onclick trong HTML
+    // Các hàm xử lý phê duyệt cá nhân
     window.approveWorker = function(id) {
         let workers = JSON.parse(localStorage.getItem('viecgap_workers') || '[]');
         workers = workers.map(w => w.id === id ? { ...w, status: 'approved' } : w);
@@ -378,19 +382,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Các hàm xử lý phê duyệt tổ chức (Lưu đồng bộ cả 2 khóa LocalStorage)
     window.approveOrg = function(id) {
-        let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
-        orgs = orgs.map(o => o.id === id ? { ...o, status: 'approved' } : o);
+        let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
+        orgs = orgs.map(o => o.id == id ? { ...o, status: 'approved' } : o);
+
         localStorage.setItem('viecgap_orgs', JSON.stringify(orgs));
+        localStorage.setItem('organizations_list', JSON.stringify(orgs));
+
         loadPendingData();
         showToast('Đã phê duyệt tổ chức thành công!');
     };
 
     window.rejectOrg = function(id) {
-        if (confirm('Bạn có chắc chắn muốn từ chối và xóa tổ chức này?')) {
-            let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
-            orgs = orgs.filter(o => o.id !== id);
+        if (confirm("Bạn có chắc chắn muốn từ chối và xóa hồ sơ tổ chức này?")) {
+            let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || localStorage.getItem('organizations_list') || '[]');
+            orgs = orgs.filter(o => o.id != id);
+
             localStorage.setItem('viecgap_orgs', JSON.stringify(orgs));
+            localStorage.setItem('organizations_list', JSON.stringify(orgs));
+
             loadPendingData();
             showToast('Đã từ chối tổ chức!');
         }

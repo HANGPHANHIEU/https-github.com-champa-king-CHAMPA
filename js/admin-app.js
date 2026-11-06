@@ -1,4 +1,3 @@
-// Tái sử dụng storage từ storage.js & orgservice từ org-service.js
 import { Storage } from './storage.js';
 import { OrgService } from './org-service.js';
 import { showToast } from './toast.js';
@@ -30,6 +29,66 @@ function saveAdminEmails(list) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' - ADMIN & REGISTRATION ĐÃ SẴN SÀNG ---");
+
+    // ==========================================
+    // 1. XỬ LÝ FORM ĐĂNG KÝ (TỔ CHỨC & CÁ NHÂN)
+    // ==========================================
+
+    // --- Đăng ký Tổ chức ---
+    const orgForm = document.getElementById('orgForm');
+    orgForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newOrg = {
+            id: 'org_' + Date.now(),
+            name: document.getElementById('orgNameInput')?.value,
+            phone: document.getElementById('orgPhoneInput')?.value,
+            province: document.getElementById('orgProvinceInput')?.value,
+            district: document.getElementById('orgDistrictInput')?.value,
+            ward: document.getElementById('orgWardInput')?.value,
+            address: document.getElementById('orgAddressInput')?.value,
+            strength: document.getElementById('orgStrengthInput')?.value,
+            status: 'pending', // Trạng thái chờ duyệt
+            createdAt: new Date().toLocaleDateString('vi-VN')
+        };
+
+        let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
+        orgs.unshift(newOrg);
+        localStorage.setItem('viecgap_orgs', JSON.stringify(orgs));
+
+        alert("Ghi danh Tổ chức thành công! Hồ sơ đang chờ Admin phê duyệt.");
+        orgForm.reset();
+        document.getElementById('orgModal')?.classList.add('hidden');
+    });
+
+    // --- Đăng ký Cá nhân ---
+    const workerForm = document.getElementById('workerForm');
+    workerForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newWorker = {
+            id: 'worker_' + Date.now(),
+            name: document.getElementById('workerNameInput')?.value,
+            phone: document.getElementById('workerPhoneInput')?.value,
+            location: document.getElementById('workerLocationInput')?.value,
+            skill: document.getElementById('workerSkillInput')?.value,
+            status: 'pending', // Trạng thái chờ duyệt
+            createdAt: new Date().toLocaleDateString('vi-VN')
+        };
+
+        let workers = JSON.parse(localStorage.getItem('viecgap_workers') || '[]');
+        workers.unshift(newWorker);
+        localStorage.setItem('viecgap_workers', JSON.stringify(workers));
+
+        alert("Đăng ký hồ sơ cá nhân thành công! Hồ sơ đang chờ Admin phê duyệt.");
+        workerForm.reset();
+        document.getElementById('workerModal')?.classList.add('hidden');
+    });
+
+
+    // ==========================================
+    // 2. XỬ LÝ HỆ THỐNG QUẢN TRỊ (ADMIN DASHBOARD)
+    // ==========================================
+
     const loginSection = document.getElementById('adminLoginSection');
     const mainContent = document.getElementById('adminMainContent');
     const loginForm = document.getElementById('adminLoginForm');
@@ -56,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newAdminEmailInput = document.getElementById('newAdminEmailInput');
     const adminEmailsListContainer = document.getElementById('adminEmailsListContainer');
 
-    // Tab switch
+    // Chuyển tab đăng nhập Admin (Google / Mật khẩu)
     tabGoogleBtn?.addEventListener('click', () => {
         tabGoogleBtn.className = 'py-2 rounded-lg bg-white text-slate-900 shadow-sm transition cursor-pointer';
         tabPassBtn.className = 'py-2 rounded-lg text-slate-500 hover:text-slate-900 transition cursor-pointer';
@@ -228,15 +287,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     async function loadPendingData() {
-        // 1. Lấy danh sách cá nhân từ LocalStorage và tổ chức từ Cloud
-        const workers = Storage.getWorkers();
-        const orgs = await OrgService.fetchCloudOrgs();
+        const workers = JSON.parse(localStorage.getItem('viecgap_workers') || '[]');
+        // Hỗ trợ lấy danh sách tổ chức đồng bộ từ cả Storage/LocalStorage hoặc OrgService
+        let orgs = [];
+        try {
+            orgs = await OrgService.fetchCloudOrgs();
+        } catch(e) {
+            orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
+        }
+        if (!orgs || orgs.length === 0) {
+            orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
+        }
 
-        // Lọc các hồ sơ có trạng thái 'pending' hoặc chưa có trạng thái
         const pendingWorkers = workers.filter(w => w.status === 'pending' || !w.status);
         const pendingOrgs = orgs.filter(o => o.status === 'pending' || !o.status);
 
-        // Hiển thị số lượng lên badge thống kê
         const statPendingWorkers = document.getElementById('statPendingWorkers');
         const statPendingOrgs = document.getElementById('statPendingOrgs');
         if (statPendingWorkers) statPendingWorkers.textContent = pendingWorkers.length;
@@ -254,12 +319,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.className = 'p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs';
                     item.innerHTML = `
                         <div>
-                            <h4 class="font-bold text-slate-800 text-sm">${w.name} - <span class="text-amber-600">${w.skill}</span></h4>
+                            <h4 class="font-bold text-slate-800 text-sm">${w.name} - <span class="text-amber-600">${w.skill || ''}</span></h4>
                             <p class="text-slate-600 mt-0.5">📞 ${w.phone} &bull; 📍 ${w.location}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="approveWorker(${w.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
-                            <button onclick="rejectWorker(${w.id})" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
+                            <button onclick="approveWorker('${w.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
+                            <button onclick="rejectWorker('${w.id}')" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
                         </div>
                     `;
                     workerContainer.appendChild(item);
@@ -280,12 +345,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.innerHTML = `
                         <div>
                             <h4 class="font-bold text-slate-800 text-sm">${o.name}</h4>
-                            <p class="text-slate-600 mt-0.5">📞 ${o.phone} &bull; 📍 ${o.district || o.location || ''}</p>
+                            <p class="text-slate-600 mt-0.5">📞 ${o.phone} &bull; 📍 ${o.district || o.province || o.location || ''}</p>
                             <p class="text-blue-700 font-medium mt-0.5">Thế mạnh: ${o.strength}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="approveOrg(${o.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
-                            <button onclick="rejectOrg(${o.id})" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
+                            <button onclick="approveOrg('${o.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Đồng ý</button>
+                            <button onclick="rejectOrg('${o.id}')" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition shadow-sm cursor-pointer">Từ chối</button>
                         </div>
                     `;
                     orgContainer.appendChild(item);
@@ -294,37 +359,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Các hàm xử lý phê duyệt gắn vào window để gọi từ thuộc tính onclick trong HTML
     window.approveWorker = function(id) {
-        let workers = Storage.getWorkers();
+        let workers = JSON.parse(localStorage.getItem('viecgap_workers') || '[]');
         workers = workers.map(w => w.id === id ? { ...w, status: 'approved' } : w);
-        localStorage.setItem('workers_list', JSON.stringify(workers));
+        localStorage.setItem('viecgap_workers', JSON.stringify(workers));
         loadPendingData();
-        showToast('Đã phê duyệt hồ sơ cá nhân!');
+        showToast('Đã phê duyệt hồ sơ cá nhân thành công!');
     };
 
     window.rejectWorker = function(id) {
         if (confirm('Bạn có chắc chắn muốn từ chối và xóa hồ sơ này?')) {
-            let workers = Storage.getWorkers();
+            let workers = JSON.parse(localStorage.getItem('viecgap_workers') || '[]');
             workers = workers.filter(w => w.id !== id);
-            localStorage.setItem('workers_list', JSON.stringify(workers));
+            localStorage.setItem('viecgap_workers', JSON.stringify(workers));
             loadPendingData();
+            showToast('Đã từ chối hồ sơ cá nhân!');
         }
     };
 
     window.approveOrg = function(id) {
-        let orgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
+        let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
         orgs = orgs.map(o => o.id === id ? { ...o, status: 'approved' } : o);
-        localStorage.setItem('organizations_list', JSON.stringify(orgs));
+        localStorage.setItem('viecgap_orgs', JSON.stringify(orgs));
         loadPendingData();
-        showToast('Đã phê duyệt tổ chức!');
+        showToast('Đã phê duyệt tổ chức thành công!');
     };
 
     window.rejectOrg = function(id) {
         if (confirm('Bạn có chắc chắn muốn từ chối và xóa tổ chức này?')) {
-            let orgs = JSON.parse(localStorage.getItem('organizations_list') || '[]');
+            let orgs = JSON.parse(localStorage.getItem('viecgap_orgs') || '[]');
             orgs = orgs.filter(o => o.id !== id);
-            localStorage.setItem('organizations_list', JSON.stringify(orgs));
+            localStorage.setItem('viecgap_orgs', JSON.stringify(orgs));
             loadPendingData();
+            showToast('Đã từ chối tổ chức!');
         }
     };
+
+    // Tải dữ liệu khi trang vừa mở
+    loadPendingData();
 });

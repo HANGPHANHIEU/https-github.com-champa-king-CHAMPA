@@ -9,6 +9,7 @@ export function updateAuthUI() {
     const user = Storage.getUser();
     const registerBtn = document.getElementById('btnRegisterPersonal'); // Nút đăng ký cá nhân trên header
     const userDisplay = document.getElementById('userDisplay'); // Vùng hiển thị tên sau khi đăng nhập
+    const btnLoginAccount = document.getElementById('btnLoginAccount'); // Nút tài khoản/đăng nhập trên header
 
     if (user) {
         if (registerBtn) registerBtn.classList.add('hidden');
@@ -16,11 +17,19 @@ export function updateAuthUI() {
             userDisplay.classList.remove('hidden');
             userDisplay.textContent = `Xin chào, ${user.name || user.phone}`;
         }
+        // Cập nhật nút tài khoản thành icon Đăng xuất kèm chữ
+        if (btnLoginAccount) {
+            btnLoginAccount.innerHTML = `<i class="fa-solid fa-right-from-bracket mr-1.5"></i> Đăng xuất`;
+        }
     } else {
         if (registerBtn) registerBtn.classList.remove('hidden');
         if (userDisplay) {
             userDisplay.classList.add('hidden');
             userDisplay.textContent = '';
+        }
+        // Khôi phục nút tài khoản về trạng thái Đăng nhập
+        if (btnLoginAccount) {
+            btnLoginAccount.innerHTML = `<i class="fa-solid fa-user mr-1.5"></i> Đăng nhập`;
         }
     }
 }
@@ -74,7 +83,10 @@ export function initAuthModal(onAuthChange) {
         div.innerHTML = `
             <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
                 <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-slate-100 p-6 space-y-4 relative">
-                    <button id="btnCloseAuthModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
+                    <!-- Nút đóng modal có icon hủy (fa-xmark) -->
+                    <button id="btnCloseAuthModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                     
                     <div class="text-center space-y-1">
                         <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-xl mx-auto mb-1">
@@ -102,7 +114,13 @@ export function initAuthModal(onAuthChange) {
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" class="w-full py-2.5 bg-[#0d9488] hover:bg-teal-700 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">Đăng nhập</button>
+                        <div class="flex gap-2">
+                            <button type="submit" class="w-full py-2.5 bg-[#0d9488] hover:bg-teal-700 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">Đăng nhập</button>
+                            <!-- Nút hủy form đăng nhập tích hợp icon fa-xmark -->
+                            <button type="button" id="btnCancelLogin" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium rounded-xl transition text-sm cursor-pointer" title="Hủy">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                         <p class="text-xs text-center text-slate-500 pt-1">
                             Chưa có tài khoản? <a href="#" id="switchToRegister" class="text-teal-600 font-bold hover:underline">Đăng ký ngay</a>
                         </p>
@@ -127,7 +145,12 @@ export function initAuthModal(onAuthChange) {
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">Tạo tài khoản mới</button>
+                        <div class="flex gap-2">
+                            <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">Tạo tài khoản mới</button>
+                            <button type="button" id="btnCancelRegister" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium rounded-xl transition text-sm cursor-pointer" title="Hủy">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                         <p class="text-xs text-center text-slate-500 pt-1">
                             Đã có tài khoản? <a href="#" id="switchToLoginFromReg" class="text-teal-600 font-bold hover:underline">Đăng nhập</a>
                         </p>
@@ -148,7 +171,12 @@ export function initAuthModal(onAuthChange) {
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">Đặt lại mật khẩu</button>
+                        <div class="flex gap-2">
+                            <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition text-sm shadow-sm cursor-pointer">Đặt lại mật khẩu</button>
+                            <button type="button" id="btnCancelForgot" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium rounded-xl transition text-sm cursor-pointer" title="Hủy">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                         <p class="text-xs text-center text-slate-500 pt-1">
                             Quay lại <a href="#" id="switchToLoginFromForgot" class="text-teal-600 font-bold hover:underline">Đăng nhập</a>
                         </p>
@@ -208,10 +236,15 @@ export function initAuthModal(onAuthChange) {
         }
     };
 
-    document.getElementById('btnCloseAuthModal')?.addEventListener('click', () => {
+    const closeModal = () => {
         modal?.classList.remove('flex');
         modal?.classList.add('hidden');
-    });
+    };
+
+    document.getElementById('btnCloseAuthModal')?.addEventListener('click', closeModal);
+    document.getElementById('btnCancelLogin')?.addEventListener('click', closeModal);
+    document.getElementById('btnCancelRegister')?.addEventListener('click', closeModal);
+    document.getElementById('btnCancelForgot')?.addEventListener('click', closeModal);
 
     // Chuyển view qua lại giữa các form
     document.getElementById('switchToRegister')?.onclick = (e) => { e.preventDefault(); showView('register'); };
@@ -228,8 +261,7 @@ export function initAuthModal(onAuthChange) {
 
         if (user) {
             Storage.setUser(user);
-            modal?.classList.remove('flex');
-            modal?.classList.add('hidden');
+            closeModal();
             updateAuthUI();
             showToast(`Xin chào ${user.name}! Đăng nhập thành công.`);
             if (typeof onAuthChange === 'function') onAuthChange();
@@ -249,8 +281,7 @@ export function initAuthModal(onAuthChange) {
             const res = AuthService.register(name, phone, pass);
             if (res.success) {
                 Storage.setUser(res.user);
-                modal?.classList.remove('flex');
-                modal?.classList.add('hidden');
+                closeModal();
                 registerForm.reset();
                 updateAuthUI();
                 showToast('Tạo tài khoản thành công!');
@@ -286,7 +317,7 @@ export function initAuthModal(onAuthChange) {
         }
     };
 
-    // Xử lý nút tài khoản trên Header (Đăng nhập / Đăng xuất nhanh)
+    // Xử lý nút tài khoản trên Header (Đăng nhập / Đăng xuất nhanh tích hợp xác nhận)
     const btnLoginAccount = document.getElementById('btnLoginAccount');
     if (btnLoginAccount) {
         btnLoginAccount.onclick = () => {

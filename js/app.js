@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (FULL FEATURES & ICONS) ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (SINGLE FILE VERSION) ---");
 
     // 1. Dọn dẹp tất cả modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.removeItem('viecgap_logged_in');
                 localStorage.removeItem('viecgap_user_phone');
                 if (loginBtnText) {
-                    loginBtnText.innerHTML = `Đăng nhập`;
+                    loginBtnText.innerHTML = `<i class="fa-solid fa-user mr-1.5"></i> Đăng nhập`;
                 }
                 alert("Đã đăng xuất thành công!");
                 window.renderJobs();
@@ -163,8 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span><i class="fa-solid fa-location-dot mr-1"></i>${job.location}</span>
                     <div class="flex items-center gap-2">
                         <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check-circle mr-1"></i>Đã nhận việc</span>
-                        <!-- Nút Hủy nhận có tích hợp icon thùng rác (fa-trash-can) -->
-                        <button onclick="window.handleRemoveAcceptedJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5">
+                        <!-- Nút Hủy nhận tích hợp icon thùng rác (fa-trash-can) -->
+                        <button onclick="window.handleRemoveAcceptedJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5">
                             <i class="fa-solid fa-trash-can"></i> Hủy nhận
                         </button>
                     </div>
@@ -210,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button onclick="window.handleRestoreJob('${job.id}')" class="bg-teal-100 hover:bg-teal-200 text-teal-700 font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer">
                         <i class="fa-solid fa-rotate-left"></i> Khôi phục
                     </button>
-                    <!-- Nút xóa vĩnh viễn với icon hủy/xóa -->
                     <button onclick="window.handlePermanentDeleteJob('${job.id}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer">
                         <i class="fa-solid fa-xmark"></i> Xóa hẳn
                     </button>

@@ -1,8 +1,7 @@
-import { takeJob, deleteJob } from './job-service.js';
 import { initTrashModal } from './trash-modal.js';
 import { updateAuthUI } from './auth-modal.js';
 
-// --- HÀM RENDER DANH SÁCH VIỆC LÀM (Đưa ra ngoài để gọi lại linh hoạt) ---
+// --- HÀM RENDER DANH SÁCH VIỆC LÀM ---
 export const renderJobs = () => {
     const jobListContainer = document.getElementById('jobList');
     const jobCountElement = document.getElementById('jobCount');
@@ -25,7 +24,7 @@ export const renderJobs = () => {
     }
 
     jobListContainer.innerHTML = jobs.map(job => {
-        // KIỂM TRA QUYỀN CHÍNH CHỦ: Chỉ hiển thị nút Xóa nếu số điện thoại đăng nhập khớp với số điện thoại tạo bài
+        // Chỉ hiện nút Xóa nếu đúng là chính chủ đăng bài
         const isOwner = currentUserPhone && job.phone === currentUserPhone;
 
         return `
@@ -61,256 +60,77 @@ export const renderJobs = () => {
     }).join('');
 };
 
-// --- 1. BẮT SỰ KIỆN TOÀN CỤC (Sử dụng event delegation chuẩn xác cho các nút động) ---
+// --- BẮT SỰ KIỆN TOÀN CỤC CHO NÚT NHẬN VIỆC VÀ XÓA ---
 document.addEventListener('click', (e) => {
-    // Bấm nút Nhận việc
+    // 1. Xử lý nút NHẬN VIỆC
     const takeBtn = e.target.closest('.btn-take');
     if (takeBtn) {
         const jobId = takeBtn.getAttribute('data-id');
-        if (jobId) {
-            takeJob(jobId);
+        const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true' || !!localStorage.getItem('user');
+        
+        if (!isLoggedIn) {
+            alert("Vui lòng đăng nhập tài khoản trước khi nhận việc!");
+            document.getElementById('authModal')?.classList.remove('hidden');
+            document.getElementById('authModal')?.classList.add('flex');
             return;
         }
+
+        const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
+        const job = jobs.find(j => j.id === jobId);
+        const currentUserPhone = localStorage.getItem('viecgap_user_phone');
+
+        if (job && job.phone === currentUserPhone) {
+            alert("Bạn không thể tự nhận công việc do chính mình đăng!");
+            return;
+        }
+
+        if (confirm(`Bạn có chắc chắn muốn nhận công việc này không?`)) {
+            alert("Nhận việc thành công! Chủ bài đăng sẽ liên hệ với bạn.");
+        }
+        return;
     }
 
-    // Bấm nút Xóa
+    // 2. Xử lý nút XÓA VIỆC (Chỉ chính chủ mới xóa được)
     const deleteBtn = e.target.closest('.btn-delete');
     if (deleteBtn) {
         const jobId = deleteBtn.getAttribute('data-id');
-        if (jobId) {
-            // Kiểm tra phân quyền chính chủ trước khi xóa trực tiếp trên giao diện
-            const currentUserPhone = localStorage.getItem('viecgap_user_phone');
-            const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
-            const job = jobs.find(j => j.id === jobId);
+        const currentUserPhone = localStorage.getItem('viecgap_user_phone');
+        const jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
+        const job = jobs.find(j => j.id === jobId);
 
-            if (!currentUserPhone) {
-                alert('Vui lòng đăng nhập để thực hiện tính năng xóa!');
-                return;
-            }
-
-            if (job && job.phone !== currentUserPhone) {
-                alert('Bạn không có quyền xóa công việc do người khác đăng!');
-                return;
-            }
-
-            if (confirm('Bạn có chắc chắn muốn xóa bài đăng này không?')) {
-                // Gọi hàm deleteJob từ service hoặc xử lý trực tiếp xóa khỏi localStorage
-                const updatedJobs = jobs.filter(j => j.id !== jobId);
-                localStorage.setItem('viecgap_jobs', JSON.stringify(updatedJobs));
-                
-                // Lưu vào thùng rác nếu có
-                if (job) {
-                    const deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
-                    deletedJobs.push(job);
-                    localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
-                }
-
-                alert('Đã xóa thành công!');
-                renderJobs(); // Tải lại danh sách
-            }
+        if (!currentUserPhone) {
+            alert('Vui lòng đăng nhập để thực hiện tính năng xóa!');
             return;
         }
+
+        if (job && job.phone !== currentUserPhone) {
+            alert('Bạn không có quyền xóa công việc do người khác đăng!');
+            return;
+        }
+
+        if (confirm('Bạn có chắc chắn muốn xóa bài đăng này không?')) {
+            const updatedJobs = jobs.filter(j => j.id !== jobId);
+            localStorage.setItem('viecgap_jobs', JSON.stringify(updatedJobs));
+
+            // Đưa vào thùng rác
+            if (job) {
+                const deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
+                deletedJobs.push(job);
+                localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
+            }
+
+            alert('Đã xóa thành công!');
+            renderJobs(); // Cập nhật lại giao diện ngay lập tức
+        }
+        return;
     }
 });
 
-// --- 2. KHỞI TẠO HỆ THỐNG KHI DOM ĐÃ TẢI XONG ---
+// --- KHỞI TẠO KHI TẢI TRANG ---
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG ---");
-
-    // Khởi tạo các module modal chuyên biệt
     initTrashModal();
-
-    // Tải lại giao diện tài khoản khi vừa mở trang
     if (typeof updateAuthUI === 'function') {
         updateAuthUI();
     }
-
-    // Dọn dẹp tất cả modal bị kẹt khi mới tải trang
-    document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    });
-
-    // Render danh sách việc làm lần đầu
-    renderJobs();
-
-    // --- 3. XỬ LÝ MODAL ĐĂNG NHẬP & KIỂM TRA PHIÊN ĐĂNG NHẬP ---
-    const authModal = document.getElementById('authModal');
-    const authForm = document.getElementById('authForm');
-    const resetForm = document.getElementById('resetForm');
-    const authModalTitle = document.getElementById('authModalTitle');
-    const authFooter = document.getElementById('authFooter');
-    const resetFooter = document.getElementById('resetFooter');
-    const loginBtnText = document.getElementById('loginBtnText');
-
-    const checkLoginStatus = () => {
-        const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true' || !!localStorage.getItem('user');
-        if (isLoggedIn && loginBtnText) {
-            loginBtnText.innerText = "Đã đăng nhập";
-        }
-        return isLoggedIn;
-    };
-    checkLoginStatus();
-
-    const openAuthModal = () => {
-        if (authModal) {
-            authModal.classList.remove('hidden');
-            authModal.classList.add('flex');
-            authForm?.classList.remove('hidden');
-            resetForm?.classList.add('hidden');
-            authFooter?.classList.remove('hidden');
-            resetFooter?.classList.add('hidden');
-            if (authModalTitle) authModalTitle.innerText = "Đăng nhập tài khoản";
-        }
-    };
-
-    const closeAuthModal = () => {
-        authModal?.classList.add('hidden');
-        authModal?.classList.remove('flex');
-        authForm?.reset();
-        resetForm?.reset();
-    };
-
-    authForm?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const phone = document.getElementById('loginPhone')?.value;
-        if (phone) {
-            localStorage.setItem('viecgap_logged_in', 'true');
-            localStorage.setItem('viecgap_user_phone', phone);
-            if (loginBtnText) loginBtnText.innerText = "Đã đăng nhập";
-            alert('Đăng nhập thành công!');
-            closeAuthModal();
-            if (typeof updateAuthUI === 'function') updateAuthUI();
-            renderJobs(); // Cập nhật lại danh sách để hiện nút xóa đúng với chủ bài
-        }
-    });
-
-    document.getElementById('btnLoginAccount')?.addEventListener('click', openAuthModal);
-    document.getElementById('btnCloseAuthModal')?.addEventListener('click', closeAuthModal);
-    document.getElementById('btnCancelAuthModal')?.addEventListener('click', closeAuthModal);
-    document.getElementById('btnCancelReset')?.addEventListener('click', closeAuthModal);
-
-    // --- 4. XỬ LÝ MODAL ĐĂNG VIỆC ---
-    const postJobModal = document.getElementById('postJobModal');
-    const postJobForm = document.getElementById('postJobForm');
-
-    const openPostJob = () => {
-        if (!checkLoginStatus()) {
-            alert('Vui lòng đăng nhập trước khi đăng công việc mới!');
-            openAuthModal();
-            return;
-        }
-        postJobModal?.classList.remove('hidden');
-        postJobModal?.classList.add('flex');
-    };
-
-    const closePostJobModal = () => {
-        postJobModal?.classList.add('hidden');
-        postJobModal?.classList.remove('flex');
-        postJobForm?.reset();
-    };
-
-    document.getElementById('btnPostJob')?.addEventListener('click', openPostJob);
-    document.getElementById('btnFloatingPostJob')?.addEventListener('click', openPostJob);
-    document.getElementById('btnCloseModal')?.addEventListener('click', closePostJobModal);
-    document.getElementById('btnCancelModal')?.addEventListener('click', closePostJobModal);
-
-    postJobForm?.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const currentUserPhone = localStorage.getItem('viecgap_user_phone') || 'anonymous';
-
-        const newJob = {
-            id: 'job_' + Date.now(),
-            title: document.getElementById('jobTitleInput')?.value || 'Công việc mới',
-            location: document.getElementById('jobLocationInput')?.value || 'Châu Thành',
-            category: document.getElementById('jobCategoryInput')?.value || 'delivery',
-            salary: document.getElementById('jobSalaryInput')?.value || 'Thỏa thuận',
-            urgent: document.getElementById('jobUrgentInput')?.checked || false,
-            phone: currentUserPhone, // Lưu lại số điện thoại người đăng để phân quyền chính chủ
-            createdAt: new Date().toLocaleDateString('vi-VN')
-        };
-
-        let jobs = JSON.parse(localStorage.getItem('viecgap_jobs') || '[]');
-        jobs.unshift(newJob);
-        localStorage.setItem('viecgap_jobs', JSON.stringify(jobs));
-
-        closePostJobModal();
-        renderJobs();
-    });
-
-    // Chuyển đổi qua lại giữa form Đăng nhập và Đổi mật khẩu
-    document.getElementById('btnToggleReset')?.addEventListener('click', () => {
-        authForm?.classList.add('hidden');
-        authFooter?.classList.add('hidden');
-        resetForm?.classList.remove('hidden');
-        resetFooter?.classList.remove('hidden');
-        if (authModalTitle) authModalTitle.innerText = "Đổi mật khẩu tài khoản";
-    });
-
-    document.getElementById('btnBackToLogin')?.addEventListener('click', () => {
-        resetForm?.classList.add('hidden');
-        resetFooter?.classList.add('hidden');
-        authForm?.classList.remove('hidden');
-        authFooter?.classList.remove('hidden');
-        if (authModalTitle) authModalTitle.innerText = "Đăng nhập tài khoản";
-    });
-
-    // --- 5. XỬ LÝ MODAL TỔ CHỨC ---
-    const orgModal = document.getElementById('orgModal');
-    const orgForm = document.getElementById('orgForm');
-
-    const closeOrgModal = () => {
-        orgModal?.classList.add('hidden');
-        orgModal?.classList.remove('flex');
-        orgForm?.reset();
-    };
-
-    document.getElementById('btnJoinOrg')?.addEventListener('click', () => {
-        orgModal?.classList.remove('hidden');
-        orgModal?.classList.add('flex');
-    });
-    document.getElementById('btnCloseOrgModal')?.addEventListener('click', closeOrgModal);
-    document.getElementById('btnCancelOrgModal')?.addEventListener('click', closeOrgModal);
-
-    // --- 6. XỬ LÝ MODAL ĐĂNG KÝ CÁ NHÂN ---
-    const workerModal = document.getElementById('workerModal');
-    const workerForm = document.getElementById('workerForm');
-
-    const closeWorkerModal = () => {
-        workerModal?.classList.add('hidden');
-        workerModal?.classList.remove('flex');
-        workerForm?.reset();
-    };
-
-    document.getElementById('btnRegisterWorker')?.addEventListener('click', () => {
-        workerModal?.classList.remove('hidden');
-        workerModal?.classList.add('flex');
-    });
-    document.getElementById('btnCloseWorkerModal')?.addEventListener('click', closeWorkerModal);
-    document.getElementById('btnCancelWorkerModal')?.addEventListener('click', closeWorkerModal);
-
-    // --- 7. XỬ LÝ MODAL THÙNG RÁC ---
-    const trashModal = document.getElementById('trashModal');
-    document.getElementById('btnOpenTrash')?.addEventListener('click', () => {
-        trashModal?.classList.remove('hidden');
-        trashModal?.classList.add('flex');
-    });
-    document.getElementById('btnCloseTrashModal')?.addEventListener('click', () => trashModal?.classList.add('hidden'));
-
-    // --- 8. XỬ LÝ CHUYỂN ĐỔI TAB DƯỚI THANH NAVIGATION ---
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tabId = btn.getAttribute('data-tab');
-            if (!tabId) return;
-            
-            document.querySelectorAll('.tab-content').forEach(t => {
-                if (t.id === tabId) {
-                    t.classList.remove('hidden');
-                } else {
-                    t.classList.add('hidden');
-                }
-            });
-        });
-    });
+    renderJobs(); // Gọi render danh sách việc làm khi vừa vào trang
 });

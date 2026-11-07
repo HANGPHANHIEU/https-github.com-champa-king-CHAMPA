@@ -6,7 +6,24 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// --- CẤU HÌNH MẬT KHẨU ADMIN ---
+const ADMIN_PASSWORD = "123"; // 👈 Bạn có thể thay đổi mật khẩu tại đây
+
 document.addEventListener('DOMContentLoaded', () => {
+    // --- BẢO MẬT: KIỂM TRA MẬT KHẨU ADMIN ---
+    let isAuthed = sessionStorage.getItem('admin_authenticated') === 'true';
+    if (!isAuthed) {
+        const inputPass = prompt("🔒 Vui lòng nhập mật khẩu Quản trị viên (Admin):");
+        if (inputPass === ADMIN_PASSWORD) {
+            sessionStorage.setItem('admin_authenticated', 'true');
+            alert("Đăng nhập Admin thành công!");
+        } else {
+            alert("❌ Mật khẩu không chính xác! Đang quay lại trang chủ.");
+            window.location.href = 'index.html';
+            return;
+        }
+    }
+
     console.log("--- HỆ THỐNG ADMIN 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (HOÀN CHỈNH & REALTIME) ---");
 
     // Dọn dẹp modal khi tải trang

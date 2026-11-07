@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (orgError) console.error("Lỗi tải tổ chức:", orgError.message);
         if (workerError) console.error("Lỗi tải cá nhân:", workerError.message);
 
+        // Chỉ lấy những hồ sơ chưa duyệt và chưa bị từ chối
         const pendingOrgs = (orgs || []).filter(o => o.status === 'pending' || !o.status);
         const pendingWorkers = (workers || []).filter(w => w.status === 'pending' || !w.status);
 
@@ -159,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 3. CÁC HÀM XỬ LÝ PHÊ DUYỆT / TỪ CHỐI ---
+    // --- 3. CÁC HÀM XỬ LÝ PHÊ DUYỆT / TỪ CHỐI (ĐÃ TỐI ƯU FALLBACK) ---
     window.approveOrg = async (id) => {
         const { error } = await supabase.from('organizations').update({ status: 'approved' }).eq('id', id);
         if (error) {
@@ -172,14 +173,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.rejectOrg = async (id) => {
-        if (confirm("Bạn có chắc chắn muốn từ chối và xóa hồ sơ tổ chức này?")) {
+        if (confirm("Bạn có chắc chắn muốn từ chối hồ sơ tổ chức này?")) {
+            // Thử xóa trước, nếu lỗi RLS thì chuyển sang update status thành 'rejected'
             const { error } = await supabase.from('organizations').delete().eq('id', id);
             if (error) {
-                alert("Lỗi khi xóa: " + error.message);
-            } else {
-                window.loadPendingData();
-                window.loadApprovedData();
+                const { error: updateErr } = await supabase.from('organizations').update({ status: 'rejected' }).eq('id', id);
+                if (updateErr) {
+                    alert("Lỗi từ chối: " + error.message);
+                    return;
+                }
             }
+            alert("Đã từ chối hồ sơ tổ chức thành công!");
+            window.loadPendingData();
+            window.loadApprovedData();
         }
     };
 
@@ -195,14 +201,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.rejectWorker = async (id) => {
-        if (confirm("Bạn có chắc chắn muốn từ chối và xóa hồ sơ cá nhân này?")) {
+        if (confirm("Bạn có chắc chắn muốn từ chối hồ sơ cá nhân này?")) {
+            // Thử xóa trước, nếu lỗi RLS thì chuyển sang update status thành 'rejected'
             const { error } = await supabase.from('workers').delete().eq('id', id);
             if (error) {
-                alert("Lỗi khi xóa: " + error.message);
-            } else {
-                window.loadPendingData();
-                window.loadApprovedData();
+                const { error: updateErr } = await supabase.from('workers').update({ status: 'rejected' }).eq('id', id);
+                if (updateErr) {
+                    alert("Lỗi từ chối: " + error.message);
+                    return;
+                }
             }
+            alert("Đã từ chối hồ sơ cá nhân thành công!");
+            window.loadPendingData();
+            window.loadApprovedData();
         }
     };
 

@@ -1,7 +1,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // --- CẤU HÌNH SUPABASE ---
-const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Thay bằng URL dự án Supabase của bạn
+const SUPABASE_URL = 'https://rznzypehvmwysxmjxxxp.supabase.c'; // Thay bằng URL dự án Supabase của bạn
 const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Thay bằng ANON KEY của bạn
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

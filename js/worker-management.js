@@ -6,8 +6,23 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const ADMIN_PASSWORD = "123"; // Mật khẩu Admin
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- TRANG QUẢN LÝ NHÂN SỰ & ĐÁNH GIÁ (BẢN AN TOÀN THỰC TẾ) ĐÃ KHỞI ĐỘNG ---");
+    // 🔒 KIỂM TRA QUYỀN ADMIN KHI VÀO TRANG QUẢN LÝ
+    let isAuthed = sessionStorage.getItem('admin_authenticated') === 'true';
+    if (!isAuthed) {
+        const inputPass = prompt("🔒 Trang này dành cho Quản trị viên. Nhập mật khẩu Admin để tiếp tục:");
+        if (inputPass === ADMIN_PASSWORD) {
+            sessionStorage.setItem('admin_authenticated', 'true');
+        } else {
+            alert("❌ Mật khẩu không chính xác! Đang quay lại trang chủ.");
+            window.location.href = 'index.html';
+            return;
+        }
+    }
+
+    console.log("--- TRANG QUẢN LÝ NHÂN SỰ & ĐÁNH GIÁ (BẢO MẬT ADMIN) ĐÃ KHỞI ĐỘNG ---");
 
     const acceptedContainer = document.getElementById('acceptedJobsListContainer');
     const totalAcceptedCountEl = document.getElementById('totalAcceptedJobsCount');
@@ -18,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const evalModal = document.getElementById('evalModal');
     const evalForm = document.getElementById('evalForm');
 
-    // --- 1. TẢI DANH SÁCH VIỆC ĐÃ CÓ NGƯỜI NHẬN (CÓ BẪY LỖI AN TOÀN) ---
+    // --- 1. TẢI DANH SÁCH VIỆC ĐÃ CÓ NGƯỜI NHẬN (ADMIN THẤY TOÀN BỘ) ---
     window.loadAcceptedJobsData = async () => {
         if (!acceptedContainer) return;
 
@@ -53,18 +68,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i class="fa-solid fa-location-dot text-slate-400 mr-1"></i> ${job.location || 'Châu Thành'} &bull; 
                             <span class="text-teal-600 font-semibold ml-1">Lương: ${job.salary || 'Thỏa thuận'}</span>
                         </p>
+                        <p class="text-slate-400 text-[11px] mt-0.5">Người đăng việc: <span class="font-semibold text-slate-600">${job.phone || 'Không rõ SĐT'}</span></p>
                     </div>
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-col items-start sm:items-end gap-1 w-full sm:w-auto">
                         <div class="flex items-center gap-1.5 text-slate-700 font-semibold">
                             <i class="fa-solid fa-user-check text-emerald-600"></i> Người nhận: 
-                            <a href="tel:${job.accepted_by}" class="text-teal-600 hover:underline font-bold">${job.accepted_by || 'Không rõ SĐT'}</a>
+                            <a href="tel:${job.accepted_by}" class="text-teal-600 hover:underline font-bold">📞 ${job.accepted_by || 'Không rõ SĐT'}</a>
                         </div>
                     </div>
                 </div>
             `).join('');
         } catch (err) {
-            console.warn("Cảnh báo tải việc đã nhận (dùng dữ liệu mẫu hoặc bỏ qua):", err.message);
-            // Fallback an toàn nếu bảng jobs chưa chuẩn cột status
+            console.warn("Cảnh báo tải việc đã nhận:", err.message);
             acceptedContainer.innerHTML = `
                 <div class="text-center py-6 text-slate-400 text-xs">
                     Chưa ghi nhận công việc nào có người nhận.
@@ -73,12 +88,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 2. TẢI DANH SÁCH HỒ SƠ THỢ (CÓ BẪY LỖI AN TOÀN CỘT) ---
+    // --- 2. TẢI DANH SÁCH HỒ SƠ THỢ ĐỂ ĐÁNH GIÁ ---
     window.loadWorkersForEvaluation = async () => {
         if (!evalContainer) return;
 
         try {
-            // Thử tải toàn bộ workers, không bắt buộc điều kiện eq('status', 'approved') nếu dữ liệu cũ chưa có cột status
             const { data: workers, error } = await supabase
                 .from('workers')
                 .select('*')
@@ -86,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (error) throw error;
 
-            // Lọc an toàn các thợ đã duyệt hoặc lấy tất cả nếu chưa set status
             const approvedWorkers = (workers || []).filter(w => !w.status || w.status === 'approved');
 
             if (totalApprovedWorkersCountEl) {
@@ -132,11 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('');
         } catch (err) {
             console.error("Lỗi tải hồ sơ thợ:", err.message);
-            evalContainer.innerHTML = `
-                <div class="text-center py-10 text-red-500 text-xs bg-white rounded-2xl border border-dashed border-red-200 col-span-2">
-                    Không thể kết nối bảng dữ liệu thợ. Vui lòng kiểm tra lại cấu hình Supabase.
-                </div>
-            `;
         }
     };
 
@@ -158,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (evalForm) evalForm.reset();
     };
 
-    // Lưu dữ liệu đánh giá, công cụ, sở trường lên Supabase
+    // Lưu dữ liệu đánh giá lên Supabase
     if (evalForm) {
         evalForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -182,22 +190,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- KHỞI CHẠY ---
+    // --- KHỞI CHẠY DỮ LIỆU ---
     window.loadAcceptedJobsData();
     window.loadWorkersForEvaluation();
 
     // --- LẮNG NGHE REALTIME ---
-    try {
-        supabase
-            .channel('public:worker_management_sync')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => {
-                window.loadAcceptedJobsData();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'workers' }, () => {
-                window.loadWorkersForEvaluation();
-            })
-            .subscribe();
-    } catch (e) {
-        console.log("Realtime không khả dụng:", e);
-    }
+    supabase
+        .channel('public:worker_management_sync')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => {
+            window.loadAcceptedJobsData();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'workers' }, () => {
+            window.loadWorkersForEvaluation();
+        })
+        .subscribe();
 });

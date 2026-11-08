@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pendingOrgList = document.getElementById('pendingOrgList');
     const pendingTotalBadge = document.getElementById('pendingTotalBadge');
 
-    // --- 1. TẢI VIỆC ĐANG THỰC HIỆN & RENDER NÚT HOÀN TẤT ---
+    // --- 1. TẢI VIỆC Đang THỰC HIỆN & RENDER NÚT HOÀN TẤT ---
     window.loadManagementData = async () => {
         const { data: jobs, error } = await supabase
             .from('jobs')
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- 2. XÁC THỰC ADMIN & BẮT SỰ KIỆN MỞ KHÓA TỨC THÌ ---
+    // --- 2. XÁC THỰC ADMIN & HÀM MỞ KHÓA GẮN TRỰC TIẾP ---
     const checkAdminSession = () => {
         const isAdmin = sessionStorage.getItem('viecgap_admin_logged') === 'true';
         if (isAdmin) {
@@ -93,20 +93,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Bắt sự kiện click Mở khóa toàn cục (Bảo đảm 100% bấm được)
-    document.addEventListener('click', (e) => {
-        const target = e.target.closest('#btnAdminLogin');
-        if (target) {
-            const pass = adminPasswordInput?.value?.trim();
-            if (pass === 'admin123' || pass === '123456') {
-                sessionStorage.setItem('viecgap_admin_logged', 'true');
-                alert('🔓 Đăng nhập quyền Admin thành công!');
-                checkAdminSession();
-            } else {
-                alert('❌ Mật khẩu Admin không chính xác! (Mật khẩu mặc định: admin123)');
-            }
+    // Khai báo hàm window.tryUnlockAdmin để nút HTML gọi trực tiếp
+    window.tryUnlockAdmin = () => {
+        const pass = adminPasswordInput?.value?.trim();
+        if (pass === 'admin123' || pass === '123456') {
+            sessionStorage.setItem('viecgap_admin_logged', 'true');
+            alert('🔓 Đăng nhập quyền Admin thành công!');
+            checkAdminSession();
+        } else {
+            alert('❌ Mật khẩu Admin không chính xác! (Mật khẩu mặc định: admin123)');
         }
-    });
+    };
 
     btnAdminLogout?.addEventListener('click', () => {
         sessionStorage.removeItem('viecgap_admin_logged');

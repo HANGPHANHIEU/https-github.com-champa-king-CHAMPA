@@ -25,17 +25,12 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <!-- Nút truy cập trang Quản lý hoa hồng 1% -->
                 <a href="commission.html" title="Quản lý hoa hồng 1%" class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-coins text-amber-600"></i> <span class="hidden sm:inline">Hoa hồng 1%</span>
                 </a>
-
-                <!-- Icon truy cập trang Quản lý nhân sự / Danh sách nhận việc -->
                 <a href="worker-management.html" title="Danh sách nhận việc & Quản lý thợ" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-users-gear text-teal-600"></i> <span class="hidden sm:inline">Quản lý nhận việc</span>
                 </a>
-
-                <!-- Nút Đăng nhập / Tài khoản -->
                 <button type="button" onclick="window.openAuthModal()" class="bg-teal-50 hover:bg-teal-100 text-teal-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-user text-teal-600"></i> <span id="loginBtnText">Đăng nhập</span>
                 </button>
@@ -61,7 +56,7 @@
             </div>
         </div>
 
-        <!-- HERO BANNER / TÌM KIẾM NHANH -->
+        <!-- HERO BANNER -->
         <section class="bg-gradient-to-r from-teal-700 to-teal-800 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
             <div class="relative z-10 space-y-3">
                 <span class="bg-teal-600/60 text-teal-100 text-[10px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">Cộng đồng uy tín Châu Thành & Toàn quốc</span>
@@ -94,7 +89,7 @@
                 </div>
             </div>
 
-            <!-- TAB 1: BẢNG TIN VIỆC LÀM -->
+            <!-- TAB 1: BẢNG TIN -->
             <div id="tabJobList" class="tab-content space-y-3">
                 <div id="jobList" class="space-y-3">
                     <div class="text-center py-8 text-slate-400 text-xs">Đang tải danh sách công việc...</div>
@@ -111,7 +106,7 @@
                 </div>
             </div>
 
-            <!-- TAB 3: TỔ CHỨC / ĐỐI TÁC -->
+            <!-- TAB 3: TỔ CHỨC -->
             <div id="tabOrganization" class="tab-content space-y-3 hidden">
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="font-bold text-slate-800 text-sm">Danh sách Tổ chức / Đội nhóm uy tín</h3>
@@ -133,18 +128,6 @@
                 <div id="workerList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
             </div>
         </section>
-
-        <!-- THÙNG RÁC QUẢN LÝ BÀI XÓA -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm mt-8">
-            <div class="flex justify-between items-center mb-3">
-                <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                    <i class="fa-solid fa-trash-can text-slate-400"></i> Thùng rác bài đăng <span id="trashBadge" class="hidden bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full text-[10px]">0</span>
-                </h3>
-            </div>
-            <div id="trashList" class="space-y-2">
-                <div class="text-center py-4 text-slate-400 text-xs">Thùng rác trống.</div>
-            </div>
-        </section>
     </main>
 
     <!-- FLOATING ACTION BUTTON -->
@@ -154,30 +137,30 @@
         </button>
     </div>
 
-    <!-- MODAL ĐĂNG NHẬP & XÁC THỰC MẬT KHẨU -->
+    <!-- MODAL ĐĂNG NHẬP & MẬT KHẨU -->
     <div id="authModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 relative">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 id="authModalTitle" class="font-extrabold text-slate-900 text-base"><i class="fa-solid fa-lock text-teal-600 mr-1"></i> Xác thực tài khoản</h3>
+                <h3 class="font-extrabold text-slate-900 text-base"><i class="fa-solid fa-lock text-teal-600 mr-1"></i> Xác thực tài khoản</h3>
                 <button type="button" onclick="window.closeAuthModal()" class="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer">✕</button>
             </div>
 
             <div class="space-y-3">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại liên hệ</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại liên hệ *</label>
                     <input type="tel" id="modalPhoneInput" required placeholder="Ví dụ: 0912345678" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-teal-600 font-bold">
                 </div>
 
-                <div id="passwordFieldGroup" class="hidden space-y-1">
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Mật khẩu truy cập</label>
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Mật khẩu truy cập (Mặc định: 123456)</label>
                     <input type="password" id="modalPasswordInput" placeholder="Nhập mật khẩu..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-teal-600 font-bold">
                     <div class="text-right pt-1">
                         <button type="button" onclick="window.triggerForgotPassword()" class="text-[11px] text-teal-700 hover:underline font-semibold cursor-pointer">Quên mật khẩu? (Nhận mã qua Zalo/WhatsApp)</button>
                     </div>
                 </div>
 
-                <button type="button" id="authSubmitBtn" onclick="window.processAuthStep()" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow">
-                    Tiếp tục
+                <button type="button" onclick="window.processAuthLogin()" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow">
+                    Đăng nhập ngay
                 </button>
             </div>
             <p class="text-[10px] text-slate-400 text-center">Hệ thống bảo mật qua số điện thoại và mật khẩu của bạn.</p>
@@ -208,7 +191,7 @@
         </div>
     </div>
 
-    <!-- MODAL ĐĂNG VIỆC (ĐẦY ĐỦ KHU VỰC) -->
+    <!-- MODAL ĐĂNG VIỆC -->
     <div id="postJobModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center">
@@ -216,184 +199,82 @@
                 <button id="btnCloseModal" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <form id="postJobForm" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Tiêu đề công việc</label>
-                    <input type="text" id="jobTitleInput" required placeholder="Ví dụ: Cần thợ hồ sửa tường gấp tại Châu Thành" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-teal-600">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Khu vực làm việc *</label>
-                    <select id="jobLocationInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-teal-600">
-                        <option value="Toàn quốc">🌐 Toàn quốc (Tất cả khu vực)</option>
-                        <optgroup label="📍 Huyện Châu Thành & Tỉnh An Giang">
-                            <option value="Huyện Châu Thành - An Giang" selected>Huyện Châu Thành (An Giang)</option>
-                            <option value="Xã An Hòa - Châu Thành">Xã An Hòa (Châu Thành)</option>
-                            <option value="Xã Bình Hòa - Châu Thành">Xã Bình Hòa (Châu Thành)</option>
-                            <option value="Xã Cần Đăng - Châu Thành">Xã Cần Đăng (Châu Thành)</option>
-                            <option value="Xã Vĩnh An - Châu Thành">Xã Vĩnh An (Châu Thành)</option>
-                            <option value="Thị trấn An Châu - Châu Thành">Thị trấn An Châu (Châu Thành)</option>
-                            <option value="Thị trấn Vĩnh Bình - Châu Thành">Thị trấn Vĩnh Bình (Châu Thành)</option>
-                            <option value="TP. Long Xuyên - An Giang">TP. Long Xuyên (An Giang)</option>
-                            <option value="TP. Châu Đốc - An Giang">TP. Châu Đốc (An Giang)</option>
-                            <option value="TX. Tân Châu - An Giang">TX. Tân Châu (An Giang)</option>
-                        </optgroup>
-                        <optgroup label="🏙️ 6 Thành phố trực thuộc Trung ương">
-                            <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                            <option value="Hà Nội">Hà Nội</option>
-                            <option value="Cần Thơ">Cần Thơ</option>
-                            <option value="Đà Nẵng">Đà Nẵng</option>
-                            <option value="Hải Phòng">Hải Phòng</option>
-                            <option value="Huế">TP. Huế</option>
-                        </optgroup>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Danh mục</label>
-                        <select id="jobCategoryInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-teal-600">
-                            <option value="Xây dựng / Thợ hồ">Xây dựng / Thợ hồ</option>
-                            <option value="Điện nước / Sửa chữa">Điện nước / Sửa chữa</option>
-                            <option value="Giao nhận / Vận chuyển">Giao nhận / Vận chuyển</option>
-                            <option value="Nông nghiệp / Thời vụ">Nông nghiệp / Thời vụ</option>
-                            <option value="Khác">Khác</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Mức lương</label>
-                        <input type="text" id="jobSalaryInput" required placeholder="Ví dụ: 300k/ngày" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-teal-600">
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 pt-1">
-                    <input type="checkbox" id="jobUrgentInput" class="w-4 h-4 text-teal-600 rounded">
-                    <label for="jobUrgentInput" class="text-xs font-semibold text-slate-700">Đánh dấu việc Gấp ⚡</label>
-                </div>
-                <div class="flex justify-end gap-2 pt-3">
-                    <button type="button" id="btnCancelModal" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-600 cursor-pointer">Hủy</button>
-                    <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 rounded-xl text-xs font-bold text-white shadow cursor-pointer">Đăng bài</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL GHI DANH TỔ CHỨC -->
-    <div id="orgModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center">
-                <h3 class="font-extrabold text-slate-900 text-base">Ghi danh Tổ chức / Đội nhóm</h3>
-                <button id="btnCloseOrgModal" class="text-slate-400 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form id="orgForm" class="space-y-3">
-                <input type="text" id="orgNameInput" required placeholder="Tên tổ chức/đội nhóm" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <input type="tel" id="orgPhoneInput" required placeholder="Số điện thoại liên hệ" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <input type="text" id="orgProvinceInput" placeholder="Tỉnh/Thành phố (Ví dụ: An Giang)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <input type="text" id="orgDistrictInput" placeholder="Quận/Huyện (Ví dụ: Châu Thành)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <input type="text" id="orgAddressInput" placeholder="Địa chỉ chi tiết" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <input type="text" id="orgStrengthInput" placeholder="Thế mạnh (Ví dụ: Xây dựng, Điện nước...)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                <input type="text" id="jobTitleInput" required placeholder="Tiêu đề công việc" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                <select id="jobLocationInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                    <option value="Huyện Châu Thành - An Giang" selected>Huyện Châu Thành (An Giang)</option>
+                    <option value="TP. Long Xuyên - An Giang">TP. Long Xuyên (An Giang)</option>
+                    <option value="Toàn quốc">Toàn quốc</option>
+                </select>
+                <input type="text" id="jobSalaryInput" required placeholder="Mức lương (Ví dụ: 300k/ngày)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" id="btnCancelOrgModal" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold cursor-pointer">Hủy</button>
-                    <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 rounded-xl text-xs font-bold text-white cursor-pointer">Gửi hồ sơ</button>
+                    <button type="button" id="btnCancelModal" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold cursor-pointer">Hủy</button>
+                    <button type="submit" class="px-4 py-2 bg-teal-600 rounded-xl text-xs font-bold text-white cursor-pointer">Đăng bài</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL ĐĂNG KÝ HỒ SƠ THỢ -->
+    <!-- MODAL ĐĂNG KÝ THỢ -->
     <div id="workerModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center">
                 <h3 class="font-extrabold text-slate-900 text-base">Đăng ký hồ sơ Thợ / Cá nhân</h3>
-                <button id="btnCloseWorkerModal" class="text-slate-400 hover:text-slate-700 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button id="btnCloseWorkerModal" class="text-slate-400 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <form id="workerForm" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Họ và tên thợ *</label>
-                    <input type="text" id="workerNameInput" required placeholder="Ví dụ: Nguyễn Văn A" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại cá nhân *</label>
-                    <input type="tel" id="workerPhoneInput" required placeholder="Ví dụ: 0912345678" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Khu vực hoạt động</label>
-                    <input type="text" id="workerLocationInput" placeholder="Ví dụ: Châu Thành, An Giang" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Nghề nghiệp / Kỹ năng</label>
-                    <input type="text" id="workerSkillInput" placeholder="Ví dụ: Thợ hồ, Thợ sơn, Điện nước..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                </div>
+                <input type="text" id="workerNameInput" required placeholder="Họ và tên thợ" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                <input type="tel" id="workerPhoneInput" required placeholder="Số điện thoại cá nhân" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                <input type="text" id="workerLocationInput" placeholder="Khu vực hoạt động" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                <input type="text" id="workerSkillInput" placeholder="Nghề nghiệp / Kỹ năng" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" id="btnCancelWorkerModal" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold cursor-pointer">Hủy</button>
-                    <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 rounded-xl text-xs font-bold text-white cursor-pointer">Gửi hồ sơ</button>
+                    <button type="submit" class="px-4 py-2 bg-teal-600 rounded-xl text-xs font-bold text-white cursor-pointer">Gửi hồ sơ</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPT TÍCH HỢP XỬ LÝ ĐĂNG NHẬP, MẬT KHẨU & ĐĂNG KÝ THỢ -->
+    <!-- SCRIPT TÍCH HỢP XỬ LÝ -->
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
         const SUPABASE_URL = 'https://rznzypehvmwysxmjxxxp.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6bnp5cGVodm13eXN4bWp4eHhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNTkxNTYsImV4cCI6MjEwODkzNTE1Nn0.B-5onxhT0EoqgtJ0ZP-ZbGSz4Gmo7xuRPEcsAYz65wA';
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let currentStepPhone = '';
-
         document.addEventListener('DOMContentLoaded', () => {
-            // Kiểm tra trạng thái đăng nhập sẵn có
             const loggedPhone = localStorage.getItem('viecgap_logged_phone');
             if (loggedPhone) {
                 document.getElementById('userAccountSection')?.classList.remove('hidden');
-                const phoneDisplay = document.getElementById('currentLoggedInPhone');
-                if (phoneDisplay) phoneDisplay.textContent = loggedPhone;
-                const loginText = document.getElementById('loginBtnText');
-                if (loginText) loginText.textContent = loggedPhone;
+                document.getElementById('currentLoggedInPhone').textContent = loggedPhone;
+                document.getElementById('loginBtnText').textContent = loggedPhone;
             }
 
-            // Xử lý Modal Đăng ký Thợ
             const workerModal = document.getElementById('workerModal');
-            const workerForm = document.getElementById('workerForm');
-
             document.getElementById('btnRegisterWorker')?.addEventListener('click', () => { 
                 workerModal?.classList.remove('hidden'); 
                 workerModal?.classList.add('flex'); 
             });
-
             document.getElementById('btnCloseWorkerModal')?.addEventListener('click', () => workerModal?.classList.add('hidden'));
             document.getElementById('btnCancelWorkerModal')?.addEventListener('click', () => workerModal?.classList.add('hidden'));
 
-            workerForm?.addEventListener('submit', async (e) => {
+            document.getElementById('workerForm')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const name = document.getElementById('workerNameInput')?.value.trim();
                 const phone = document.getElementById('workerPhoneInput')?.value.trim();
                 const location = document.getElementById('workerLocationInput')?.value.trim();
                 const skill = document.getElementById('workerSkillInput')?.value.trim();
 
-                if (!name || !phone) {
-                    alert("Vui lòng nhập đầy đủ họ tên và số điện thoại cá nhân!");
-                    return;
-                }
-
-                const { error } = await supabase.from('workers').insert([{
-                    name: name,
-                    phone: phone,
-                    location: location || 'Châu Thành, An Giang',
-                    skill: skill || 'Thợ tự do',
-                    status: 'pending'
-                }]);
-                
-                if (error) {
-                    alert("Lỗi khi gửi hồ sơ: " + error.message);
-                } else {
-                    alert("🎉 Gửi hồ sơ thợ thành công! Hồ sơ đang chờ Quản trị viên (Admin) phê duyệt.");
+                const { error } = await supabase.from('workers').insert([{ name, phone, location: location || 'Châu Thành', skill: skill || 'Thợ tự do', status: 'pending' }]);
+                if (!error) {
+                    alert("🎉 Gửi hồ sơ thợ thành công! Đang chờ Admin duyệt.");
                     workerModal?.classList.add('hidden');
-                    workerForm.reset();
+                    e.target.reset();
+                } else {
+                    alert("Lỗi: " + error.message);
                 }
             });
         });
 
-        // --- CÁC HÀM XÁC THỰC MẬT KHẨU & ZALO/WHATSAPP ---
         window.openAuthModal = () => {
             const loggedPhone = localStorage.getItem('viecgap_logged_phone');
             if (loggedPhone) {
@@ -402,84 +283,59 @@
             }
             document.getElementById('authModal')?.classList.remove('hidden');
             document.getElementById('authModal')?.classList.add('flex');
-            document.getElementById('modalPhoneInput').value = '';
-            document.getElementById('modalPasswordInput').value = '';
-            document.getElementById('passwordFieldGroup')?.classList.add('hidden');
-            currentStepPhone = '';
         };
 
-        window.closeAuthModal = () => {
-            document.getElementById('authModal')?.classList.add('hidden');
-        };
+        window.closeAuthModal = () => document.getElementById('authModal')?.classList.add('hidden');
 
-        window.processAuthStep = () => {
-            const phoneInput = document.getElementById('modalPhoneInput');
-            const passFieldGroup = document.getElementById('passwordFieldGroup');
-            const passInput = document.getElementById('modalPasswordInput');
-            const submitBtn = document.getElementById('authSubmitBtn');
+        window.processAuthLogin = () => {
+            const phone = document.getElementById('modalPhoneInput')?.value?.trim();
+            const pass = document.getElementById('modalPasswordInput')?.value?.trim();
 
-            if (!currentStepPhone) {
-                const phone = phoneInput?.value?.trim();
-                if (!phone || phone.length < 9) {
-                    alert('⚠️ Vui lòng nhập số điện thoại hợp lệ!');
-                    return;
-                }
-                currentStepPhone = phone;
-                passFieldGroup?.classList.remove('hidden');
-                phoneInput.disabled = true;
-                submitBtn.textContent = "Đăng nhập";
-                
-                if (!localStorage.getItem(`pass_${currentStepPhone}`)) {
-                    localStorage.setItem(`pass_${currentStepPhone}`, '123456'); // Mặc định 123456
-                }
-                passInput.focus();
-            } else {
-                const pass = passInput?.value?.trim();
-                const savedPass = localStorage.getItem(`pass_${currentStepPhone}`) || '123456';
-
-                if (pass === savedPass || pass === '123456') {
-                    localStorage.setItem('viecgap_logged_phone', currentStepPhone);
-                    alert('🔓 Đăng nhập thành công!');
-                    window.closeAuthModal();
-                    location.reload();
-                } else {
-                    alert('❌ Mật khẩu không chính xác!');
-                }
-            }
-        };
-
-        // Quên mật khẩu qua Zalo / WhatsApp
-        window.triggerForgotPassword = () => {
-            if (!currentStepPhone) return;
-            
-            const otpCode = Math.floor(100000 + Math.random() * 900000);
-            localStorage.setItem(`otp_${currentStepPhone}`, otpCode);
-
-            const choice = prompt(`Chọn kênh nhận mã khôi phục mật khẩu cho số ${currentStepPhone}:\n1. Gửi mã qua Zalo\n2. Gửi mã qua WhatsApp\n\nNhập "1" hoặc "2":`);
-
-            if (choice === '1') {
-                alert(`📱 [ZALO API] Đã gửi mã xác thực "${otpCode}" đến tài khoản Zalo của số: ${currentStepPhone}`);
-            } else if (choice === '2') {
-                const waUrl = `https://wa.me/${currentStepPhone.replace(/^0/, '84')}?text=Ma%20xac%20thuc%20Viec%20Gap%20cua%20ban%20la:%20${otpCode}`;
-                window.open(waUrl, '_blank');
-                alert(`💬 [WHATSAPP] Đã chuyển hướng để gửi mã xác thực "${otpCode}"!`);
-            } else {
-                alert('❌ Lựa chọn không hợp lệ.');
+            if (!phone || phone.length < 9) {
+                alert('⚠️ Vui lòng nhập số điện thoại hợp lệ!');
                 return;
             }
 
-            const enteredCode = prompt('Vui lòng nhập mã code 6 số bạn vừa nhận được:');
+            const savedPass = localStorage.getItem(`pass_${phone}`) || '123456';
+            if (pass === savedPass || pass === '123456') {
+                localStorage.setItem('viecgap_logged_phone', phone);
+                alert('🔓 Đăng nhập thành công!');
+                window.closeAuthModal();
+                location.reload();
+            } else {
+                alert('❌ Mật khẩu không chính xác!');
+            }
+        };
+
+        window.triggerForgotPassword = () => {
+            const phone = document.getElementById('modalPhoneInput')?.value?.trim();
+            if (!phone || phone.length < 9) {
+                alert('⚠️ Vui lòng nhập số điện thoại trước khi lấy lại mật khẩu!');
+                return;
+            }
+
+            const otpCode = Math.floor(100000 + Math.random() * 900000);
+            const choice = prompt(`Chọn kênh nhận mã khôi phục cho số ${phone}:\n1. Zalo\n2. WhatsApp\n\nNhập "1" hoặc "2":`);
+
+            if (choice === '1') {
+                alert(`📱 [ZALO API] Đã gửi mã xác thực "${otpCode}" đến Zalo số: ${phone}`);
+            } else if (choice === '2') {
+                window.open(`https://wa.me/${phone.replace(/^0/, '84')}?text=Ma%20xac%20thuc%20Viec%20Gap:%20${otpCode}`, '_blank');
+                alert(`💬 [WHATSAPP] Đã chuyển hướng gửi mã "${otpCode}"!`);
+            } else {
+                return;
+            }
+
+            const enteredCode = prompt('Nhập mã code 6 số bạn vừa nhận:');
             if (enteredCode && enteredCode.trim() === otpCode.toString()) {
-                const newPass = prompt('✅ Xác thực thành công! Nhập mật khẩu mới của bạn:');
+                const newPass = prompt('✅ Xác thực thành công! Nhập mật khẩu mới:');
                 if (newPass && newPass.length >= 4) {
-                    localStorage.setItem(`pass_${currentStepPhone}`, newPass);
-                    alert('🎉 Đặt lại mật khẩu thành công! Bạn có thể dùng mật khẩu này để đăng nhập.');
+                    localStorage.setItem(`pass_${phone}`, newPass);
+                    alert('🎉 Đặt lại mật khẩu thành công!');
                     document.getElementById('modalPasswordInput').value = newPass;
-                } else {
-                    alert('⚠️ Mật khẩu mới quá ngắn.');
                 }
             } else {
-                alert('❌ Mã xác thực không chính xác!');
+                alert('❌ Mã xác thực không đúng!');
             }
         };
 
@@ -487,10 +343,7 @@
             document.getElementById('changePassModal')?.classList.remove('hidden');
             document.getElementById('changePassModal')?.classList.add('flex');
         };
-
-        window.closeChangePasswordModal = () => {
-            document.getElementById('changePassModal')?.classList.add('hidden');
-        };
+        window.closeChangePasswordModal = () => document.getElementById('changePassModal')?.classList.add('hidden');
 
         window.submitChangePasswordUser = () => {
             const loggedPhone = localStorage.getItem('viecgap_logged_phone');
@@ -499,31 +352,26 @@
             const currentPass = localStorage.getItem(`pass_${loggedPhone}`) || '123456';
 
             if (oldPass !== currentPass) {
-                alert('❌ Mật khẩu cũ không chính xác!');
+                alert('❌ Mật khẩu cũ không đúng!');
                 return;
             }
-
             if (!newPass || newPass.length < 4) {
-                alert('⚠️ Mật khẩu mới phải từ 4 ký tự trở lên!');
+                alert('⚠️ Mật khẩu mới quá ngắn!');
                 return;
             }
 
             localStorage.setItem(`pass_${loggedPhone}`, newPass);
             alert('🎉 Đổi mật khẩu thành công!');
             window.closeChangePasswordModal();
-            document.getElementById('cpOldPass').value = '';
-            document.getElementById('cpNewPass').value = '';
         };
 
         window.handleLogout = () => {
-            if (confirm('Bạn có chắc chắn muốn đăng xuất tài khoản?')) {
+            if (confirm('Đăng xuất tài khoản?')) {
                 localStorage.removeItem('viecgap_logged_phone');
                 location.reload();
             }
         };
     </script>
-
-    <!-- SCRIPT CHÍNH CỦA ỨNG DỤNG -->
     <script type="module" src="js/app.js"></script>
 </body>
 </html>

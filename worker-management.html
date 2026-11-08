@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Nhân sự & Nhận việc - Việc Gấp</title>
+    <title>Quản lý Nhân sự & Phê duyệt Admin - Việc Gấp</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -19,8 +19,8 @@
                     V
                 </a>
                 <div>
-                    <h1 class="font-extrabold text-slate-900 text-base leading-tight">Trung tâm Quản lý</h1>
-                    <p class="text-[10px] text-slate-500">Nhân sự & Công việc đang thực hiện</p>
+                    <h1 class="font-extrabold text-slate-900 text-base leading-tight">Trung tâm Quản lý Admin</h1>
+                    <p class="text-[10px] text-slate-500">Phê duyệt hồ sơ & Quản lý việc đang thực hiện</p>
                 </div>
             </div>
 
@@ -52,16 +52,16 @@
             </div>
         </section>
 
-        <!-- HỒ SƠ THỢ & QUẢN LÝ (ADMIN) -->
+        <!-- KHU VỰC PHÊ DUYỆT BẢO MẬT DÀNH CHO ADMIN -->
         <section class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                 <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-hard-hat text-teal-600"></i> Hồ sơ, Sở trường & Duyệt thợ
+                    <i class="fa-solid fa-user-shield text-teal-600"></i> Phê duyệt Hồ sơ Thợ & Tổ chức
                 </h3>
-                <span id="workerCountBadge" class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full text-xs font-bold">Tổng thợ: 0</span>
+                <span id="pendingTotalBadge" class="bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full text-xs font-bold">Chờ duyệt: 0</span>
             </div>
 
-            <!-- Khu vực nhập mật khẩu Admin để duyệt thợ -->
+            <!-- Ô Nhập mật khẩu mở khóa Admin -->
             <div id="adminLoginSection" class="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-center space-y-3">
                 <p class="text-xs text-slate-600"><i class="fa-solid fa-lock text-amber-500 mr-1"></i> Tính năng duyệt hồ sơ thợ & tổ chức dành riêng cho Quản trị viên (Admin).</p>
                 <div class="flex justify-center gap-2 max-w-xs mx-auto">
@@ -70,17 +70,30 @@
                 </div>
             </div>
 
-            <!-- Danh sách chờ duyệt (Ẩn mặc định cho tới khi nhập đúng mật khẩu Admin) -->
-            <div id="adminPanel" class="hidden space-y-4 pt-2">
+            <!-- DANH SÁCH CHỜ DUYỆT (Ẩn mặc định, chỉ hiện khi nhập đúng MK Admin) -->
+            <div id="adminPanel" class="hidden space-y-6 pt-2">
                 <div class="flex justify-between items-center bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-xs text-emerald-800 font-semibold">
                     <span>🔓 Đã mở khóa quyền Quản trị viên (Admin)</span>
-                    <button id="btnAdminLogout" class="text-red-600 hover:underline">Khóa lại</button>
+                    <button id="btnAdminLogout" class="text-red-600 hover:underline cursor-pointer">Khóa lại</button>
                 </div>
                 
-                <div>
-                    <h4 class="font-bold text-xs text-slate-700 mb-2 uppercase">Danh sách thợ chờ phê duyệt:</h4>
+                <!-- 1. Danh sách Thợ/Cá nhân chờ duyệt -->
+                <div class="space-y-2">
+                    <h4 class="font-bold text-xs text-slate-700 uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-hard-hat text-teal-600"></i> Hồ sơ Thợ / Cá nhân chờ duyệt:
+                    </h4>
                     <div id="pendingWorkerList" class="space-y-2">
                         <div class="text-center py-4 text-slate-400 text-xs">Không có hồ sơ thợ nào chờ duyệt.</div>
+                    </div>
+                </div>
+
+                <!-- 2. Danh sách Tổ chức/Đội nhóm chờ duyệt -->
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <h4 class="font-bold text-xs text-slate-700 uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-building text-teal-600"></i> Hồ sơ Tổ chức / Đối tác chờ duyệt:
+                    </h4>
+                    <div id="pendingOrgList" class="space-y-2">
+                        <div class="text-center py-4 text-slate-400 text-xs">Không có tổ chức nào chờ duyệt.</div>
                     </div>
                 </div>
             </div>

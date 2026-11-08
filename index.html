@@ -11,8 +11,8 @@
     
     <!-- ÉP CHỐNG CACHE SAFARI IPAD -->
     <script>
-        if (!window.location.search.includes('v=2026_forgot_pass_icon')) {
-            window.location.replace(window.location.pathname + '?v=2026_forgot_pass_icon');
+        if (!window.location.search.includes('v=2026_forgot_icon_added')) {
+            window.location.replace(window.location.pathname + '?v=2026_forgot_icon_added');
         }
     </script>
 </head>
@@ -97,18 +97,20 @@
                     <label class="block text-xs font-bold text-slate-300 mb-1"><i class="fa-solid fa-lock text-slate-400 mr-1"></i> Mật khẩu truy cập</label>
                     <input type="password" id="loginPasswordInput" placeholder="Nhập mật khẩu..." style="background-color:#ffffff !important; color:#000000 !important;" class="w-full border-4 border-slate-300 rounded-xl px-4 py-3 text-sm font-extrabold focus:outline-none">
                     
-                    <!-- DÒNG ĐỔI & TÌM LẠI MẬT KHẨU CÓ CẢ ICON KHÓA VÀ ICON XOAY KHÔI PHỤC -->
+                    <!-- DÒNG CÓ ICON CHÌA KHÓA VÀ ICON XOAY KHÔI PHỤC -->
                     <div class="flex justify-between items-center pt-2 text-xs font-bold">
-                        <button type="button" onclick="window.openChangePasswordModal()" class="text-teal-300 hover:underline cursor-pointer flex items-center gap-1">
-                            <i class="fa-solid fa-key text-amber-400"></i> <span>🔑 Đổi mật khẩu?</span>
+                        <button type="button" onclick="window.openChangePasswordModal()" class="text-teal-300 hover:underline cursor-pointer flex items-center gap-1.5">
+                            <i class="fa-solid fa-key text-amber-400 text-sm"></i>
+                            <span>Đổi mật khẩu?</span>
                         </button>
-                        <button type="button" onclick="window.triggerForgotPassword()" class="text-amber-300 hover:underline cursor-pointer flex items-center gap-1">
-                            <i class="fa-solid fa-rotate-left text-amber-400"></i> <span>🔄 Quên mật khẩu? (Mã Zalo/WA)</span>
+                        <button type="button" onclick="window.triggerForgotPassword()" class="text-amber-300 hover:underline cursor-pointer flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate-left text-amber-400 text-sm"></i>
+                            <span>Quên mật khẩu? (Mã Zalo/WA)</span>
                         </button>
                     </div>
                 </div>
                 <button type="button" onclick="window.processAuthLogin()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold py-3.5 rounded-xl text-sm shadow-xl cursor-pointer flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-unlock text-lg"></i> <span>🔓 Xác nhận Đăng nhập</span>
+                    <i class="fa-solid fa-unlock text-lg"></i> <span>Xác nhận Đăng nhập</span>
                 </button>
             </form>
         </div>

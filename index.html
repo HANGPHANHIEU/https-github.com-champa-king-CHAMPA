@@ -11,8 +11,8 @@
     
     <!-- ÉP CHỐNG CACHE SAFARI IPAD -->
     <script>
-        if (!window.location.search.includes('v=2026_logout_fix')) {
-            window.location.replace(window.location.pathname + '?v=2026_logout_fix');
+        if (!window.location.search.includes('v=2026_job_supabase')) {
+            window.location.replace(window.location.pathname + '?v=2026_job_supabase');
         }
     </script>
 </head>
@@ -276,29 +276,41 @@
         </div>
     </div>
 
-    <!-- MODAL ĐĂNG VIỆC -->
+    <!-- MODAL ĐĂNG VIỆC (CÓ ĐỦ THÔNG TIN TÍCH HỢP SUPABASE) -->
     <div id="postJobModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center">
-                <h3 class="font-extrabold text-slate-900 text-base">Đăng công việc mới</h3>
-                <button id="btnCloseModal" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <h3 class="font-extrabold text-slate-900 text-base"><i class="fa-solid fa-briefcase text-teal-600 mr-1"></i> Đăng công việc mới lên Supabase</h3>
+                <button id="btnCloseModal" class="text-slate-400 hover:text-slate-700 cursor-pointer text-lg font-bold">✕</button>
             </div>
             <form id="postJobForm" class="space-y-3">
-                <input type="text" id="jobTitleInput" required placeholder="Tiêu đề công việc" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <select id="jobLocationInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                    <option value="Huyện Châu Thành - An Giang" selected>Huyện Châu Thành (An Giang)</option>
-                    <option value="Xã An Hòa - Châu Thành">Xã An Hòa (Châu Thành)</option>
-                    <option value="Xã Bình Hòa - Châu Thành">Xã Bình Hòa (Châu Thành)</option>
-                    <option value="Xã Cần Đăng - Châu Thành">Xã Cần Đăng (Châu Thành)</option>
-                    <option value="Xã Vĩnh An - Châu Thành">Xã Vĩnh An (Châu Thành)</option>
-                    <option value="Thị trấn An Châu - Châu Thành">Thị trấn An Châu (Châu Thành)</option>
-                    <option value="TP. Long Xuyên - An Giang">TP. Long Xuyên (An Giang)</option>
-                    <option value="Toàn quốc">Toàn quốc</option>
-                </select>
-                <input type="text" id="jobSalaryInput" required placeholder="Mức lương (Ví dụ: 300k/ngày)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Tiêu đề công việc *</label>
+                    <input type="text" id="jobTitleInput" required placeholder="Ví dụ: Cần thợ hồ xây tường gấp..." style="background-color:#fff; color:#000;" class="w-full border-2 border-slate-300 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-teal-600 font-bold">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Khu vực làm việc *</label>
+                    <select id="jobLocationInput" style="background-color:#fff; color:#000;" class="w-full border-2 border-slate-300 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-teal-600 font-bold">
+                        <option value="Huyện Châu Thành - An Giang" selected>Huyện Châu Thành (An Giang)</option>
+                        <option value="Xã An Hòa - Châu Thành">Xã An Hòa (Châu Thành)</option>
+                        <option value="Xã Bình Hòa - Châu Thành">Xã Bình Hòa (Châu Thành)</option>
+                        <option value="Xã Cần Đăng - Châu Thành">Xã Cần Đăng (Châu Thành)</option>
+                        <option value="Xã Vĩnh An - Châu Thành">Xã Vĩnh An (Châu Thành)</option>
+                        <option value="Thị trấn An Châu - Châu Thành">Thị trấn An Châu (Châu Thành)</option>
+                        <option value="TP. Long Xuyên - An Giang">TP. Long Xuyên (An Giang)</option>
+                        <option value="Toàn quốc">Toàn quốc</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Mức lương / Thù lao *</label>
+                    <input type="text" id="jobSalaryInput" required placeholder="Ví dụ: 300k/ngày hoặc Thỏa thuận..." style="background-color:#fff; color:#000;" class="w-full border-2 border-slate-300 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-teal-600 font-bold">
+                </div>
+                <div class="bg-teal-50 border border-teal-200 p-2.5 rounded-xl text-[11px] text-teal-800">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Số điện thoại đăng: <strong id="jobPosterPhoneDisplay">...</strong> (Lấy tự động từ tài khoản đang đăng nhập).
+                </div>
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" id="btnCancelModal" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold">Hủy</button>
-                    <button type="submit" class="px-4 py-2 bg-teal-600 rounded-xl text-xs font-bold text-white">Đăng bài</button>
+                    <button type="button" id="btnCancelModal" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold cursor-pointer">Hủy</button>
+                    <button type="submit" class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 rounded-xl text-xs font-bold text-white shadow transition cursor-pointer">🚀 Đăng bài lên Supabase</button>
                 </div>
             </form>
         </div>
@@ -309,22 +321,22 @@
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center">
                 <h3 class="font-extrabold text-slate-900 text-base">Đăng ký hồ sơ Thợ / Cá nhân</h3>
-                <button id="btnCloseWorkerModal" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button id="btnCloseWorkerModal" class="text-slate-400 hover:text-slate-700">✕</button>
             </div>
             <form id="workerForm" class="space-y-3">
-                <input type="text" id="workerNameInput" required placeholder="Họ và tên thợ" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <input type="tel" id="workerPhoneInput" required placeholder="Số điện thoại cá nhân" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <input type="text" id="workerLocationInput" placeholder="Khu vực hoạt động" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <input type="text" id="workerSkillInput" placeholder="Nghề nghiệp / Kỹ năng" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                <input type="text" id="workerNameInput" required placeholder="Họ và tên thợ" style="background-color:#fff; color:#000;" class="w-full border-2 border-slate-300 rounded-xl px-3 py-2.5 text-xs">
+                <input type="tel" id="workerPhoneInput" required placeholder="Số điện thoại cá nhân" style="background-color:#fff; color:#000;" class="w-full border-2 border-slate-300 rounded-xl px-3 py-2.5 text-xs">
+                <input type="text" id="workerLocationInput" placeholder="Khu vực hoạt động" style="background-color:#fff; color:#000;" class="w-full border-2 border-slate-300 rounded-xl px-3 py-2.5 text-xs">
+                <input type="text" id="workerSkillInput" placeholder="Nghề nghiệp / Kỹ năng" style="background-color:#fff; color:#000;" class="w-full border-2 border-slate-300 rounded-xl px-3 py-2.5 text-xs">
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" id="btnCancelWorkerModal" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold">Hủy</button>
-                    <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 rounded-xl text-xs font-bold text-white cursor-pointer">Gửi hồ sơ</button>
+                    <button type="submit" class="px-4 py-2 bg-teal-600 rounded-xl text-xs font-bold text-white cursor-pointer">Gửi hồ sơ</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPT XỬ LÝ ĐĂNG XUẤT VÀ ĐĂNG NHẬP -->
+    <!-- SCRIPT TÍCH HỢP SUPABASE ĐẦY ĐỦ -->
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
@@ -346,10 +358,13 @@
                 document.getElementById('userAccountSection')?.classList.remove('hidden');
                 document.getElementById('currentLoggedInPhone').textContent = loggedPhone;
                 document.getElementById('loginBtnText').textContent = loggedPhone;
+                document.getElementById('jobPosterPhoneDisplay').textContent = loggedPhone;
+            } else {
+                document.getElementById('jobPosterPhoneDisplay').textContent = "Chưa đăng nhập (Sẽ dùng sđt mặc định)";
             }
 
-            // NÚT ĐĂNG VIỆC
-            document.getElementById('btnPostJob')?.addEventListener('click', (e) => {
+            // NÚT MỞ MODAL ĐĂNG VIỆC
+            const openPostModal = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 const modal = document.getElementById('postJobModal');
@@ -357,43 +372,45 @@
                     modal.classList.remove('hidden');
                     modal.classList.add('flex');
                 }
-            }, true);
+            };
 
-            document.getElementById('btnFloatingPostJob')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const modal = document.getElementById('postJobModal');
-                if (modal) {
-                    modal.classList.remove('hidden');
-                    modal.classList.add('flex');
-                }
-            }, true);
+            document.getElementById('btnPostJob')?.addEventListener('click', openPostModal, true);
+            document.getElementById('btnFloatingPostJob')?.addEventListener('click', openPostModal, true);
 
             document.getElementById('btnCloseModal')?.addEventListener('click', () => document.getElementById('postJobModal')?.classList.add('hidden'));
             document.getElementById('btnCancelModal')?.addEventListener('click', () => document.getElementById('postJobModal')?.classList.add('hidden'));
 
-            // ĐĂNG BÀI VIỆC LÀM LÊN SUPABASE
+            // GỬI THÔNG TIN ĐĂNG VIỆC MỚI LÊN BẢNG 'jobs' TRÊN SUPABASE
             document.getElementById('postJobForm')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const title = document.getElementById('jobTitleInput')?.value.trim();
                 const location = document.getElementById('jobLocationInput')?.value;
                 const salary = document.getElementById('jobSalaryInput')?.value.trim();
+                const currentPhone = localStorage.getItem('viecgap_logged_phone') || '0966507481';
 
+                if (!title || !salary) {
+                    alert('⚠️ Vui lòng nhập đầy đủ tiêu đề và mức lương!');
+                    return;
+                }
+
+                // Lưu trực tiếp vào cơ sở dữ liệu Supabase theo đúng cấu trúc bảng jobs
                 const { error } = await supabase.from('jobs').insert([{
-                    title,
-                    location,
-                    salary,
-                    contact: loggedPhone || '0966507481',
+                    title: title,
+                    location: location,
+                    salary: salary,
+                    contact: currentPhone,
+                    phone: currentPhone,
+                    status: 'active',
                     created_at: new Date()
                 }]);
 
                 if (!error) {
-                    alert("🎉 Đăng bài tuyển dụng thành công!");
+                    alert("🎉 Đăng bài tuyển dụng lên Supabase thành công!");
                     document.getElementById('postJobModal')?.classList.add('hidden');
                     e.target.reset();
                     location.reload();
                 } else {
-                    alert("Lỗi khi đăng bài: " + error.message);
+                    alert("❌ Lỗi khi lưu vào Supabase: " + error.message);
                 }
             });
 
@@ -598,7 +615,6 @@
             window.closeChangePasswordModal();
         };
 
-        // HÀM ĐĂNG XUẤT CHUẨN XÁC
         window.handleLogout = () => {
             if (confirm('Bạn có chắc chắn muốn đăng xuất tài khoản?')) {
                 localStorage.removeItem('viecgap_logged_phone');

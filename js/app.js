@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (BẢO MẬT CHÍNH CHỦ & CHECKBOX KHU VỰC) ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG HOÀN CHỈNH ---");
 
     // 1. Dọn dẹp modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
@@ -65,53 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         authForm?.reset();
         resetForm?.reset();
     };
-
-    // --- XỬ LÝ DROPDOWN CHECKBOX KHU VỰC ---
-    const locationDropdownBtn = document.getElementById('locationDropdownBtn');
-    const locationCheckboxPanel = document.getElementById('locationCheckboxPanel');
-    const closeLocationPanel = document.getElementById('closeLocationPanel');
-    const selectedLocationText = document.getElementById('selectedLocationText');
-    const selectAllLocations = document.getElementById('selectAllLocations');
-    const locCheckboxes = document.querySelectorAll('.loc-checkbox');
-
-    locationDropdownBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        locationCheckboxPanel?.classList.toggle('hidden');
-    });
-
-    closeLocationPanel?.addEventListener('click', () => {
-        locationCheckboxPanel?.classList.add('hidden');
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!locationDropdownBtn?.contains(e.target) && !locationCheckboxPanel?.contains(e.target)) {
-            locationCheckboxPanel?.classList.add('hidden');
-        }
-    });
-
-    const updateSelectedLocationsText = () => {
-        const checkedBoxes = document.querySelectorAll('.loc-checkbox:checked');
-        if (checkedBoxes.length === 0) {
-            selectedLocationText.textContent = "🌐 Vui lòng chọn ít nhất 1 khu vực";
-        } else if (checkedBoxes.length === locCheckboxes.length) {
-            selectedLocationText.textContent = "🌐 Toàn quốc (Tất cả khu vực)";
-        } else {
-            const names = Array.from(checkedBoxes).map(cb => cb.value);
-            selectedLocationText.textContent = names.join(', ');
-        }
-    };
-
-    locCheckboxes.forEach(cb => {
-        cb.addEventListener('change', updateSelectedLocationsText);
-    });
-
-    selectAllLocations?.addEventListener('change', (e) => {
-        const isChecked = e.target.checked;
-        locCheckboxes.forEach(cb => {
-            cb.checked = isChecked;
-        });
-        updateSelectedLocationsText();
-    });
 
     // --- HÀM RENDER TỔ CHỨC ĐÃ DUYỆT ---
     const renderApprovedOrgs = async () => {
@@ -284,7 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (job.status === 'accepted') {
                 if (isOwner) {
-                    // CHÍNH CHỦ THẤY: Hiện số điện thoại thợ nhận việc
                     acceptedStatusHTML = `
                         <div class="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs flex items-center justify-between">
                             <span class="text-emerald-800 font-medium"><i class="fa-solid fa-user-check mr-1"></i> Thợ nhận việc:</span>
@@ -292,7 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `;
                 } else {
-                    // USER KHÁC: Ẩn thông tin bảo mật
                     acceptedStatusHTML = `
                         <div class="mt-2 p-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-500 flex items-center justify-between">
                             <span><i class="fa-solid fa-lock mr-1 text-amber-500"></i> Công việc này đã có người nhận</span>
@@ -300,6 +251,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `;
                 }
+            } else if (job.status === 'completed') {
+                acceptedStatusHTML = `
+                    <div class="mt-2 p-2 bg-teal-50 border border-teal-200 rounded-xl text-xs text-teal-800 flex items-center justify-between">
+                        <span><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Công việc đã hoàn tất (Đã tính 1% phí)</span>
+                    </div>
+                `;
             } else {
                 actionButtonHTML = `
                     <button onclick="window.handleTakeJob('${job.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1">
@@ -466,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
     postJobForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const currentUserPhone = localStorage.getItem('viecgap_user_phone') || '';
-        const locationVal = selectedLocationText?.textContent || 'Toàn quốc';
+        const locationVal = document.getElementById('jobLocationInput')?.value || 'Toàn quốc';
 
         const newJob = {
             title: document.getElementById('jobTitleInput')?.value || 'Công việc mới',
@@ -488,10 +445,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Tổ chức & Thợ modal
+    // --- MODAL GHI DANH TỔ CHỨC ---
     const orgModal = document.getElementById('orgModal');
     const orgForm = document.getElementById('orgForm');
-    document.getElementById('btnJoinOrg')?.addEventListener('click', () => { orgModal?.classList.remove('hidden'); orgModal?.classList.add('flex'); });
+    
+    document.getElementById('btnJoinOrg')?.addEventListener('click', () => { 
+        orgModal?.classList.remove('hidden'); 
+        orgModal?.classList.add('flex'); 
+    });
     document.getElementById('btnCloseOrgModal')?.addEventListener('click', () => orgModal?.classList.add('hidden'));
     document.getElementById('btnCancelOrgModal')?.addEventListener('click', () => orgModal?.classList.add('hidden'));
 
@@ -511,27 +472,49 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Đã gửi hồ sơ tổ chức chờ Admin duyệt!");
             orgModal?.classList.add('hidden');
             orgForm.reset();
+        } else {
+            alert("Lỗi gửi hồ sơ: " + error.message);
         }
     });
 
+    // --- MODAL ĐĂNG KÝ HỒ SƠ THỢ (ĐÃ KHẮC PHỤC LỖI GỬI) ---
     const workerModal = document.getElementById('workerModal');
     const workerForm = document.getElementById('workerForm');
-    document.getElementById('btnRegisterWorker')?.addEventListener('click', () => { workerModal?.classList.remove('hidden'); workerModal?.classList.add('flex'); });
+
+    document.getElementById('btnRegisterWorker')?.addEventListener('click', () => { 
+        workerModal?.classList.remove('hidden'); 
+        workerModal?.classList.add('flex'); 
+    });
     document.getElementById('btnCloseWorkerModal')?.addEventListener('click', () => workerModal?.classList.add('hidden'));
     document.getElementById('btnCancelWorkerModal')?.addEventListener('click', () => workerModal?.classList.add('hidden'));
 
     workerForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Ngăn chặn load lại trang
+        
+        const name = document.getElementById('workerNameInput')?.value;
+        const phone = document.getElementById('workerPhoneInput')?.value;
+        const location = document.getElementById('workerLocationInput')?.value;
+        const skill = document.getElementById('workerSkillInput')?.value;
+
+        if (!name || !phone) {
+            alert("Vui lòng nhập đầy đủ họ tên và số điện thoại cá nhân!");
+            return;
+        }
+
         const newWorker = {
-            name: document.getElementById('workerNameInput')?.value,
-            phone: document.getElementById('workerPhoneInput')?.value,
-            location: document.getElementById('workerLocationInput')?.value,
-            skill: document.getElementById('workerSkillInput')?.value,
-            status: 'pending'
+            name: name,
+            phone: phone,
+            location: location || 'Châu Thành, An Giang',
+            skill: skill || 'Thợ tự do',
+            status: 'pending' // Trạng thái chờ Admin duyệt
         };
+
         const { error } = await supabase.from('workers').insert([newWorker]);
-        if (!error) {
-            alert("Đã gửi hồ sơ thợ chờ Admin duyệt!");
+        
+        if (error) {
+            alert("Lỗi khi gửi hồ sơ: " + error.message);
+        } else {
+            alert("🎉 Gửi hồ sơ thợ thành công! Hồ sơ của bạn đang chờ Quản trị viên (Admin) phê duyệt.");
             workerModal?.classList.add('hidden');
             workerForm.reset();
         }
@@ -561,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Khởi chạy
     window.renderJobs();
 
-    // Realtime sync
+    // Realtime sync đa thiết bị
     supabase.channel('public:app_live_sync')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => window.renderJobs())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'organizations' }, () => renderApprovedOrgs())

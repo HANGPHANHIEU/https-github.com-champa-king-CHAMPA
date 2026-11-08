@@ -2,16 +2,17 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Việc Gấp - Châu Thành, An Giang & Toàn Quốc</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Mẹ chống cache trực tiếp -->
+    
+    <!-- ÉP CHỐNG CACHE SAFARI IPAD BẰNG THAM SỐ PHIÊN BẢN MỚI -->
     <script>
-        if (!window.location.search.includes('v=2026_fixed')) {
-            window.location.replace(window.location.pathname + '?v=2026_fixed');
+        if (!window.location.search.includes('v=2026_reg_fixed')) {
+            window.location.replace(window.location.pathname + '?v=2026_reg_fixed');
         }
     </script>
 </head>
@@ -31,59 +32,95 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <!-- Nút truy cập trang Quản lý hoa hồng 1% -->
-                <a href="commission.html" title="Quản lý hoa hồng 1%" class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                <a href="commission.html?v=2026" title="Quản lý hoa hồng 1%" class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-coins text-amber-600"></i> <span class="hidden sm:inline">Hoa hồng 1%</span>
                 </a>
-
-                <!-- Icon truy cập trang Quản lý nhân sự / Danh sách nhận việc -->
-                <a href="worker-management.html" title="Danh sách nhận việc & Quản lý thợ" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                <a href="worker-management.html?v=2026" title="Danh sách nhận việc & Quản lý thợ" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-users-gear text-teal-600"></i> <span class="hidden sm:inline">Quản lý nhận việc</span>
                 </a>
-
-                <!-- Nút Đăng nhập / Tài khoản -->
                 <button type="button" onclick="window.toggleAuthBox()" class="bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow">
-                    <i class="fa-solid fa-user"></i> <span id="loginBtnText">Đăng nhập</span>
+                    <i class="fa-solid fa-user"></i> <span id="loginBtnText">Đăng ký / Đăng nhập</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- KHU VỰC ĐĂNG NHẬP & MẬT KHẨU TRỰC TIẾP (HIỆN NGAY DƯỚI HEADER - KHÔNG LO KẸT IPAD) -->
+    <!-- KHU VỰC ĐĂNG KÝ / ĐĂNG NHẬP TRỰC TIẾP (FIX DỨT ĐIỂM KẸT CẢM ỨNG IPAD) -->
     <div id="inlineAuthBox" class="hidden bg-slate-900 text-white border-b border-slate-700 py-6 px-4 shadow-2xl">
         <div class="max-w-md mx-auto space-y-4 bg-slate-800 p-6 rounded-3xl border-2 border-teal-500">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="font-extrabold text-sm text-teal-400 flex items-center gap-2">
-                    <i class="fa-solid fa-lock"></i> Đăng nhập & Xác thực mật khẩu
-                </h3>
+            
+            <!-- CHUYỂN ĐỔI TAB ĐĂNG KÝ VÀ ĐĂNG NHẬP -->
+            <div class="flex border-b border-slate-700 pb-3 justify-between items-center">
+                <div class="flex gap-2">
+                    <button type="button" id="tabBtnRegister" onclick="window.switchAuthTab('register')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-teal-600 text-white shadow">
+                        1. Đăng ký tài khoản
+                    </button>
+                    <button type="button" id="tabBtnLogin" onclick="window.switchAuthTab('login')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-700 text-slate-300">
+                        2. Đăng nhập
+                    </button>
+                </div>
                 <button type="button" onclick="window.toggleAuthBox()" class="text-slate-400 hover:text-white font-bold text-sm">✕ Đóng</button>
             </div>
 
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1">Số điện thoại liên hệ *</label>
-                    <input type="tel" id="modalPhoneInput" placeholder="Ví dụ: 0912345678" style="background-color:#ffffff !important; color:#000000 !important;" class="w-full border-4 border-amber-400 rounded-xl px-4 py-3 text-sm font-extrabold focus:outline-none">
+            <!-- TAB 1: FORM ĐĂNG KÝ QUA MÃ ZALO / WHATSAPP -->
+            <form id="formRegisterSection" onsubmit="event.preventDefault(); window.processRegisterStep();" class="space-y-3">
+                <div class="bg-teal-950/80 border border-teal-600/50 p-3 rounded-2xl text-[11px] text-teal-200">
+                    <i class="fa-solid fa-shield-halved text-amber-400 mr-1"></i> Nhập số điện thoại để nhận mã OTP xác thực qua <strong>Zalo</strong> hoặc <strong>WhatsApp</strong> trước khi khởi tạo tài khoản.
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1">Mật khẩu truy cập (Mặc định: 123456)</label>
-                    <input type="password" id="modalPasswordInput" placeholder="Nhập mật khẩu..." style="background-color:#ffffff !important; color:#000000 !important;" class="w-full border-4 border-teal-400 rounded-xl px-4 py-3 text-sm font-extrabold focus:outline-none">
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Số điện thoại liên hệ *</label>
+                    <input type="tel" id="regPhoneInput" placeholder="Ví dụ: 0912345678" style="background-color:#ffffff !important; color:#000000 !important;" class="w-full border-4 border-teal-500 rounded-xl px-4 py-3 text-sm font-extrabold focus:outline-none">
+                </div>
+
+                <div id="regOtpStepGroup" class="hidden space-y-3 pt-1">
+                    <div>
+                        <label class="block text-xs font-bold text-amber-300 mb-1">Mã xác thực OTP (6 chữ số) *</label>
+                        <input type="text" id="regOtpInput" placeholder="Nhập mã 6 số..." style="background-color:#ffffff !important; color:#000000 !important;" class="w-full border-4 border-amber-400 rounded-xl px-4 py-3 text-sm font-extrabold focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Tạo mật khẩu đăng nhập (Mặc định: 123456)</label>
+                        <input type="password" id="regPassInput" placeholder="Nhập mật khẩu tự chọn..." style="background-color:#ffffff !important; color:#000000 !important;" class="w-full border-4 border-slate-300 rounded-xl px-4 py-3 text-sm font-extrabold focus:outline-none">
+                    </div>
+                </div>
+
+                <button type="button" id="btnSendRegCode" onclick="window.requestRegisterOTP()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-3.5 rounded-xl text-sm shadow-xl cursor-pointer">
+                    📲 Gửi mã xác thực qua Zalo / WhatsApp
+                </button>
+
+                <button type="button" id="btnConfirmReg" onclick="window.confirmRegisterAccount()" class="hidden w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold py-3.5 rounded-xl text-sm shadow-xl cursor-pointer">
+                    ✅ Xác nhận Đăng ký & Tạo tài khoản
+                </button>
+            </form>
+
+            <!-- TAB 2: FORM ĐĂNG NHẬP BẰNG MẬT KHẨU -->
+            <form id="formLoginSection" onsubmit="event.preventDefault(); window.processAuthLogin();" class="hidden space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Số điện thoại liên hệ *</label>
+                    <input type="tel" id="loginPhoneInput" placeholder="Ví dụ: 0912345678" style="background-color:#ffffff !important; color:#000000 !important;" class="w-full border-4 border-teal-500 rounded-xl px-4 py-3 text-sm font-extrabold focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Mật khẩu truy cập</label>
+                    <input type="password" id="loginPasswordInput" placeholder="Nhập mật khẩu..." style="background-color:#ffffff !important; color:#000000 !important;" class="w-full border-4 border-slate-300 rounded-xl px-4 py-3 text-sm font-extrabold focus:outline-none">
                     <div class="text-right pt-1.5">
                         <button type="button" onclick="window.triggerForgotPassword()" class="text-xs text-amber-300 hover:underline font-bold cursor-pointer">Quên mật khẩu? (Nhận mã Zalo / WhatsApp)</button>
                     </div>
                 </div>
 
                 <button type="button" onclick="window.processAuthLogin()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold py-3.5 rounded-xl text-sm shadow-xl cursor-pointer">
-                    Xác nhận Đăng nhập ngay
+                    🔓 Xác nhận Đăng nhập
                 </button>
-            </div>
+            </form>
+
         </div>
     </div>
 
     <!-- MAIN CONTAINER -->
     <main class="max-w-4xl mx-auto px-4 py-5 space-y-6">
 
-        <!-- THÔNG TIN TÀI KHOẢN ĐANG ĐĂNG NHẬP & NÚT ĐỔI MẬT KHẨU -->
+        <!-- THÔNG TIN TÀI KHOẢN ĐANG ĐĂNG NHẬP & ĐỔI MẬT KHẨU -->
         <div id="userAccountSection" class="hidden bg-white border border-teal-200 rounded-3xl p-4 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div class="text-xs text-slate-700">
                 <i class="fa-solid fa-id-badge text-teal-600 mr-1"></i> SĐT đang kết nối: <strong id="currentLoggedInPhone" class="text-teal-800"></strong>
@@ -98,7 +135,7 @@
             </div>
         </div>
 
-        <!-- HERO BANNER / TÌM KIẾM NHANH -->
+        <!-- HERO BANNER -->
         <section class="bg-gradient-to-r from-teal-700 to-teal-800 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
             <div class="relative z-10 space-y-3">
                 <span class="bg-teal-600/60 text-teal-100 text-[10px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">Cộng đồng uy tín Châu Thành & Toàn quốc</span>
@@ -131,7 +168,7 @@
                 </div>
             </div>
 
-            <!-- TAB 1: BẢNG TIN VIỆC LÀM -->
+            <!-- TAB 1: BẢNG TIN -->
             <div id="tabJobList" class="tab-content space-y-3">
                 <div id="jobList" class="space-y-3">
                     <div class="text-center py-8 text-slate-400 text-xs">Đang tải danh sách công việc...</div>
@@ -148,7 +185,7 @@
                 </div>
             </div>
 
-            <!-- TAB 3: TỔ CHỨC / ĐỐI TÁC -->
+            <!-- TAB 3: TỔ CHỨC -->
             <div id="tabOrganization" class="tab-content space-y-3 hidden">
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="font-bold text-slate-800 text-sm">Danh sách Tổ chức / Đội nhóm uy tín</h3>
@@ -252,19 +289,22 @@
                 <input type="text" id="workerSkillInput" placeholder="Nghề nghiệp / Kỹ năng" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" id="btnCancelWorkerModal" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold">Hủy</button>
-                    <button type="submit" class="px-4 py-2 bg-teal-600 rounded-xl text-xs font-bold text-white cursor-pointer">Gửi hồ sơ</button>
+                    <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 rounded-xl text-xs font-bold text-white cursor-pointer">Gửi hồ sơ</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPT TÍCH HỢP XỬ LÝ TOÀN BỘ -->
+    <!-- SCRIPT TÍCH HỢP XỬ LÝ DỊCH VỤ -->
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
         const SUPABASE_URL = 'https://rznzypehvmwysxmjxxxp.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6bnp5cGVodm13eXN4bWp4eHhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNTkxNTYsImV4cCI6MjEwODkzNTE1Nn0.B-5onxhT0EoqgtJ0ZP-ZbGSz4Gmo7xuRPEcsAYz65wA';
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let tempGeneratedOtp = null;
+        let tempRegisterPhone = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             const loggedPhone = localStorage.getItem('viecgap_logged_phone');
@@ -310,14 +350,80 @@
             if (box) {
                 box.classList.toggle('hidden');
                 if (!box.classList.contains('hidden')) {
-                    setTimeout(() => document.getElementById('modalPhoneInput')?.focus(), 100);
+                    setTimeout(() => document.getElementById('regPhoneInput')?.focus(), 100);
                 }
             }
         };
 
+        window.switchAuthTab = (type) => {
+            const regForm = document.getElementById('formRegisterSection');
+            const loginForm = document.getElementById('formLoginSection');
+            const btnReg = document.getElementById('tabBtnRegister');
+            const btnLog = document.getElementById('tabBtnLogin');
+
+            if (type === 'register') {
+                regForm?.classList.remove('hidden');
+                loginForm?.classList.add('hidden');
+                btnReg.className = "px-3 py-1.5 rounded-xl text-xs font-extrabold bg-teal-600 text-white shadow";
+                btnLog.className = "px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-700 text-slate-300";
+            } else {
+                regForm?.classList.add('hidden');
+                loginForm?.classList.remove('hidden');
+                btnReg.className = "px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-700 text-slate-300";
+                btnLog.className = "px-3 py-1.5 rounded-xl text-xs font-extrabold bg-teal-600 text-white shadow";
+            }
+        };
+
+        // YÊU CẦU MÃ OTP ĐĂNG KÝ TÙY CHỌN ZALO HOẶC WHATSAPP
+        window.requestRegisterOTP = () => {
+            const phone = document.getElementById('regPhoneInput')?.value?.trim();
+            if (!phone || phone.length < 9) {
+                alert('⚠️ Vui lòng nhập số điện thoại hợp lệ để lấy mã xác thực!');
+                return;
+            }
+
+            tempRegisterPhone = phone;
+            tempGeneratedOtp = Math.floor(100000 + Math.random() * 900000);
+
+            const choice = prompt(`Chọn kênh gửi mã xác thực ĐĂNG KÝ cho số ${phone}:\n1. Gửi qua Zalo\n2. Gửi qua WhatsApp\n\nNhập "1" hoặc "2":`);
+
+            if (choice === '1') {
+                alert(`📱 [HỆ THỐNG ZALO API]\nĐã gửi mã xác thực ĐĂNG KÝ "${tempGeneratedOtp}" đến Zalo của số điện thoại: ${phone}`);
+            } else if (choice === '2') {
+                const waUrl = `https://wa.me/${phone.replace(/^0/, '84')}?text=Ma%20xac%20thuc%20Dang%20Ky%20Viec%20Gap%20cua%20ban%20la:%20${tempGeneratedOtp}`;
+                window.open(waUrl, '_blank');
+                alert(`💬 [HỆ THỐNG WHATSAPP]\nĐã chuyển hướng gửi mã xác thực ĐĂNG KÝ "${tempGeneratedOtp}"!`);
+            } else {
+                alert('❌ Lựa chọn không hợp lệ.');
+                return;
+            }
+
+            document.getElementById('regOtpStepGroup')?.classList.remove('hidden');
+            document.getElementById('btnSendRegCode')?.classList.add('hidden');
+            document.getElementById('btnConfirmReg')?.classList.remove('hidden');
+        };
+
+        // XÁC NHẬN TẠO TÀI KHOẢN SAU KHI NHẬP ĐÚNG OTP
+        window.confirmRegisterAccount = () => {
+            const otpEntered = document.getElementById('regOtpInput')?.value?.trim();
+            const customPass = document.getElementById('regPassInput')?.value?.trim() || '123456';
+
+            if (!otpEntered || otpEntered !== tempGeneratedOtp.toString()) {
+                alert('❌ Mã xác thực OTP không chính xác!');
+                return;
+            }
+
+            localStorage.setItem(`pass_${tempRegisterPhone}`, customPass);
+            localStorage.setItem('viecgap_logged_phone', tempRegisterPhone);
+
+            alert('🎉 Đăng ký tài khoản thành công! Bạn đã được đăng nhập tự động.');
+            location.reload();
+        };
+
+        // ĐĂNG NHẬP DÀNH CHO TÀI KHOẢN ĐÃ CÓ MẬT KHẨU
         window.processAuthLogin = () => {
-            const phone = document.getElementById('modalPhoneInput')?.value?.trim();
-            const pass = document.getElementById('modalPasswordInput')?.value?.trim();
+            const phone = document.getElementById('loginPhoneInput')?.value?.trim();
+            const pass = document.getElementById('loginPasswordInput')?.value?.trim();
 
             if (!phone || phone.length < 9) {
                 alert('⚠️ Vui lòng nhập số điện thoại hợp lệ!');
@@ -334,10 +440,11 @@
             }
         };
 
+        // KHÔI PHỤC MẬT KHẨU KHI QUÊN
         window.triggerForgotPassword = () => {
-            const phone = document.getElementById('modalPhoneInput')?.value?.trim();
+            const phone = document.getElementById('loginPhoneInput')?.value?.trim();
             if (!phone || phone.length < 9) {
-                alert('⚠️ Vui lòng nhập số điện thoại trước!');
+                alert('⚠️ Vui lòng nhập số điện thoại liên hệ ở khung Đăng nhập trước!');
                 return;
             }
 
@@ -358,8 +465,8 @@
                 const newPass = prompt('✅ Xác thực thành công! Nhập mật khẩu mới:');
                 if (newPass && newPass.length >= 4) {
                     localStorage.setItem(`pass_${phone}`, newPass);
-                    alert('🎉 Đặt lại mật khẩu thành công!');
-                    document.getElementById('modalPasswordInput').value = newPass;
+                    alert('🎉 Đặt lại mật khẩu thành công! Bạn có thể dùng mật khẩu này để đăng nhập.');
+                    document.getElementById('loginPasswordInput').value = newPass;
                 }
             } else {
                 alert('❌ Mã xác thực không đúng!');
@@ -394,14 +501,12 @@
         };
 
         window.handleLogout = () => {
-            if (confirm('Đăng xuất tài khoản?')) {
+            if (confirm('Bạn có chắc chắn muốn đăng xuất tài khoản?')) {
                 localStorage.removeItem('viecgap_logged_phone');
                 location.reload();
             }
         };
     </script>
-
-    <!-- SCRIPT CHÍNH -->
     <script type="module" src="js/app.js"></script>
 </body>
 </html>

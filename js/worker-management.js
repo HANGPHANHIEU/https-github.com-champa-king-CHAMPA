@@ -8,7 +8,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- TRANG QUẢN LÝ NHÂN SỰ & HOÀN TẤT ĐÃ KHỞI ĐỘNG ---");
+    console.log("--- BẢNG QUẢN LÝ ADMIN PHÊ DUYỆT ĐÃ KHỞI ĐỘNG ---");
 
     const acceptedJobListManagement = document.getElementById('acceptedJobListManagement');
     const activeJobCountBadge = document.getElementById('activeJobCountBadge');
@@ -18,10 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminPasswordInput = document.getElementById('adminPasswordInput');
     const btnAdminLogin = document.getElementById('btnAdminLogin');
     const btnAdminLogout = document.getElementById('btnAdminLogout');
+    
     const pendingWorkerList = document.getElementById('pendingWorkerList');
-    const workerCountBadge = document.getElementById('workerCountBadge');
+    const pendingOrgList = document.getElementById('pendingOrgList');
+    const pendingTotalBadge = document.getElementById('pendingTotalBadge');
 
-    // --- 1. TẢI DANH SÁCH CÔNG VIỆC ĐANG THỰC HIỆN & NÚT HOÀN TẤT ---
+    // --- 1. TẢI VIỆC ĐANG THỰC HIỆN ---
     window.loadManagementData = async () => {
         const { data: jobs, error } = await supabase
             .from('jobs')
@@ -29,10 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .eq('status', 'accepted')
             .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error("Lỗi tải danh sách việc:", error.message);
-            return;
-        }
+        if (error) return;
 
         const activeJobs = jobs || [];
         if (activeJobCountBadge) {
@@ -65,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <a href="tel:${job.accepted_by}" class="font-bold text-teal-700 hover:underline">📞 ${job.accepted_by}</a>
                     </div>
 
-                    <!-- NÚT HOÀN TẤT CÔNG VIỆC VÀ TÍNH HOA HỒNG 1% -->
                     <button onclick="window.completeJobFromManagement('${job.id}', '${job.salary}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl font-bold transition text-xs flex items-center gap-1.5 shadow cursor-pointer">
                         <i class="fa-solid fa-circle-check"></i> Hoàn tất (Thu 1% Phí)
                     </button>
@@ -74,21 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     };
 
-    // Hàm gọi sự kiện hoàn tất và tích hợp file commission.js
     window.completeJobFromManagement = (jobId, salaryStr) => {
         handleCompleteJobWithCommission(jobId, salaryStr, () => {
-            // Sau khi hoàn thành xong, tự động tải lại danh sách
             window.loadManagementData();
         });
     };
 
-    // --- 2. QUẢN LÝ ĐĂNG NHẬP ADMIN & DUYỆT THỢ ---
+    // --- 2. XÁC THỰC ADMIN & TẢI DANH SÁCH CHỜ DUYỆT ---
     const checkAdminSession = () => {
         const isAdmin = sessionStorage.getItem('viecgap_admin_logged') === 'true';
         if (isAdmin) {
             adminLoginSection?.classList.add('hidden');
             adminPanel?.classList.remove('hidden');
-            loadPendingWorkers();
+            loadAllPendingProfiles();
         } else {
             adminLoginSection?.classList.remove('hidden');
             adminPanel?.classList.add('hidden');
@@ -97,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnAdminLogin?.addEventListener('click', () => {
         const pass = adminPasswordInput?.value;
-        // Mật khẩu mặc định Admin là 'admin123' (anh có thể thay đổi tùy ý)
         if (pass === 'admin123' || pass === '123456') {
             sessionStorage.setItem('viecgap_admin_logged', 'true');
             alert('🔓 Đăng nhập quyền Admin thành công!');
@@ -113,44 +108,85 @@ document.addEventListener('DOMContentLoaded', () => {
         checkAdminSession();
     });
 
-    const loadPendingWorkers = async () => {
-        const { data: workers, error } = await supabase.from('workers').select('*');
-        if (error) return;
+    // Hàm tải danh sách phê duyệt cả Cá nhân và Tổ chức
+    const loadAllPendingProfiles = async () => {
+        // Tải danh sách Thợ/Cá nhân
+        const { data: workers } = await supabase.from('workers').select('*').eq('status', 'pending');
+        // Tải danh sách Tổ chức
+        const { data: orgs } = await supabase.from('organizations').select('*').eq('status', 'pending');
 
-        const allWorkers = workers || [];
-        if (workerCountBadge) workerCountBadge.textContent = `Tổng thợ: ${allWorkers.length}`;
+        const pendingWorkers = workers || [];
+        const pendingOrgs = orgs || [];
 
-        const pending = allWorkers.filter(w => w.status === 'pending');
-        if (pending.length === 0) {
-            pendingWorkerList.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">Không có hồ sơ thợ nào chờ duyệt.</div>`;
-            return;
+        if (pendingTotalBadge) {
+            pendingTotalBadge.textContent = `Chờ duyệt: ${pendingWorkers.length + pendingOrgs.length}`;
         }
 
-        pendingWorkerList.innerHTML = pending.map(w => `
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex justify-between items-center text-xs">
-                <div>
-                    <strong>${w.name}</strong> - 📞 ${w.phone}<br>
-                    <span class="text-slate-500">Khu vực: ${w.location} | Kỹ năng: ${w.skill}</span>
+        // Render Thợ chờ duyệt
+        if (pendingWorkers.length === 0) {
+            pendingWorkerList.innerHTML = `<div class="text-center py-3 text-slate-400 text-xs bg-slate-50 rounded-xl">Không có hồ sơ thợ nào chờ duyệt.</div>`;
+        } else {
+            pendingWorkerList.innerHTML = pendingWorkers.map(w => `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex justify-between items-center text-xs">
+                    <div>
+                        <strong class="text-slate-900">${w.name}</strong> - 📞 <a href="tel:${w.phone}" class="font-bold text-teal-700">${w.phone}</a><br>
+                        <span class="text-slate-500">📍 ${w.location || 'Châu Thành'} | 🛠️ ${w.skill || 'Tự do'}</span>
+                    </div>
+                    <button onclick="window.approveWorker('${w.id}')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-1.5 rounded-lg shadow cursor-pointer">
+                        Duyệt cá nhân
+                    </button>
                 </div>
-                <button onclick="window.approveWorker('${w.id}')" class="bg-teal-600 text-white font-bold px-3 py-1.5 rounded-lg">Duyệt hồ sơ</button>
-            </div>
-        `).join('');
+            `).join('');
+        }
+
+        // Render Tổ chức chờ duyệt
+        if (pendingOrgs.length === 0) {
+            pendingOrgList.innerHTML = `<div class="text-center py-3 text-slate-400 text-xs bg-slate-50 rounded-xl">Không có hồ sơ tổ chức nào chờ duyệt.</div>`;
+        } else {
+            pendingOrgList.innerHTML = pendingOrgs.map(o => `
+                <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-3 flex justify-between items-center text-xs">
+                    <div>
+                        <strong class="text-slate-900">${o.name}</strong> - 📞 <a href="tel:${o.phone}" class="font-bold text-teal-700">${o.phone}</a><br>
+                        <span class="text-slate-600">📍 ${o.province || ''} ${o.district || ''} | ⭐ Thế mạnh: ${o.strength || 'N/A'}</span>
+                    </div>
+                    <button onclick="window.approveOrg('${o.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg shadow cursor-pointer">
+                        Duyệt tổ chức
+                    </button>
+                </div>
+            `).join('');
+        }
     };
 
+    // Hàm phê duyệt Cá nhân
     window.approveWorker = async (workerId) => {
         const { error } = await supabase.from('workers').update({ status: 'approved' }).eq('id', workerId);
         if (!error) {
             alert('✅ Đã phê duyệt hồ sơ thợ thành công!');
-            loadPendingWorkers();
+            loadAllPendingProfiles();
+        } else {
+            alert('❌ Lỗi phê duyệt: ' + error.message);
         }
     };
 
-    // Khởi chạy dữ liệu
+    // Hàm phê duyệt Tổ chức
+    window.approveOrg = async (orgId) => {
+        const { error } = await supabase.from('organizations').update({ status: 'approved' }).eq('id', orgId);
+        if (!error) {
+            alert('✅ Đã phê duyệt hồ sơ tổ chức thành công!');
+            loadAllPendingProfiles();
+        } else {
+            alert('❌ Lỗi phê duyệt: ' + error.message);
+        }
+    };
+
+    // Khởi chạy
     window.loadManagementData();
     checkAdminSession();
 
     // Realtime Sync
-    supabase.channel('public:management_live_sync')
+    supabase.channel('public:admin_management_sync')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => window.loadManagementData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'workers' }, () => loadAllPendingProfiles())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'organizations' }, () => loadAllPendingProfiles())
         .subscribe();
 });

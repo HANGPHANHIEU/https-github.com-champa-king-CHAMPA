@@ -11,8 +11,8 @@
     
     <!-- ÉP CHỐNG CACHE SAFARI IPAD -->
     <script>
-        if (!window.location.search.includes('v=2026_unique_phone_check')) {
-            window.location.replace(window.location.pathname + '?v=2026_unique_phone_check');
+        if (!window.location.search.includes('v=2026_fix_duplicate_check')) {
+            window.location.replace(window.location.pathname + '?v=2026_fix_duplicate_check');
         }
     </script>
 </head>
@@ -97,7 +97,6 @@
                     <label class="block text-xs font-bold text-slate-300 mb-1"><i class="fa-solid fa-lock text-slate-400 mr-1"></i> Mật khẩu truy cập</label>
                     <input type="password" id="loginPasswordInput" placeholder="Nhập mật khẩu..." style="background-color:#ffffff !important; color:#000000 !important;" class="w-full border-4 border-slate-300 rounded-xl px-4 py-3 text-sm font-extrabold focus:outline-none">
                     
-                    <!-- DÒNG CÓ ICON CHÌA KHÓA VÀ ICON XOAY KHÔI PHỤC -->
                     <div class="flex justify-between items-center pt-2 text-xs font-bold">
                         <button type="button" onclick="window.openChangePasswordModal()" class="text-teal-300 hover:underline cursor-pointer flex items-center gap-1.5">
                             <i class="fa-solid fa-key text-amber-400 text-sm"></i>
@@ -566,7 +565,7 @@
             }
         };
 
-        // KIỂM TRA TRÙNG SỐ ĐIỆN THOẠI TRƯỚC KHI GỬI OTP ĐĂNG KÝ
+        // KIỂM TRA TRÙNG SỐ ĐIỆN THOẠI TRƯỚC KHI GỬI OTP ĐĂNG KÝ (ĐÃ FIX CHUẨN)
         window.requestRegisterOTP = async () => {
             const phone = document.getElementById('regPhoneInput')?.value?.trim();
             if (!phone || phone.length < 9) {
@@ -574,20 +573,21 @@
                 return;
             }
 
-            // KIỂM TRA SỐ ĐIỆN THOẠI ĐÃ TỒN TẠI TRONG SUPABASE CHƯA
             try {
-                const { data, error } = await supabase.from('users').select('phone').eq('phone', phone).maybeSingle();
-                if (data) {
-                    alert(`⚠️ Số điện thoại "${phone}" đã được đăng ký trước đó!\nVui lòng chuyển sang tab Đăng nhập hoặc sử dụng tính năng Quên mật khẩu.`);
+                // Truy vấn trực tiếp Supabase để kiểm tra số điện thoại đã tồn tại chưa
+                const { data, error } = await supabase.from('users').select('phone').eq('phone', phone);
+                
+                if (data && data.length > 0) {
+                    alert(`⚠️ Số điện thoại "${phone}" đã được đăng ký tài khoản trên hệ thống!\nVui lòng chuyển sang tab Đăng nhập hoặc bấm "Quên mật khẩu".`);
                     return;
                 }
             } catch (err) {
-                console.log("Kiểm tra trùng sđt qua DB lỗi, kiểm tra bộ nhớ đệm...");
+                console.log("Lỗi kiểm tra DB:", err);
             }
 
-            // Kiểm tra thêm trong localStorage phòng hờ
+            // Kiểm tra thêm bộ nhớ cục bộ (localStorage)
             if (localStorage.getItem(`pass_${phone}`)) {
-                alert(`⚠️ Số điện thoại "${phone}" đã tồn tại trên hệ thống này!`);
+                alert(`⚠️ Số điện thoại "${phone}" đã tồn tại trên thiết bị này!`);
                 return;
             }
 

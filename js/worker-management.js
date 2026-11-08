@@ -8,7 +8,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- BẢNG QUẢN LÝ ADMIN PHÊ DUYỆT ĐÃ KHỞI ĐỘNG ---");
+    console.log("--- BẢNG QUẢN LÝ ADMIN ĐÃ KHỞI ĐỘNG CHÍNH XÁC ---");
 
     const acceptedJobListManagement = document.getElementById('acceptedJobListManagement');
     const activeJobCountBadge = document.getElementById('activeJobCountBadge');
@@ -16,14 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminLoginSection = document.getElementById('adminLoginSection');
     const adminPanel = document.getElementById('adminPanel');
     const adminPasswordInput = document.getElementById('adminPasswordInput');
-    const btnAdminLogin = document.getElementById('btnAdminLogin');
     const btnAdminLogout = document.getElementById('btnAdminLogout');
     
     const pendingWorkerList = document.getElementById('pendingWorkerList');
     const pendingOrgList = document.getElementById('pendingOrgList');
     const pendingTotalBadge = document.getElementById('pendingTotalBadge');
 
-    // --- 1. TẢI VIỆC ĐANG THỰC HIỆN ---
+    // --- 1. TẢI VIỆC ĐANG THỰC HIỆN & RENDER NÚT HOÀN TẤT ---
     window.loadManagementData = async () => {
         const { data: jobs, error } = await supabase
             .from('jobs')
@@ -31,7 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .eq('status', 'accepted')
             .order('created_at', { ascending: false });
 
-        if (error) return;
+        if (error) {
+            console.error("Lỗi tải việc đang thực hiện:", error.message);
+            return;
+        }
 
         const activeJobs = jobs || [];
         if (activeJobCountBadge) {
@@ -78,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- 2. XÁC THỰC ADMIN & TẢI DANH SÁCH CHỜ DUYỆT ---
+    // --- 2. XÁC THỰC ADMIN & BẮT SỰ KIỆN MỞ KHÓA TỨC THÌ ---
     const checkAdminSession = () => {
         const isAdmin = sessionStorage.getItem('viecgap_admin_logged') === 'true';
         if (isAdmin) {
@@ -91,28 +93,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    btnAdminLogin?.addEventListener('click', () => {
-        const pass = adminPasswordInput?.value;
-        if (pass === 'admin123' || pass === '123456') {
-            sessionStorage.setItem('viecgap_admin_logged', 'true');
-            alert('🔓 Đăng nhập quyền Admin thành công!');
-            checkAdminSession();
-        } else {
-            alert('❌ Mật khẩu Admin không chính xác!');
+    // Bắt sự kiện click Mở khóa toàn cục (Bảo đảm 100% bấm được)
+    document.addEventListener('click', (e) => {
+        const target = e.target.closest('#btnAdminLogin');
+        if (target) {
+            const pass = adminPasswordInput?.value?.trim();
+            if (pass === 'admin123' || pass === '123456') {
+                sessionStorage.setItem('viecgap_admin_logged', 'true');
+                alert('🔓 Đăng nhập quyền Admin thành công!');
+                checkAdminSession();
+            } else {
+                alert('❌ Mật khẩu Admin không chính xác! (Mật khẩu mặc định: admin123)');
+            }
         }
     });
 
     btnAdminLogout?.addEventListener('click', () => {
         sessionStorage.removeItem('viecgap_admin_logged');
-        adminPasswordInput.value = '';
+        if (adminPasswordInput) adminPasswordInput.value = '';
         checkAdminSession();
     });
 
-    // Hàm tải danh sách phê duyệt cả Cá nhân và Tổ chức
+    // Hàm tải toàn bộ hồ sơ chờ duyệt (Thợ + Tổ chức)
     const loadAllPendingProfiles = async () => {
-        // Tải danh sách Thợ/Cá nhân
         const { data: workers } = await supabase.from('workers').select('*').eq('status', 'pending');
-        // Tải danh sách Tổ chức
         const { data: orgs } = await supabase.from('organizations').select('*').eq('status', 'pending');
 
         const pendingWorkers = workers || [];

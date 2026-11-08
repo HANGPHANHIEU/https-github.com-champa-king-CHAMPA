@@ -11,8 +11,8 @@
     
     <!-- ÉP CHỐNG CACHE SAFARI IPAD -->
     <script>
-        if (!window.location.search.includes('v=2026_job_supabase')) {
-            window.location.replace(window.location.pathname + '?v=2026_job_supabase');
+        if (!window.location.search.includes('v=2026_job_clean')) {
+            window.location.replace(window.location.pathname + '?v=2026_job_clean');
         }
     </script>
 </head>
@@ -276,11 +276,11 @@
         </div>
     </div>
 
-    <!-- MODAL ĐĂNG VIỆC (CÓ ĐỦ THÔNG TIN TÍCH HỢP SUPABASE) -->
+    <!-- MODAL ĐĂNG CÔNG VIỆC MỚI -->
     <div id="postJobModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center">
-                <h3 class="font-extrabold text-slate-900 text-base"><i class="fa-solid fa-briefcase text-teal-600 mr-1"></i> Đăng công việc mới lên Supabase</h3>
+                <h3 class="font-extrabold text-slate-900 text-base"><i class="fa-solid fa-briefcase text-teal-600 mr-1"></i> Đăng bài tuyển dụng công việc</h3>
                 <button id="btnCloseModal" class="text-slate-400 hover:text-slate-700 cursor-pointer text-lg font-bold">✕</button>
             </div>
             <form id="postJobForm" class="space-y-3">
@@ -310,7 +310,7 @@
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" id="btnCancelModal" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold cursor-pointer">Hủy</button>
-                    <button type="submit" class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 rounded-xl text-xs font-bold text-white shadow transition cursor-pointer">🚀 Đăng bài lên Supabase</button>
+                    <button type="submit" class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 rounded-xl text-xs font-bold text-white shadow transition cursor-pointer">🚀 Đăng bài viết ngay</button>
                 </div>
             </form>
         </div>
@@ -336,7 +336,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT TÍCH HỢP SUPABASE ĐẦY ĐỦ -->
+    <!-- SCRIPT XỬ LÝ HỆ THỐNG -->
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
@@ -380,7 +380,7 @@
             document.getElementById('btnCloseModal')?.addEventListener('click', () => document.getElementById('postJobModal')?.classList.add('hidden'));
             document.getElementById('btnCancelModal')?.addEventListener('click', () => document.getElementById('postJobModal')?.classList.add('hidden'));
 
-            // GỬI THÔNG TIN ĐĂNG VIỆC MỚI LÊN BẢNG 'jobs' TRÊN SUPABASE
+            // GỬI THÔNG TIN ĐĂNG VIỆC MỚI
             document.getElementById('postJobForm')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const title = document.getElementById('jobTitleInput')?.value.trim();
@@ -393,7 +393,6 @@
                     return;
                 }
 
-                // Lưu trực tiếp vào cơ sở dữ liệu Supabase theo đúng cấu trúc bảng jobs
                 const { error } = await supabase.from('jobs').insert([{
                     title: title,
                     location: location,
@@ -405,12 +404,12 @@
                 }]);
 
                 if (!error) {
-                    alert("🎉 Đăng bài tuyển dụng lên Supabase thành công!");
+                    alert("🎉 Đăng bài viết thành công!");
                     document.getElementById('postJobModal')?.classList.add('hidden');
                     e.target.reset();
                     location.reload();
                 } else {
-                    alert("❌ Lỗi khi lưu vào Supabase: " + error.message);
+                    alert("❌ Lỗi khi đăng bài: " + error.message);
                 }
             });
 

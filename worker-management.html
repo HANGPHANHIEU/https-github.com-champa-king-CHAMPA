@@ -61,12 +61,12 @@
                 <span id="pendingTotalBadge" class="bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full text-xs font-bold">Chờ duyệt: 0</span>
             </div>
 
-            <!-- Ô Nhập mật khẩu mở khóa Admin -->
+            <!-- Ô Nhập mật khẩu mở khóa Admin (Gọi trực tiếp window.tryUnlockAdmin) -->
             <div id="adminLoginSection" class="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-center space-y-3">
                 <p class="text-xs text-slate-600"><i class="fa-solid fa-lock text-amber-500 mr-1"></i> Tính năng duyệt hồ sơ thợ & tổ chức dành riêng cho Quản trị viên (Admin).</p>
                 <div class="flex justify-center gap-2 max-w-xs mx-auto">
-                    <input type="password" id="adminPasswordInput" placeholder="Mật khẩu Admin..." class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-teal-600">
-                    <button type="button" id="btnAdminLogin" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition cursor-pointer">Mở khóa</button>
+                    <input type="password" id="adminPasswordInput" placeholder="Mật khẩu (admin123)..." class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-teal-600">
+                    <button type="button" onclick="window.tryUnlockAdmin()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition cursor-pointer">Mở khóa</button>
                 </div>
             </div>
 

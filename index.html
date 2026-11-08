@@ -153,16 +153,14 @@
                 </div>
                 <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer">Tiếp tục</button>
             </form>
-            <form id="resetForm" class="space-y-3 hidden"></form>
             <div id="authFooter" class="text-center text-[11px] text-slate-500">Hệ thống tự động xác thực qua số điện thoại của bạn.</div>
-            <div id="resetFooter" class="hidden"></div>
             <div class="flex justify-end pt-2">
                 <button id="btnCancelAuthModal" class="text-xs text-slate-500 hover:text-slate-700 font-semibold px-3 py-1.5">Hủy</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL ĐĂNG VIỆC (ĐẦY ĐỦ 34 TỈNH, 6 THÀNH PHỐ VÀ XÃ/HUYỆN CHÂU THÀNH) -->
+    <!-- MODAL ĐĂNG VIỆC (ĐẦY ĐỦ KHU VỰC) -->
     <div id="postJobModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center">
@@ -175,13 +173,10 @@
                     <input type="text" id="jobTitleInput" required placeholder="Ví dụ: Cần thợ hồ sửa tường gấp tại Châu Thành" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-teal-600">
                 </div>
 
-                <!-- Ô CHỌN KHU VỰC ĐẦY ĐỦ CHI TIẾT -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Khu vực làm việc *</label>
                     <select id="jobLocationInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-teal-600">
                         <option value="Toàn quốc">🌐 Toàn quốc (Tất cả khu vực)</option>
-
-                        <!-- ĐỊA PHƯƠNG CHÂU THÀNH & AN GIANG -->
                         <optgroup label="📍 Huyện Châu Thành & Tỉnh An Giang">
                             <option value="Huyện Châu Thành - An Giang" selected>Huyện Châu Thành (An Giang)</option>
                             <option value="Xã An Hòa - Châu Thành">Xã An Hòa (Châu Thành)</option>
@@ -193,11 +188,7 @@
                             <option value="TP. Long Xuyên - An Giang">TP. Long Xuyên (An Giang)</option>
                             <option value="TP. Châu Đốc - An Giang">TP. Châu Đốc (An Giang)</option>
                             <option value="TX. Tân Châu - An Giang">TX. Tân Châu (An Giang)</option>
-                            <option value="Huyện Thoại Sơn - An Giang">Huyện Thoại Sơn (An Giang)</option>
-                            <option value="Huyện Chợ Mới - An Giang">Huyện Chợ Mới (An Giang)</option>
                         </optgroup>
-
-                        <!-- 6 THÀNH PHỐ TRỰC THUỘC TRUNG ƯƠNG -->
                         <optgroup label="🏙️ 6 Thành phố trực thuộc Trung ương">
                             <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
                             <option value="Hà Nội">Hà Nội</option>
@@ -205,44 +196,6 @@
                             <option value="Đà Nẵng">Đà Nẵng</option>
                             <option value="Hải Phòng">Hải Phòng</option>
                             <option value="Huế">TP. Huế</option>
-                        </optgroup>
-
-                        <!-- CÁC TỈNH MIỀN NAM & ĐBSCL -->
-                        <optgroup label="📍 Các tỉnh Miền Nam & ĐBSCL">
-                            <option value="Bình Dương">Bình Dương</option>
-                            <option value="Đồng Nai">Đồng Nai</option>
-                            <option value="Bà Rịa - Vũng Tàu">Bà Rịa - Vũng Tàu</option>
-                            <option value="Long An">Long An</option>
-                            <option value="Kiên Giang">Kiên Giang</option>
-                            <option value="Đồng Tháp">Đồng Tháp</option>
-                            <option value="Tiền Giang">Tiền Giang</option>
-                            <option value="Vĩnh Long">Vĩnh Long</option>
-                            <option value="Bến Tre">Bến Tre</option>
-                            <option value="Tây Ninh">Tây Ninh</option>
-                            <option value="Sóc Trăng">Sóc Trăng</option>
-                            <option value="Bạc Liêu">Bạc Liêu</option>
-                            <option value="Cà Mau">Cà Mau</option>
-                            <option value="Trà Vinh">Trà Vinh</option>
-                            <option value="Hậu Giang">Hậu Giang</option>
-                        </optgroup>
-
-                        <!-- MIỀN TRUNG, TÂY NGUYÊN & MIỀN BẮC -->
-                        <optgroup label="⛰️ Các Tỉnh Miền Trung, Tây Nguyên & Miền Bắc">
-                            <option value="Lâm Đồng">Lâm Đồng</option>
-                            <option value="Khánh Hòa">Khánh Hòa</option>
-                            <option value="Bình Thuận">Bình Thuận</option>
-                            <option value="Bình Định">Bình Định</option>
-                            <option value="Quảng Nam">Quảng Nam</option>
-                            <option value="Đắk Lắk">Đắk Lắk</option>
-                            <option value="Gia Lai">Gia Lai</option>
-                            <option value="Quảng Ninh">Quảng Ninh</option>
-                            <option value="Bắc Ninh">Bắc Ninh</option>
-                            <option value="Hải Dương">Hải Dương</option>
-                            <option value="Hưng Yên">Hưng Yên</option>
-                            <option value="Thái Nguyên">Thái Nguyên</option>
-                            <option value="Lào Cai">Lào Cai</option>
-                            <option value="Thanh Hóa">Thanh Hóa</option>
-                            <option value="Nghệ An">Nghệ An</option>
                         </optgroup>
                     </select>
                 </div>
@@ -297,25 +250,89 @@
         </div>
     </div>
 
-    <!-- MODAL ĐĂNG KÝ CÁ NHÂN -->
+    <!-- MODAL ĐĂNG KÝ HỒ SƠ THỢ -->
     <div id="workerModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center">
                 <h3 class="font-extrabold text-slate-900 text-base">Đăng ký hồ sơ Thợ / Cá nhân</h3>
-                <button id="btnCloseWorkerModal" class="text-slate-400"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button id="btnCloseWorkerModal" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <form id="workerForm" class="space-y-3">
-                <input type="text" id="workerNameInput" required placeholder="Họ và tên thợ" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <input type="tel" id="workerPhoneInput" required placeholder="Số điện thoại cá nhân" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <input type="text" id="workerLocationInput" placeholder="Khu vực hoạt động (Ví dụ: Châu Thành, An Giang)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <input type="text" id="workerSkillInput" placeholder="Nghề nghiệp / Kỹ năng (Ví dụ: Thợ hồ, Thợ sơn...)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Họ và tên thợ *</label>
+                    <input type="text" id="workerNameInput" required placeholder="Ví dụ: Nguyễn Văn A" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại cá nhân *</label>
+                    <input type="tel" id="workerPhoneInput" required placeholder="Ví dụ: 0912345678" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Khu vực hoạt động</label>
+                    <input type="text" id="workerLocationInput" placeholder="Ví dụ: Châu Thành, An Giang" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nghề nghiệp / Kỹ năng</label>
+                    <input type="text" id="workerSkillInput" placeholder="Ví dụ: Thợ hồ, Thợ sơn, Điện nước..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" id="btnCancelWorkerModal" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold">Hủy</button>
-                    <button type="submit" class="px-4 py-2 bg-teal-600 rounded-xl text-xs font-bold text-white">Gửi hồ sơ</button>
+                    <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 rounded-xl text-xs font-bold text-white cursor-pointer">Gửi hồ sơ</button>
                 </div>
             </form>
         </div>
     </div>
+
+    <!-- SCRIPT XỬ LÝ TRỰC TIẾP ĐĂNG KÝ THỢ ĐỂ KHÔNG BỊ LỖI GỬI -->
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        const SUPABASE_URL = 'https://rznzypehvmwysxmjxxxp.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6bnp5cGVodm13eXN4bWp4eHhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNTkxNTYsImV4cCI6MjEwODkzNTE1Nn0.B-5onxhT0EoqgtJ0ZP-ZbGSz4Gmo7xuRPEcsAYz65wA';
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const workerModal = document.getElementById('workerModal');
+            const workerForm = document.getElementById('workerForm');
+
+            document.getElementById('btnRegisterWorker')?.addEventListener('click', () => { 
+                workerModal?.classList.remove('hidden'); 
+                workerModal?.classList.add('flex'); 
+            });
+
+            document.getElementById('btnCloseWorkerModal')?.addEventListener('click', () => workerModal?.classList.add('hidden'));
+            document.getElementById('btnCancelWorkerModal')?.addEventListener('click', () => workerModal?.classList.add('hidden'));
+
+            workerForm?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const name = document.getElementById('workerNameInput')?.value.trim();
+                const phone = document.getElementById('workerPhoneInput')?.value.trim();
+                const location = document.getElementById('workerLocationInput')?.value.trim();
+                const skill = document.getElementById('workerSkillInput')?.value.trim();
+
+                if (!name || !phone) {
+                    alert("Vui lòng nhập đầy đủ họ tên và số điện thoại cá nhân!");
+                    return;
+                }
+
+                const { error } = await supabase.from('workers').insert([{
+                    name: name,
+                    phone: phone,
+                    location: location || 'Châu Thành, An Giang',
+                    skill: skill || 'Thợ tự do',
+                    status: 'pending'
+                }]);
+                
+                if (error) {
+                    alert("Lỗi khi gửi hồ sơ: " + error.message);
+                } else {
+                    alert("🎉 Gửi hồ sơ thợ thành công! Hồ sơ đang chờ Quản trị viên (Admin) phê duyệt.");
+                    workerModal?.classList.add('hidden');
+                    workerForm.reset();
+                }
+            });
+        });
+    </script>
 
     <!-- SCRIPT CHÍNH -->
     <script type="module" src="js/app.js"></script>

@@ -66,15 +66,15 @@
                 <p class="text-xs text-slate-600"><i class="fa-solid fa-lock text-amber-500 mr-1"></i> Tính năng duyệt hồ sơ thợ & tổ chức dành riêng cho Quản trị viên (Admin).</p>
                 <div class="flex justify-center gap-2 max-w-xs mx-auto">
                     <input type="password" id="adminPasswordInput" placeholder="Mật khẩu Admin..." class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-teal-600">
-                    <button id="btnAdminLogin" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition cursor-pointer">Mở khóa</button>
+                    <button type="button" id="btnAdminLogin" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition cursor-pointer">Mở khóa</button>
                 </div>
             </div>
 
-            <!-- DANH SÁCH CHỜ DUYỆT (Ẩn mặc định, chỉ hiện khi nhập đúng MK Admin) -->
+            <!-- DANH SÁCH CHỜ DUYỆT (Ẩn mặc định, hiện khi nhập đúng MK Admin) -->
             <div id="adminPanel" class="hidden space-y-6 pt-2">
                 <div class="flex justify-between items-center bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-xs text-emerald-800 font-semibold">
                     <span>🔓 Đã mở khóa quyền Quản trị viên (Admin)</span>
-                    <button id="btnAdminLogout" class="text-red-600 hover:underline cursor-pointer">Khóa lại</button>
+                    <button type="button" id="btnAdminLogout" class="text-red-600 hover:underline cursor-pointer">Khóa lại</button>
                 </div>
                 
                 <!-- 1. Danh sách Thợ/Cá nhân chờ duyệt -->

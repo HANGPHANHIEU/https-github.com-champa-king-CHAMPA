@@ -11,8 +11,8 @@
     
     <!-- ÉP CHỐNG CACHE SAFARI IPAD -->
     <script>
-        if (!window.location.search.includes('v=2026_fix_final')) {
-            window.location.replace(window.location.pathname + '?v=2026_fix_final');
+        if (!window.location.search.includes('v=2026_fix_duplicate_check')) {
+            window.location.replace(window.location.pathname + '?v=2026_fix_duplicate_check');
         }
     </script>
 </head>
@@ -390,10 +390,16 @@
         </div>
     </div>
 
-    <!-- NẠP FILE TỪ ĐIỂN & XỬ LÝ SONG NGỮ (language-switcher.js) -->
-    <script src="language-switcher.js"></script>
+    <!-- SCRIPT TỰ ĐỘNG NẠP WIDGET NGÔN NGỮ -->
+    <script>
+        fetch('language-widget.html')
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('languageWidgetContainer').innerHTML = html;
+            });
+    </script>
 
-    <!-- SCRIPT XỬ LÝ HỆ THỐNG SUPABASE & XÓA / NHẬN VIỆC (ĐỒNG BỘ LOCALSTORAGE) -->
+    <!-- SCRIPT XỬ LÝ HỆ THỐNG -->
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
@@ -403,7 +409,6 @@
 
         let tempGeneratedOtp = null;
         let tempRegisterPhone = null;
-        const ADMIN_PHONE = '0966507481'; // Số điện thoại Admin
 
         document.addEventListener('DOMContentLoaded', async () => {
             const loggedPhone = localStorage.getItem('viecgap_logged_phone');
@@ -437,15 +442,9 @@
             document.getElementById('btnCloseModal')?.addEventListener('click', () => document.getElementById('postJobModal')?.classList.add('hidden'));
             document.getElementById('btnCancelModal')?.addEventListener('click', () => document.getElementById('postJobModal')?.classList.add('hidden'));
 
-            // GỬI THÔNG TIN ĐĂNG VIỆC MỚI (LƯU KÈM SỐ ĐIỆN THOẠI)
+            // GỬI THÔNG TIN ĐĂNG VIỆC MỚI
             document.getElementById('postJobForm')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const currentPhone = localStorage.getItem('viecgap_logged_phone');
-                if (!currentPhone) {
-                    alert(window.currentLang === 'vi' ? '⚠️ Vui lòng đăng nhập số điện thoại trước khi đăng việc!' : '⚠️ Please login before posting a job!');
-                    return;
-                }
-
                 const category = document.getElementById('jobCategoryInput')?.value;
                 const title = document.getElementById('jobTitleInput')?.value.trim();
                 const location = document.getElementById('jobLocationInput')?.value;
@@ -461,7 +460,6 @@
                     title: title,
                     location: location,
                     salary: salary,
-                    phone: currentPhone,
                     status: 'active',
                     created_at: new Date()
                 }]);
@@ -532,53 +530,6 @@
             });
         });
 
-        // HÀM NHẬN VIỆC (ĐỌC TRỰC TIẾP TỪ LOCALSTORAGE ĐỂ KHÔNG BỊ LỖI ĐĂNG NHẬP)
-        window.handleAcceptJob = async (jobId) => {
-            const currentPhone = localStorage.getItem('viecgap_logged_phone');
-            if (!currentPhone) {
-                alert(window.currentLang === 'vi' ? '⚠️ Vui lòng đăng nhập trước khi nhận việc!' : '⚠️ Please login before accepting jobs!');
-                window.toggleAuthBox?.();
-                return;
-            }
-
-            const { error } = await supabase
-                .from('jobs')
-                .update({ 
-                    status: 'accepted',
-                    accepted_by: currentPhone,
-                    accepted_at: new Date()
-                })
-                .eq('id', jobId);
-
-            if (!error) {
-                alert(window.currentLang === 'vi' ? '🎉 Nhận việc thành công!' : '🎉 Job accepted successfully!');
-                location.reload();
-            } else {
-                alert('❌ Lỗi: ' + error.message);
-            }
-        };
-
-        // HÀM XÓA BÀI ĐĂNG (CHỈ CHỦ BÀI HOẶC ADMIN)
-        window.deleteJobPost = async (jobId, jobPosterPhone) => {
-            const currentPhone = localStorage.getItem('viecgap_logged_phone');
-            if (!currentPhone || (currentPhone !== jobPosterPhone && currentPhone !== ADMIN_PHONE)) {
-                alert(window.currentLang === 'vi' ? '❌ Bạn không có quyền xóa bài viết này!' : '❌ You do not have permission to delete this post!');
-                return;
-            }
-
-            if (!confirm(window.currentLang === 'vi' ? '⚠️ Bạn có chắc chắn muốn xóa bài đăng này không?' : '⚠️ Are you sure you want to delete this job?')) {
-                return;
-            }
-
-            const { error } = await supabase.from('jobs').delete().eq('id', jobId);
-            if (!error) {
-                alert(window.currentLang === 'vi' ? '🎉 Xóa bài viết thành công!' : '🎉 Job deleted successfully!');
-                location.reload();
-            } else {
-                alert('❌ Lỗi khi xóa: ' + error.message);
-            }
-        };
-
         window.currentSelectedLocation = 'ALL';
         window.filterJobsByLocation = (loc) => {
             window.currentSelectedLocation = loc;
@@ -613,6 +564,7 @@
             }
         };
 
+        // KIỂM TRA TRÙNG SỐ ĐIỆN THOẠI TRƯỚC KHI GỬI OTP
         window.requestRegisterOTP = async () => {
             const phone = document.getElementById('regPhoneInput')?.value?.trim();
             if (!phone || phone.length < 9) {

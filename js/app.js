@@ -9,7 +9,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const ADMIN_PHONE = '0966507481';
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG HOÀN CHỈNH ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG HOÀN CHỈNH (TIẾNG VIỆT & THÙNG RÁC) ---");
 
     // 1. Dọn dẹp modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetFooter = document.getElementById('resetFooter');
     const loginBtnText = document.getElementById('loginBtnText');
 
-    // Kiểm tra trạng thái đăng nhập từ LocalStorage (Đồng bộ cả 2 khóa)
+    // Kiểm tra trạng thái đăng nhập từ LocalStorage
     const checkLoginStatus = () => {
         const loggedPhone = localStorage.getItem('viecgap_user_phone') || localStorage.getItem('viecgap_logged_phone');
         const isLoggedIn = !!loggedPhone;
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     };
 
-    // --- HÀM RENDER THÙNG RÁC ---
+    // --- HÀM RENDER THÙNG RÁC (ĐẦY ĐỦ TÍNH NĂNG) ---
     const renderTrashList = () => {
         const trashContainer = document.getElementById('trashList');
         const trashBadge = document.getElementById('trashBadge');
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!trashContainer) return;
 
         if (deletedJobs.length === 0) {
-            trashContainer.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs" data-i18n="emptyTrash">Thùng rác trống.</div>`;
+            trashContainer.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">Thùng rác trống.</div>`;
             return;
         }
 
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 actionButtonHTML = `
                     <button onclick="window.handleTakeJob('${job.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1 shadow-sm">
-                        <span data-i18n="btnAcceptJob">Nhận việc</span> &rarr;
+                        <span>Nhận việc</span> &rarr;
                     </button>
                 `;
             }
@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${actionButtonHTML}
                             ${isOwner ? `
                                 <button onclick="window.handleDeleteJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1">
-                                    <i class="fa-solid fa-trash-can"></i> <span data-i18n="deleteBtn">Xóa</span>
+                                    <i class="fa-solid fa-trash-can"></i> <span>Xóa</span>
                                 </button>
                             ` : ''}
                         </div>
@@ -313,11 +313,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderApprovedOrgs();
         renderApprovedWorkers();
         renderTrashList();
-
-        // Tự động gọi hàm dịch nếu file language-switcher.js tồn tại
-        if (typeof window.applyLanguage === 'function') {
-            window.applyLanguage(window.currentLang);
-        }
     };
 
     // Lắng nghe sự kiện lọc khu vực từ thanh filter
@@ -579,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Khởi chạy
+    // Khởi chạy ứng dụng
     window.renderJobs();
 
     // Realtime sync đa thiết bị

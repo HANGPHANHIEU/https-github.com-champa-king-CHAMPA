@@ -8,104 +8,91 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ADMIN_PHONE = '0966507481';
 
-// --- BẢNG TỪ ĐIỂN ĐẦY ĐỦ CHO TOÀN BỘ GIAO DIỆN ---
-const textMap = {
-    // Header & Thông tin chung
-    "Việc Gấp": "Quick Jobs",
-    "Kết nối lao động nhanh chóng": "Fast Labor Connection",
-    "Hoa hồng 1%": "1% Commission",
-    "Quản lý nhận việc": "Manage Workers",
-    "Đăng ký / Đăng nhập": "Register / Login",
-    "SĐT đang kết nối:": "Connected Phone:",
-    "Đăng xuất": "Logout",
-    
-    // Banner Hero
-    "CỘNG ĐỒNG UY TÍN CHÂU THÀNH & TOÀN QUỐC": "CHAU THANH & NATIONWIDE TRUSTED COMMUNITY",
-    "Cộng đồng uy tín Châu Thành & Toàn quốc": "Chau Thanh & Nationwide Trusted Community",
-    "Cần thợ gấp? Hoặc tìm việc làm ngay trong ngày?": "Need workers fast? Or looking for daily jobs?",
-    "Nền tảng kết nối trực tiếp người cần thuê và người nhận việc an toàn, bảo mật và minh bạch.": "Direct platform connecting hirers and job seekers safely, securely, and transparently.",
-    "Đăng việc ngay": "Post Job Now",
-
-    // Các Tab điều hướng chính
-    "Bảng tin việc làm": "Job Feed",
-    "Việc đã nhận": "Accepted Jobs",
-    "Tổ chức/Đối tác": "Organizations",
-    "Hồ sơ thợ": "Workers Profile",
-
-    // Bộ lọc khu vực
-    "Lọc nhanh theo khu vực:": "Filter by location:",
-    "Tất cả khu vực": "All Locations",
-
-    // Nhãn hành động & trạng thái
-    "Nhận việc": "Accept Job",
-    "Xóa": "Delete",
-    "Hủy nhận": "Cancel",
-    "Khôi phục": "Restore",
-    "Xóa hẳn": "Delete Permanently",
-    "Đăng nhập tài khoản": "Login Account",
-    "Đã xác minh": "Verified",
-    "Thế mạnh": "Strength",
-    "Kỹ năng/Nghề nghiệp": "Skills",
-    "Thông tin bảo mật": "Confidential",
-    "Gấp": "Urgent",
-    "Thỏa thuận": "Negotiable",
-    "Lương": "Salary",
-    "Chưa có công việc nào ở khu vực này. Hãy đăng việc ngay!": "No jobs available in this area. Post a job now!",
-    "Bạn chưa nhận công việc nào.": "You have not accepted any jobs.",
-    "Thùng rác trống.": "Trash is empty."
-};
+// --- BẢNG TỪ ĐIỂN ĐỐI CHIẾU SONG NGỮ (VIỆT - ANH) ---
+const translationPairs = [
+    { vi: "Việc Gấp", en: "Quick Jobs" },
+    { vi: "Kết nối lao động nhanh chóng", en: "Fast Labor Connection" },
+    { vi: "Hoa hồng 1%", en: "1% Commission" },
+    { vi: "Quản lý nhận việc", en: "Manage Workers" },
+    { vi: "Đăng ký / Đăng nhập", en: "Register / Login" },
+    { vi: "CỘNG ĐỒNG UY TÍN CHÂU THÀNH & TOÀN QUỐC", en: "CHAU THANH & NATIONWIDE TRUSTED COMMUNITY" },
+    { vi: "Cộng đồng uy tín Châu Thành & Toàn quốc", en: "Chau Thanh & Nationwide Trusted Community" },
+    { vi: "Cần thợ gấp? Hoặc tìm việc làm ngay trong ngày?", en: "Need workers fast? Or looking for daily jobs?" },
+    { vi: "Nền tảng kết nối trực tiếp người cần thuê và người nhận việc an toàn, bảo mật và minh bạch.", en: "Direct platform connecting hirers and job seekers safely, securely, and transparently." },
+    { vi: "Đăng việc ngay", en: "Post Job Now" },
+    { vi: "Bảng tin việc làm", en: "Job Feed" },
+    { vi: "Việc đã nhận", en: "Accepted Jobs" },
+    { vi: "Tổ chức/Đối tác", en: "Organizations" },
+    { vi: "Hồ sơ thợ", en: "Workers Profile" },
+    { vi: "Lọc nhanh theo khu vực:", en: "Filter by location:" },
+    { vi: "Tất cả khu vực", en: "All Locations" },
+    { vi: "Nhận việc", en: "Accept Job" },
+    { vi: "Xóa", en: "Delete" },
+    { vi: "Hủy nhận", en: "Cancel" },
+    { vi: "Khôi phục", en: "Restore" },
+    { vi: "Xóa hẳn", en: "Delete Permanently" },
+    { vi: "Đăng nhập tài khoản", en: "Login Account" },
+    { vi: "Đăng xuất", en: "Logout" },
+    { vi: "Đã xác minh", en: "Verified" },
+    { vi: "Thế mạnh", en: "Strength" },
+    { vi: "Kỹ năng/Nghề nghiệp", en: "Skills" },
+    { vi: "Thông tin bảo mật", en: "Confidential" },
+    { vi: "Gấp", en: "Urgent" },
+    { vi: "Thỏa thuận", en: "Negotiable" },
+    { vi: "Lương", en: "Salary" },
+    { vi: "Chưa có công việc nào ở khu vực này. Hãy đăng việc ngay!", en: "No jobs available in this area. Post a job now!" },
+    { vi: "Bạn chưa nhận công việc nào.", en: "You have not accepted any jobs." },
+    { vi: "Thùng rác trống.", en: "Trash is empty." },
+    { vi: "Công việc đã có người nhận", en: "This job has been accepted" },
+    { vi: "Thợ nhận việc:", en: "Accepted Worker:" },
+    { vi: "Công việc đã hoàn tất (Đã tính 1% phí)", en: "Completed (1% fee applied)" }
+];
 
 // Trạng thái ngôn ngữ toàn cục
 window.currentLang = localStorage.getItem('app_language') || 'vi';
 
-// --- HÀM ÁP DỤNG NGÔN NGỮ QUÉT TOÀN BỘ DOM ---
+// --- HÀM THỰC THI CHUYỂN ĐỔI TOÀN BỘ TEXT TRÊN TRANG ---
 window.applyLanguage = function(lang) {
     if (lang) window.currentLang = lang;
     localStorage.setItem('app_language', window.currentLang);
     const isEn = window.currentLang === 'en';
 
-    // 1. Đổi chữ trên nút bấm đổi ngôn ngữ Header
+    // 1. Cập nhật chữ trên nút đổi ngôn ngữ Header
     const langBtnText = document.getElementById('langBtnText') || document.getElementById('activeLangText');
     if (langBtnText) {
         langBtnText.textContent = isEn ? 'VN' : 'EN';
     }
 
-    // 2. Dùng TreeWalker quét tất cả các node text trên toàn bộ trang để dịch chuẩn xác
+    // 2. Dùng TreeWalker quét toàn bộ các node văn bản trên trang để thay thế đồng loạt
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
     let node;
     while (node = walker.nextNode()) {
-        let text = node.nodeValue.trim();
-        if (!text) continue;
+        let val = node.nodeValue.trim();
+        if (!val) continue;
 
-        if (isEn) {
-            for (let [vi, en] of Object.entries(textMap)) {
-                if (text === vi) {
-                    node.nodeValue = node.nodeValue.replace(vi, en);
-                }
+        translationPairs.forEach(pair => {
+            if (isEn && val === pair.vi) {
+                node.nodeValue = node.nodeValue.replace(pair.vi, pair.en);
+            } else if (!isEn && val === pair.en) {
+                node.nodeValue = node.nodeValue.replace(pair.en, pair.vi);
             }
-        } else {
-            for (let [vi, en] of Object.entries(textMap)) {
-                if (text === en) {
-                    node.nodeValue = node.nodeValue.replace(en, vi);
-                }
-            }
-        }
+        });
     }
 
-    // 3. Render lại danh sách việc làm để đồng bộ ngôn ngữ các thành phần động
+    // 3. Render lại bảng tin để cập nhật ngôn ngữ cho các thành phần động
     if (typeof window.renderJobs === 'function') {
         window.renderJobs('ALL');
     }
 };
 
-// --- HÀM BẤM CHUYỂN ĐỔI NGÔN NGỮ ---
+// --- HÀM BẤM NÚT CHUYỂN ĐỔI ---
 window.toggleLanguage = function() {
     window.currentLang = window.currentLang === 'vi' ? 'en' : 'vi';
     window.applyLanguage(window.currentLang);
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (FULL TEXT WALKER TRANSLATE) ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (FULL TRANSITION ACTIVE) ---");
 
     // Tự động chèn nút đổi ngôn ngữ lên Header nếu chưa có
     let langContainer = document.getElementById('languageWidgetContainer');
@@ -273,8 +260,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const isEn = window.currentLang === 'en';
-
         acceptedContainer.innerHTML = myAcceptedJobs.map(job => `
             <div class="bg-white border border-teal-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between gap-3">
                 <div class="flex justify-between items-start">
@@ -287,9 +272,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-50">
                     <span><i class="fa-solid fa-location-dot mr-1"></i>${job.location}</span>
                     <div class="flex items-center gap-2">
-                        <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check-circle mr-1"></i>${isEn ? 'Accepted' : 'Đã nhận việc'}</span>
+                        <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check-circle mr-1"></i>Đã nhận việc</span>
                         <button onclick="window.handleRemoveAcceptedJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5">
-                            <i class="fa-solid fa-trash-can"></i> ${isEn ? 'Cancel' : 'Hủy nhận'}
+                            <i class="fa-solid fa-trash-can"></i> Hủy nhận
                         </button>
                     </div>
                 </div>
@@ -316,17 +301,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const isEn = window.currentLang === 'en';
-
         trashContainer.innerHTML = deletedJobs.map(job => `
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex justify-between items-center text-xs mb-2">
                 <div>
                     <h4 class="font-bold text-slate-800 text-sm">${job.title}</h4>
-                    <p class="text-slate-500">${job.location} | ${isEn ? 'Salary' : 'Lương'}: ${job.salary}</p>
+                    <p class="text-slate-500">${job.location} | Lương: ${job.salary}</p>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="window.handleRestoreJob('${job.id}')" class="bg-teal-100 text-teal-700 font-semibold px-2.5 py-1 rounded-lg">${isEn ? 'Restore' : 'Khôi phục'}</button>
-                    <button onclick="window.handlePermanentDeleteJob('${job.id}')" class="bg-red-100 text-red-700 font-semibold px-2.5 py-1 rounded-lg">${isEn ? 'Delete Permanently' : 'Xóa hẳn'}</button>
+                    <button onclick="window.handleRestoreJob('${job.id}')" class="bg-teal-100 text-teal-700 font-semibold px-2.5 py-1 rounded-lg">Khôi phục</button>
+                    <button onclick="window.handlePermanentDeleteJob('${job.id}')" class="bg-red-100 text-red-700 font-semibold px-2.5 py-1 rounded-lg">Xóa hẳn</button>
                 </div>
             </div>
         `).join('');
@@ -350,17 +333,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (jobCountElement) jobCountElement.innerText = jobs.length;
 
-        const isEn = window.currentLang === 'en';
-
         if (jobs.length === 0) {
-            jobListContainer.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">${isEn ? 'No jobs available in this area. Post a job now!' : 'Chưa có công việc nào ở khu vực này. Hãy đăng việc ngay!'}</div>`;
+            jobListContainer.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">Chưa có công việc nào ở khu vực này. Hãy đăng việc ngay!</div>`;
             return;
         }
 
         jobListContainer.innerHTML = jobs.map(job => {
             const jobPosterPhone = job.phone || job.poster_phone || '';
             const isOwner = currentUserPhone && (currentUserPhone === jobPosterPhone || currentUserPhone === ADMIN_PHONE);
-            const dateStr = job.created_at ? new Date(job.created_at).toLocaleDateString(isEn ? 'en-US' : 'vi-VN') : (isEn ? 'Recent' : 'Gần đây');
+            const dateStr = job.created_at ? new Date(job.created_at).toLocaleDateString('vi-VN') : 'Gần đây';
 
             let actionButtonHTML = '';
             let acceptedStatusHTML = '';
@@ -369,28 +350,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentUserPhone && currentUserPhone === jobPosterPhone) {
                     acceptedStatusHTML = `
                         <div class="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs flex items-center justify-between">
-                            <span class="text-emerald-800 font-medium"><i class="fa-solid fa-user-check mr-1"></i> ${isEn ? 'Accepted Worker:' : 'Thợ nhận việc:'}</span>
+                            <span class="text-emerald-800 font-medium"><i class="fa-solid fa-user-check mr-1"></i> Thợ nhận việc:</span>
                             <a href="tel:${job.accepted_by}" class="font-bold text-teal-700 hover:underline">📞 ${job.accepted_by}</a>
                         </div>
                     `;
                 } else {
                     acceptedStatusHTML = `
                         <div class="mt-2 p-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-500 flex items-center justify-between">
-                            <span><i class="fa-solid fa-lock mr-1 text-amber-500"></i> ${isEn ? 'This job has been accepted' : 'Công việc này đã có người nhận'}</span>
-                            <span class="text-[10px] italic text-slate-400">(${isEn ? 'Confidential' : 'Thông tin bảo mật'})</span>
+                            <span><i class="fa-solid fa-lock mr-1 text-amber-500"></i> Công việc này đã có người nhận</span>
+                            <span class="text-[10px] italic text-slate-400">(Thông tin bảo mật)</span>
                         </div>
                     `;
                 }
             } else if (job.status === 'completed') {
                 acceptedStatusHTML = `
                     <div class="mt-2 p-2 bg-teal-50 border border-teal-200 rounded-xl text-xs text-teal-800 flex items-center justify-between">
-                        <span><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> ${isEn ? 'Completed (1% fee applied)' : 'Công việc đã hoàn tất (Đã tính 1% phí)'}</span>
+                        <span><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Công việc đã hoàn tất (Đã tính 1% phí)</span>
                     </div>
                 `;
             } else {
                 actionButtonHTML = `
                     <button onclick="window.handleTakeJob('${job.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1 shadow-sm">
-                        <span>${isEn ? 'Accept Job' : 'Nhận việc'}</span> &rarr;
+                        <span>Nhận việc</span> &rarr;
                     </button>
                 `;
             }
@@ -401,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="bg-teal-50 text-teal-700 text-[11px] font-semibold px-2 py-0.5 rounded-md uppercase">${job.category || 'Khác'}</span>
-                                ${job.urgent ? `<span class="bg-amber-100 text-amber-700 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1"><i class="fa-solid fa-bolt text-[10px]"></i> ${isEn ? 'Urgent' : 'Gấp'}</span>` : ''}
+                                ${job.urgent ? '<span class="bg-amber-100 text-amber-700 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1"><i class="fa-solid fa-bolt text-[10px]"></i> Gấp</span>' : ''}
                             </div>
                             <h3 class="font-bold text-slate-900 text-base">${job.title}</h3>
                         </div>
@@ -419,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${actionButtonHTML}
                             ${isOwner ? `
                                 <button onclick="window.handleDeleteJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1">
-                                    <i class="fa-solid fa-trash-can"></i> <span>${isEn ? 'Delete' : 'Xóa'}</span>
+                                    <i class="fa-solid fa-trash-can"></i> <span>Xóa</span>
                                 </button>
                             ` : ''}
                         </div>
@@ -432,9 +413,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderApprovedOrgs();
         renderApprovedWorkers();
         renderTrashList();
-        
-        // Sau khi render xong bảng tin, quét lại toàn trang để đảm bảo các chữ tĩnh được dịch
-        if (isEn && typeof window.applyLanguage === 'function') {
+
+        // Sau khi render xong, kích hoạt quét ngôn ngữ toàn trang
+        if (window.currentLang === 'en') {
             window.applyLanguage('en');
         }
     };
@@ -448,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.handleTakeJob = async (jobId) => {
         const currentUserPhone = localStorage.getItem('viecgap_user_phone') || localStorage.getItem('viecgap_logged_phone');
         if (!currentUserPhone) {
-            alert(window.currentLang === 'en' ? "Please login before accepting a job!" : "Vui lòng đăng nhập trước khi nhận việc!");
+            alert("Vui lòng đăng nhập trước khi nhận việc!");
             openAuthModal();
             return;
         }
@@ -459,14 +440,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const job = jobs[0];
         const posterPhone = job.phone || job.poster_phone;
         if (posterPhone === currentUserPhone) {
-            alert(window.currentLang === 'en' ? "You cannot accept your own posted job!" : "Bạn không thể tự nhận công việc do chính mình đăng!");
+            alert("Bạn không thể tự nhận công việc do chính mình đăng!");
             return;
         }
 
-        if (confirm(window.currentLang === 'en' ? `Confirm accepting job: "${job.title}"?` : `Xác nhận nhận việc: "${job.title}"?`)) {
+        if (confirm(`Xác nhận nhận việc: "${job.title}"?`)) {
             const { error } = await supabase.from('jobs').update({ status: 'accepted', accepted_by: currentUserPhone }).eq('id', jobId);
             if (!error) {
-                alert(window.currentLang === 'en' ? "Job accepted successfully!" : "Nhận việc thành công!");
+                alert("Nhận việc thành công!");
                 window.renderJobs();
             } else {
                 alert("Lỗi: " + error.message);
@@ -475,10 +456,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.handleRemoveAcceptedJob = async (jobId) => {
-        if (confirm(window.currentLang === 'en' ? "Cancel accepting this job?" : "Hủy nhận công việc này?")) {
+        if (confirm("Hủy nhận công việc này?")) {
             const { error } = await supabase.from('jobs').update({ status: 'active', accepted_by: null }).eq('id', jobId);
             if (!error) {
-                alert(window.currentLang === 'en' ? "Job acceptance cancelled!" : "Đã hủy nhận việc!");
+                alert("Đã hủy nhận việc!");
                 window.renderJobs();
             }
         }
@@ -493,18 +474,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const posterPhone = job.phone || job.poster_phone;
 
         if (!currentUserPhone || (currentUserPhone !== posterPhone && currentUserPhone !== ADMIN_PHONE)) {
-            alert(window.currentLang === 'en' ? "You do not have permission to delete this post!" : "Bạn không có quyền xóa bài viết này!");
+            alert("Bạn không có quyền xóa bài viết này!");
             return;
         }
 
-        if (confirm(window.currentLang === 'en' ? "Delete this job post?" : "Xóa bài đăng này?")) {
+        if (confirm("Xóa bài đăng này?")) {
             const deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
             deletedJobs.push({ ...job, deletedAt: new Date().toLocaleString('vi-VN') });
             localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
 
             const { error } = await supabase.from('jobs').delete().eq('id', jobId);
             if (!error) {
-                alert(window.currentLang === 'en' ? "Job deleted!" : "Đã xóa công việc!");
+                alert("Đã xóa công việc!");
                 window.renderJobs();
             } else {
                 alert("Lỗi khi xóa: " + error.message);
@@ -520,13 +501,13 @@ document.addEventListener('DOMContentLoaded', () => {
             await supabase.from('jobs').insert([jobToRestore]);
             deletedJobs = deletedJobs.filter(j => j.id !== jobId);
             localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
-            alert(window.currentLang === 'en' ? "Job post restored!" : "Đã khôi phục bài đăng!");
+            alert("Đã khôi phục bài đăng!");
             window.renderJobs();
         }
     };
 
     window.handlePermanentDeleteJob = (jobId) => {
-        if (confirm(window.currentLang === 'en' ? "Permanently delete from trash?" : "Xóa vĩnh viễn khỏi thùng rác?")) {
+        if (confirm("Xóa vĩnh viễn khỏi thùng rác?")) {
             let deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
             deletedJobs = deletedJobs.filter(j => j.id !== jobId);
             localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
@@ -542,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('viecgap_logged_in', 'true');
             localStorage.setItem('viecgap_user_phone', phone);
             localStorage.setItem('viecgap_logged_phone', phone);
-            alert(window.currentLang === 'en' ? 'Login successful!' : 'Đăng nhập thành công!');
+            alert('Đăng nhập thành công!');
             closeAuthModal();
             window.renderJobs();
         }
@@ -559,7 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openPostJob = () => {
         const loggedPhone = localStorage.getItem('viecgap_user_phone') || localStorage.getItem('viecgap_logged_phone');
         if (!loggedPhone) {
-            alert(window.currentLang === 'en' ? 'Please login before posting a job!' : 'Vui lòng đăng nhập trước khi đăng công việc!');
+            alert('Vui lòng đăng nhập trước khi đăng công việc!');
             openAuthModal();
             return;
         }
@@ -597,7 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (error) {
             alert("Lỗi đăng việc: " + error.message);
         } else {
-            alert(window.currentLang === 'en' ? "Job posted successfully!" : "Đăng việc thành công!");
+            alert("Đăng việc thành công!");
             closePostJobModal();
             window.renderJobs();
         }
@@ -627,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         const { error } = await supabase.from('organizations').insert([newOrg]);
         if (!error) {
-            alert(window.currentLang === 'en' ? "Organization application submitted, awaiting Admin approval!" : "Đã gửi hồ sơ tổ chức chờ Admin duyệt!");
+            alert("Đã gửi hồ sơ tổ chức chờ Admin duyệt!");
             orgModal?.classList.add('hidden');
             orgForm.reset();
         } else {
@@ -654,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const skill = document.getElementById('workerSkillInput')?.value;
 
         if (!name || !phone) {
-            alert(window.currentLang === 'en' ? "Please enter your full name and phone number!" : "Vui lòng nhập đầy đủ họ tên và số điện thoại cá nhân!");
+            alert("Vui lòng nhập đầy đủ họ tên và số điện thoại cá nhân!");
             return;
         }
 
@@ -671,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (error) {
             alert("Lỗi khi gửi hồ sơ: " + error.message);
         } else {
-            alert(window.currentLang === 'en' ? "🎉 Worker application submitted successfully! Waiting for Admin approval." : "🎉 Gửi hồ sơ thợ thành công! Hồ sơ của bạn đang chờ Quản trị viên (Admin) phê duyệt.");
+            alert("🎉 Gửi hồ sơ thợ thành công! Hồ sơ của bạn đang chờ Quản trị viên (Admin) phê duyệt.");
             workerModal?.classList.add('hidden');
             workerForm.reset();
         }
@@ -698,7 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Khởi chạy ứng dụng và kích hoạt quét dịch toàn trang ngay lập tức
+    // Khởi chạy ứng dụng
     window.renderJobs();
     if (window.currentLang === 'en') {
         setTimeout(() => window.applyLanguage('en'), 300);

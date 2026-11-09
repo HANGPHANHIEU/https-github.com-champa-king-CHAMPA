@@ -1,4 +1,4 @@
-// BỘ TỪ ĐIỂN SONG NGỮ (VIỆT - ANH)
+// BỘ TỪ ĐIỂN SONG NGỮ (VIỆT - ANH) CHO "VIỆC GẤP"
 const translations = {
     vi: {
         appTitle: "Việc Gấp",
@@ -16,7 +16,7 @@ const translations = {
         btnSendOtp: "Gửi mã xác thực qua Zalo / WhatsApp",
         btnConfirmReg: "Xác nhận Đăng ký & Đăng nhập ngay",
         loginPassLabel: "Mật khẩu truy cập",
-        btnChangePass: "Đổi mật khẩu?",
+        btnChangePass: "Đổi mật khẩu",
         btnForgotPass: "Quên mật khẩu? (Mã Zalo/WA)",
         btnConfirmLogin: "Xác nhận Đăng nhập",
         connectedPhone: "SĐT đang kết nối:",
@@ -44,7 +44,9 @@ const translations = {
         changePassTitle: "Đổi mật khẩu tài khoản",
         oldPassLabel: "Mật khẩu hiện tại *",
         newPassLabel: "Mật khẩu mới (tối thiểu 4 ký tự) *",
-        confirmChangePass: "Xác nhận đổi mật khẩu"
+        confirmChangePass: "Xác nhận đổi mật khẩu",
+        btnAcceptJob: "Nhận việc",
+        deleteBtn: "Xóa"
     },
     en: {
         appTitle: "Quick Jobs",
@@ -62,7 +64,7 @@ const translations = {
         btnSendOtp: "Send OTP via Zalo / WhatsApp",
         btnConfirmReg: "Confirm Register & Login",
         loginPassLabel: "Password",
-        btnChangePass: "Change Password?",
+        btnChangePass: "Change Password",
         btnForgotPass: "Forgot Password? (Zalo/WA)",
         btnConfirmLogin: "Confirm Login",
         connectedPhone: "Connected Phone:",
@@ -90,24 +92,26 @@ const translations = {
         changePassTitle: "Change Password",
         oldPassLabel: "Current Password *",
         newPassLabel: "New Password (min 4 chars) *",
-        confirmChangePass: "Confirm Change Password"
+        confirmChangePass: "Confirm Change Password",
+        btnAcceptJob: "Accept Job",
+        deleteBtn: "Delete"
     }
 };
 
 window.currentLang = localStorage.getItem('app_language') || 'vi';
 
-// Hàm thực hiện dịch văn bản
+// Hàm áp dụng ngôn ngữ lên toàn bộ trang và thẻ động
 window.applyLanguage = function(lang) {
     if (lang) window.currentLang = lang;
     localStorage.setItem('app_language', window.currentLang);
 
-    // Cập nhật nhãn nút bấm
+    // Cập nhật nhãn nút bấm trên header
     const btnText = document.getElementById('langBtnText');
     if (btnText) {
         btnText.textContent = window.currentLang === 'vi' ? 'EN' : 'VN';
     }
 
-    // Dịch tất cả các thẻ có data-i18n
+    // Dịch toàn bộ các phần tử có thuộc tính data-i18n
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[window.currentLang] && translations[window.currentLang][key]) {
@@ -116,15 +120,19 @@ window.applyLanguage = function(lang) {
     });
 };
 
-// Hàm bấm chuyển đổi ngôn ngữ
+// Hàm bấm chuyển đổi qua lại giữa VI và EN
 window.toggleLanguage = function() {
     window.currentLang = window.currentLang === 'vi' ? 'en' : 'vi';
     window.applyLanguage(window.currentLang);
+    
+    // Gọi lại hàm render bài đăng (nếu có) để cập nhật chữ trên danh sách việc làm
+    if (typeof window.renderJobs === 'function') {
+        window.renderJobs(window.currentSelectedLocation || 'ALL');
+    }
 };
 
-// Khởi tạo tự động chèn nút bấm và dịch ngay khi DOM sẵn sàng
+// Tự động chèn nút bấm ngôn ngữ vào Header nếu chưa có container
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Tự động chèn nút bấm vào Header nếu chưa có container
     let container = document.getElementById('languageWidgetContainer');
     if (!container) {
         const headerFlex = document.querySelector('header .max-w-4xl > div:last-child');
@@ -138,11 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (container && !document.getElementById('langBtnText')) {
         container.innerHTML = `
             <button type="button" onclick="window.toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer border border-slate-300">
-                <i class="fa-solid fa-globe text-teal-600"></i> <span id="langBtnText">EN</span>
+                <i class="fa-solid fa-globe text-teal-600"></i> <span id="langBtnText">${window.currentLang === 'vi' ? 'EN' : 'VN'}</span>
             </button>
         `;
     }
 
-    // 2. Chạy dịch lần đầu
+    // Kích hoạt dịch ngay khi nạp trang
     window.applyLanguage(window.currentLang);
 });

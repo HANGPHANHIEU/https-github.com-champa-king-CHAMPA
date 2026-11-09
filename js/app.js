@@ -42,28 +42,28 @@ const translationPairs = [
     { vi: "Lương", en: "Salary" },
     { vi: "Chưa có công việc nào ở khu vực này. Hãy đăng việc ngay!", en: "No jobs available in this area. Post a job now!" },
     { vi: "Bạn chưa nhận công việc nào.", en: "You have not accepted any jobs." },
-    { vi: "Thùng rác trống.", en: "Trash is empty." },
+    { vi: "Th thùng rác trống.", en: "Trash is empty." },
     { vi: "Công việc đã có người nhận", en: "This job has been accepted" },
     { vi: "Thợ nhận việc:", en: "Accepted Worker:" },
     { vi: "Công việc đã hoàn tất (Đã tính 1% phí)", en: "Completed (1% fee applied)" }
 ];
 
-// Trạng thái ngôn ngữ toàn cục
+// Lấy trạng thái ngôn ngữ hiện tại từ localStorage (mặc định là 'vi')
 window.currentLang = localStorage.getItem('app_language') || 'vi';
 
-// --- HÀM THỰC THI CHUYỂN ĐỔI TOÀN BỘ TEXT TRÊN TRANG ---
+// --- HÀM THỰC THI DỊCH TOÀN BỘ GIAO DIỆN ---
 window.applyLanguage = function(lang) {
     if (lang) window.currentLang = lang;
     localStorage.setItem('app_language', window.currentLang);
     const isEn = window.currentLang === 'en';
 
-    // 1. Cập nhật chữ trên nút đổi ngôn ngữ Header
+    // Cập nhật chữ hiển thị trên nút bấm (Đang ở VN thì hiện nút EN để bấm sang Anh, ngược lại đang ở EN thì hiện VN để bấm về Việt)
     const langBtnText = document.getElementById('langBtnText') || document.getElementById('activeLangText');
     if (langBtnText) {
-        langBtnText.textContent = isEn ? 'VN' : 'EN';
+        langBtnText.textContent = isEn ? 'VN (Tiếng Việt)' : 'EN (English)';
     }
 
-    // 2. Dùng TreeWalker quét toàn bộ các node văn bản trên trang để thay thế đồng loạt
+    // Quét toàn bộ văn bản trên trang để dịch đồng loạt
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
     let node;
     while (node = walker.nextNode()) {
@@ -79,20 +79,24 @@ window.applyLanguage = function(lang) {
         });
     }
 
-    // 3. Render lại bảng tin để cập nhật ngôn ngữ cho các thành phần động
     if (typeof window.renderJobs === 'function') {
         window.renderJobs('ALL');
     }
 };
 
-// --- HÀM BẤM NÚT CHUYỂN ĐỔI ---
+// --- HÀM BẤM NÚT CHUYỂN ĐỔI ANH <-> VIỆT TRỰC TIẾP ---
 window.toggleLanguage = function() {
-    window.currentLang = window.currentLang === 'vi' ? 'en' : 'vi';
-    window.applyLanguage(window.currentLang);
+    // Đảo ngược trạng thái ngôn ngữ
+    let newLang = window.currentLang === 'vi' ? 'en' : 'vi';
+    localStorage.setItem('app_language', newLang);
+    window.currentLang = newLang;
+
+    // Tải lại trang nhẹ nhàng để áp dụng toàn bộ từ điển mới mượt mà 100% trên Safari/iPad
+    location.reload();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (FULL TRANSITION ACTIVE) ---");
+    console.log("--- HỆ THỐNG CHUYỂN ĐỔI ANH - VIỆT ĐÃ SẴN SÀNG ---");
 
     // Tự động chèn nút đổi ngôn ngữ lên Header nếu chưa có
     let langContainer = document.getElementById('languageWidgetContainer');
@@ -106,8 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (langContainer && !document.getElementById('langBtnText')) {
         langContainer.innerHTML = `
-            <button type="button" onclick="window.toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer border border-slate-300 shadow-sm">
-                <i class="fa-solid fa-globe text-teal-600"></i> <span id="langBtnText">${window.currentLang === 'vi' ? 'EN' : 'VN'}</span>
+            <button type="button" onclick="window.toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-slate-300 shadow-sm">
+                <i class="fa-solid fa-globe text-teal-600"></i> 
+                <span id="langBtnText">${window.currentLang === 'vi' ? 'EN (English)' : 'VN (Tiếng Việt)'}</span>
             </button>
         `;
     }
@@ -414,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderApprovedWorkers();
         renderTrashList();
 
-        // Sau khi render xong, kích hoạt quét ngôn ngữ toàn trang
+        // Nếu đang ở chế độ tiếng Anh, tự động áp dụng dịch toàn trang
         if (window.currentLang === 'en') {
             window.applyLanguage('en');
         }
@@ -679,10 +684,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Khởi chạy ứng dụng
+    // Khởi chạy ứng dụng và tự động quét dịch nếu trạng thái lưu là tiếng Anh
     window.renderJobs();
     if (window.currentLang === 'en') {
-        setTimeout(() => window.applyLanguage('en'), 300);
+        setTimeout(() => window.applyLanguage('en'), 200);
     }
 
     // Realtime sync đa thiết bị

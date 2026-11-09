@@ -1,4 +1,4 @@
-// BỘ TỪ ĐIỂN SONG NGỮ (VIỆT - ANH) HOÀN CHỈNH CHO "VIỆC GẤP"
+// BỘ TỪ ĐIỂN SONG NGỮ (VIỆT - ANH) HOÀN CHỈNH
 const translations = {
     vi: {
         appTitle: "Việc Gấp",
@@ -98,57 +98,62 @@ const translations = {
     }
 };
 
+// ĐỒNG BỘ NGUYÊN THỦY LÊN CẢ LOCALSTORAGE LẪN WINDOW
 window.currentLang = localStorage.getItem('app_language') || 'vi';
 
-// HÀM DỊCH TẤT CẢ PHẦN TỬ TRÊN TRANG (KỂ CẢ THẺ ĐỘNG)
 window.applyLanguage = function(lang) {
-    if (lang) window.currentLang = lang;
-    localStorage.setItem('app_language', window.currentLang);
+    const targetLang = lang || window.currentLang || 'vi';
+    window.currentLang = targetLang;
+    localStorage.setItem('app_language', targetLang);
 
-    // Cập nhật nút bấm trên Header
+    // 1. Đổi nút bấm trên Header
     const btnText = document.getElementById('langBtnText');
     if (btnText) {
-        btnText.textContent = window.currentLang === 'vi' ? 'EN' : 'VN';
+        btnText.textContent = targetLang === 'vi' ? 'EN' : 'VN';
     }
 
-    // 1. Dịch các thẻ có thuộc tính data-i18n
+    // 2. Ép dịch toàn bộ các thuộc tính data-i18n
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (translations[window.currentLang] && translations[window.currentLang][key]) {
-            el.textContent = translations[window.currentLang][key];
+        if (translations[targetLang] && translations[targetLang][key]) {
+            el.textContent = translations[targetLang][key];
         }
     });
 
-    // 2. Dịch trực tiếp nút "Nhận việc / Accept Job" và "Xóa / Delete" trong danh sách việc làm
+    // 3. Ép dịch các nút động trong danh sách việc làm (#jobList)
     document.querySelectorAll('#jobList button').forEach(btn => {
-        const text = btn.textContent.trim();
-        if (window.currentLang === 'en') {
-            if (text.includes('Nhận việc')) {
-                btn.innerHTML = `<span data-i18n="btnAcceptJob">Accept Job</span> &rarr;`;
+        const html = btn.innerHTML;
+        if (targetLang === 'en') {
+            if (html.includes('Nhận việc')) {
+                btn.innerHTML = html.replace('Nhận việc', 'Accept Job');
             }
-            if (text.includes('Xóa')) {
-                btn.innerHTML = `<i class="fa-solid fa-trash-can mr-1"></i><span data-i18n="deleteBtn">Delete</span>`;
+            if (html.includes('Xóa')) {
+                btn.innerHTML = html.replace('Xóa', 'Delete');
             }
         } else {
-            if (text.includes('Accept Job')) {
-                btn.innerHTML = `<span data-i18n="btnAcceptJob">Nhận việc</span> &rarr;`;
+            if (html.includes('Accept Job')) {
+                btn.innerHTML = html.replace('Accept Job', 'Nhận việc');
             }
-            if (text.includes('Delete')) {
-                btn.innerHTML = `<i class="fa-solid fa-trash-can mr-1"></i><span data-i18n="deleteBtn">Xóa</span>`;
+            if (html.includes('Delete')) {
+                btn.innerHTML = html.replace('Delete', 'Xóa');
             }
         }
     });
 };
 
-// HÀM CHUYỂN ĐỔI NGÔN NGỮ KHI BẤM NÚT
 window.toggleLanguage = function() {
-    window.currentLang = window.currentLang === 'vi' ? 'en' : 'vi';
-    window.applyLanguage(window.currentLang);
+    const nextLang = (localStorage.getItem('app_language') || 'vi') === 'vi' ? 'en' : 'vi';
+    window.applyLanguage(nextLang);
+    
+    // Gọi ép render lại danh sách nếu hàm window.renderJobs có tồn tại
+    if (typeof window.renderJobs === 'function') {
+        window.renderJobs('ALL');
+    }
 };
 
-// TỰ ĐỘNG LẮNG NGHE THAY ĐỔI GIAO DIỆN ĐỂ DỊCH (MUTATION OBSERVER)
+// TỰ ĐỘNG CHẠY KHI TẢI TRANG VÀ QUAN SÁT THAY ĐỔI THẺ ĐỘNG
 document.addEventListener('DOMContentLoaded', () => {
-    // Tự chèn nút đổi ngôn ngữ nếu chưa có
+    // 1. Tự chèn nút chuyển đổi nếu chưa có
     let container = document.getElementById('languageWidgetContainer');
     if (!container) {
         const headerFlex = document.querySelector('header .max-w-4xl > div:last-child');
@@ -160,22 +165,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (container && !document.getElementById('langBtnText')) {
+        const initialLang = localStorage.getItem('app_language') || 'vi';
         container.innerHTML = `
             <button type="button" onclick="window.toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer border border-slate-300">
-                <i class="fa-solid fa-globe text-teal-600"></i> <span id="langBtnText">${window.currentLang === 'vi' ? 'EN' : 'VN'}</span>
+                <i class="fa-solid fa-globe text-teal-600"></i> <span id="langBtnText">${initialLang === 'vi' ? 'EN' : 'VN'}</span>
             </button>
         `;
     }
 
-    // Áp dụng dịch ban đầu
+    // 2. Kích hoạt dịch ngay lập tức
     window.applyLanguage(window.currentLang);
 
-    // Tự động quan sát bảng tin #jobList: Mỗi khi Supabase / app.js render lại bài mới, nó tự chạy dịch lại luôn
-    const targetNode = document.getElementById('jobList');
-    if (targetNode) {
+    // 3. Quan sát #jobList: Khi Supabase vẽ xong thẻ mới, tự dịch lại liền
+    const jobListEl = document.getElementById('jobList');
+    if (jobListEl) {
         const observer = new MutationObserver(() => {
-            window.applyLanguage(window.currentLang);
+            window.applyLanguage(localStorage.getItem('app_language') || 'vi');
         });
-        observer.observe(targetNode, { childList: true, subtree: true });
+        observer.observe(jobListEl, { childList: true, subtree: true });
     }
 });

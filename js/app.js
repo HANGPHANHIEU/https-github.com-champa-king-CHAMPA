@@ -9,7 +9,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const ADMIN_PHONE = '0966507481';
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG HOÀN CHỈNH (TIẾNG VIỆT & THÙNG RÁC) ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (ĐÃ BẬT LẠI THÙNG RÁC) ---");
 
     // 1. Dọn dẹp modal bị kẹt khi mới tải trang
     document.querySelectorAll('[id*="Modal"], [id*="modal"]').forEach(modal => {
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     };
 
-    // --- HÀM RENDER THÙNG RÁC (ĐẦY ĐỦ TÍNH NĂNG) ---
+    // --- HÀM RENDER THÙNG RÁC (ĐÃ GẮN ĐẦY ĐỦ LOGIC) ---
     const renderTrashList = () => {
         const trashContainer = document.getElementById('trashList');
         const trashBadge = document.getElementById('trashBadge');
@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     };
 
-    // --- RENDER BẢNG TIN CHÍNH (CÓ BẢO MẬT CHÍNH CHỦ VÀ ADMIN) ---
+    // --- RENDER BẢNG TIN CHÍNH (CÓ GỌI THÙNG RÁC) ---
     window.renderJobs = async (locationFilter = 'ALL') => {
         const jobListContainer = document.getElementById('jobList');
         const jobCountElement = document.getElementById('jobCount');
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAcceptedJobs();
         renderApprovedOrgs();
         renderApprovedWorkers();
-        renderTrashList();
+        renderTrashList(); // <-- Kích hoạt hiển thị thùng rác đầy đủ
     };
 
     // Lắng nghe sự kiện lọc khu vực từ thanh filter

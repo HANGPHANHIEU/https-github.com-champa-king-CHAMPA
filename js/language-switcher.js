@@ -1,4 +1,4 @@
-// BỘ TỪ ĐIỂN SONG NGỮ (VIỆT - ANH) HOÀN CHỈNH
+// BỘ TỪ ĐIỂN SONG NGỮ (VIỆT - ANH) HOÀN CHỈNH CHO "VIỆC GẤP"
 const translations = {
     vi: {
         appTitle: "Việc Gấp",
@@ -98,87 +98,82 @@ const translations = {
     }
 };
 
-// Quản lý trạng thái ngôn ngữ
 window.currentLang = localStorage.getItem('app_language') || 'vi';
 
-// Hàm thực thi dịch toàn bộ giao diện
+// HÀM ÁP DỤNG NGÔN NGỮ LÊN TOÀN BỘ TRANG
 window.applyLanguage = function(lang) {
-    const targetLang = lang || window.currentLang || 'vi';
-    window.currentLang = targetLang;
-    localStorage.setItem('app_language', targetLang);
+    if (lang) window.currentLang = lang;
+    localStorage.setItem('app_language', window.currentLang);
 
-    // Update chữ trên nút bấm đổi ngôn ngữ
-    const langLabel = document.getElementById('langBtnText');
-    if (langLabel) {
-        langLabel.textContent = targetLang === 'vi' ? 'EN' : 'VN';
-    }
-
-    // 1. Dịch các phần tử cố định có attribute data-i18n
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (translations[targetLang] && translations[targetLang][key]) {
-            el.textContent = translations[targetLang][key];
+    // Cập nhật nhãn trên tất cả các nút có hiển thị chữ EN / VN
+    document.querySelectorAll('*').forEach(el => {
+        if (el.childNodes.length === 1 && el.nodeType === Node.ELEMENT_NODE) {
+            const text = el.textContent.trim();
+            if (text === 'EN' || text === 'VN') {
+                el.textContent = window.currentLang === 'vi' ? 'EN' : 'VN';
+            }
         }
     });
 
-    // 2. Dịch các phần tử động sinh ra trong bài đăng (#jobList)
+    // 1. Dịch các thẻ có data-i18n
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[window.currentLang] && translations[window.currentLang][key]) {
+            el.textContent = translations[window.currentLang][key];
+        }
+    });
+
+    // 2. Dịch các nút động trong danh sách công việc (#jobList)
     document.querySelectorAll('#jobList button').forEach(btn => {
         const text = btn.textContent;
-        if (targetLang === 'en') {
-            if (text.includes('Nhận việc')) btn.innerHTML = `<span data-i18n="btnAcceptJob">Accept Job</span> &rarr;`;
-            if (text.includes('Xóa')) btn.innerHTML = `<i class="fa-solid fa-trash-can mr-1"></i><span data-i18n="deleteBtn">Delete</span>`;
+        if (window.currentLang === 'en') {
+            if (text.includes('Nhận việc')) {
+                btn.innerHTML = `<span data-i18n="btnAcceptJob">Accept Job</span> &rarr;`;
+            }
+            if (text.includes('Xóa')) {
+                btn.innerHTML = `<i class="fa-solid fa-trash-can mr-1"></i><span data-i18n="deleteBtn">Delete</span>`;
+            }
         } else {
-            if (text.includes('Accept Job')) btn.innerHTML = `<span data-i18n="btnAcceptJob">Nhận việc</span> &rarr;`;
-            if (text.includes('Delete')) btn.innerHTML = `<i class="fa-solid fa-trash-can mr-1"></i><span data-i18n="deleteBtn">Xóa</span>`;
+            if (text.includes('Accept Job')) {
+                btn.innerHTML = `<span data-i18n="btnAcceptJob">Nhận việc</span> &rarr;`;
+            }
+            if (text.includes('Delete')) {
+                btn.innerHTML = `<i class="fa-solid fa-trash-can mr-1"></i><span data-i18n="deleteBtn">Xóa</span>`;
+            }
         }
     });
 };
 
-// Hàm chuyển đổi ngôn ngữ
+// HÀM CHUYỂN ĐỔI NGÔN NGỮ
 window.toggleLanguage = function() {
-    const nextLang = (localStorage.getItem('app_language') || 'vi') === 'vi' ? 'en' : 'vi';
-    window.applyLanguage(nextLang);
+    window.currentLang = window.currentLang === 'vi' ? 'en' : 'vi';
+    window.applyLanguage(window.currentLang);
     if (typeof window.renderJobs === 'function') {
         window.renderJobs(window.currentSelectedLocation || 'ALL');
     }
 };
 
-// Tự động khởi tạo và gán sự kiện khi DOM sẵn sàng
+// TỰ ĐỘNG GẮN SỰ KIỆN VÀO NÚT "EN" CÓ SẴN TRÊN HEADER KHI TẢI TRANG
 document.addEventListener('DOMContentLoaded', () => {
-    let container = document.getElementById('languageWidgetContainer');
-    
-    if (!container) {
-        const headerRight = document.querySelector('header .max-w-4xl > div:last-child');
-        if (headerRight) {
-            container = document.createElement('div');
-            container.id = 'languageWidgetContainer';
-            headerRight.insertBefore(container, headerRight.firstChild);
+    // Tìm bất kỳ phần tử nào đang chứa chữ "EN" hoặc "VN" trên header để biến nó thành nút bấm
+    document.querySelectorAll('header button, header div, header span').forEach(el => {
+        if (el.textContent.trim() === 'EN' || el.textContent.trim() === 'VN') {
+            el.style.cursor = 'pointer';
+            el.onclick = (e) => {
+                e.preventDefault();
+                window.toggleLanguage();
+            };
         }
-    }
+    });
 
-    if (container) {
-        const curLang = localStorage.getItem('app_language') || 'vi';
-        container.innerHTML = `
-            <button type="button" id="btnToggleLangHeader" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer border border-slate-300">
-                <i class="fa-solid fa-globe text-teal-600"></i> <span id="langBtnText">${curLang === 'vi' ? 'EN' : 'VN'}</span>
-            </button>
-        `;
-
-        // Gắn sự kiện Click trực tiếp bằng AddEventListener để tránh lỗi mất Scope
-        document.getElementById('btnToggleLangHeader')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.toggleLanguage();
-        });
-    }
-
-    // Chạy dịch ngay lập tức
+    // Kích hoạt dịch ngay lập tức
     window.applyLanguage(window.currentLang);
 
-    // Tự quan sát bài đăng mới từ Supabase để tự dịch lại ngay
+    // Lắng nghe thay đổi DOM khi render bài đăng
     const jobListEl = document.getElementById('jobList');
     if (jobListEl) {
         const observer = new MutationObserver(() => {
-            window.applyLanguage(localStorage.getItem('app_language') || 'vi');
+            window.applyLanguage(window.currentLang);
         });
         observer.observe(jobListEl, { childList: true, subtree: true });
     }

@@ -11,8 +11,8 @@
     
     <!-- ÉP CHỐNG CACHE SAFARI IPAD -->
     <script>
-        if (!window.location.search.includes('v=2026_fix_delete_auth')) {
-            window.location.replace(window.location.pathname + '?v=2026_fix_delete_auth');
+        if (!window.location.search.includes('v=2026_fix_final')) {
+            window.location.replace(window.location.pathname + '?v=2026_fix_final');
         }
     </script>
 </head>
@@ -393,7 +393,7 @@
     <!-- NẠP FILE TỪ ĐIỂN & XỬ LÝ SONG NGỮ (language-switcher.js) -->
     <script src="language-switcher.js"></script>
 
-    <!-- SCRIPT XỬ LÝ HỆ THỐNG SUPABASE & XÓA BÀI ĐĂNG (CHỈ CHỦ BÀI HOẶC ADMIN) -->
+    <!-- SCRIPT XỬ LÝ HỆ THỐNG SUPABASE & XÓA / NHẬN VIỆC (ĐỒNG BỘ LOCALSTORAGE) -->
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
@@ -403,7 +403,7 @@
 
         let tempGeneratedOtp = null;
         let tempRegisterPhone = null;
-        const ADMIN_PHONE = '0966507481'; // Số điện thoại Admin có quyền xóa mọi bài đăng
+        const ADMIN_PHONE = '0966507481'; // Số điện thoại Admin
 
         document.addEventListener('DOMContentLoaded', async () => {
             const loggedPhone = localStorage.getItem('viecgap_logged_phone');
@@ -437,10 +437,11 @@
             document.getElementById('btnCloseModal')?.addEventListener('click', () => document.getElementById('postJobModal')?.classList.add('hidden'));
             document.getElementById('btnCancelModal')?.addEventListener('click', () => document.getElementById('postJobModal')?.classList.add('hidden'));
 
-            // GỬI THÔNG TIN ĐĂNG VIỆC MỚI (LƯU KÈM SỐ ĐIỆN THOẠI NGƯỜI ĐĂNG)
+            // GỬI THÔNG TIN ĐĂNG VIỆC MỚI (LƯU KÈM SỐ ĐIỆN THOẠI)
             document.getElementById('postJobForm')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                if (!loggedPhone) {
+                const currentPhone = localStorage.getItem('viecgap_logged_phone');
+                if (!currentPhone) {
                     alert(window.currentLang === 'vi' ? '⚠️ Vui lòng đăng nhập số điện thoại trước khi đăng việc!' : '⚠️ Please login before posting a job!');
                     return;
                 }
@@ -460,7 +461,7 @@
                     title: title,
                     location: location,
                     salary: salary,
-                    phone: loggedPhone, // Lưu SĐT người đăng để phân quyền xóa
+                    phone: currentPhone,
                     status: 'active',
                     created_at: new Date()
                 }]);
@@ -531,10 +532,36 @@
             });
         });
 
-        // HÀM XÓA BÀI ĐĂNG (CHỈ CHỦ BÀI HOẶC ADMIN MỚI THỰC HIỆN ĐƯỢC)
+        // HÀM NHẬN VIỆC (ĐỌC TRỰC TIẾP TỪ LOCALSTORAGE ĐỂ KHÔNG BỊ LỖI ĐĂNG NHẬP)
+        window.handleAcceptJob = async (jobId) => {
+            const currentPhone = localStorage.getItem('viecgap_logged_phone');
+            if (!currentPhone) {
+                alert(window.currentLang === 'vi' ? '⚠️ Vui lòng đăng nhập trước khi nhận việc!' : '⚠️ Please login before accepting jobs!');
+                window.toggleAuthBox?.();
+                return;
+            }
+
+            const { error } = await supabase
+                .from('jobs')
+                .update({ 
+                    status: 'accepted',
+                    accepted_by: currentPhone,
+                    accepted_at: new Date()
+                })
+                .eq('id', jobId);
+
+            if (!error) {
+                alert(window.currentLang === 'vi' ? '🎉 Nhận việc thành công!' : '🎉 Job accepted successfully!');
+                location.reload();
+            } else {
+                alert('❌ Lỗi: ' + error.message);
+            }
+        };
+
+        // HÀM XÓA BÀI ĐĂNG (CHỈ CHỦ BÀI HOẶC ADMIN)
         window.deleteJobPost = async (jobId, jobPosterPhone) => {
-            const loggedPhone = localStorage.getItem('viecgap_logged_phone');
-            if (!loggedPhone || (loggedPhone !== jobPosterPhone && loggedPhone !== ADMIN_PHONE)) {
+            const currentPhone = localStorage.getItem('viecgap_logged_phone');
+            if (!currentPhone || (currentPhone !== jobPosterPhone && currentPhone !== ADMIN_PHONE)) {
                 alert(window.currentLang === 'vi' ? '❌ Bạn không có quyền xóa bài viết này!' : '❌ You do not have permission to delete this post!');
                 return;
             }
@@ -586,7 +613,6 @@
             }
         };
 
-        // KIỂM TRA TRÙNG SỐ ĐIỆN THOẠI TRƯỚC KHI GỬI OTP
         window.requestRegisterOTP = async () => {
             const phone = document.getElementById('regPhoneInput')?.value?.trim();
             if (!phone || phone.length < 9) {

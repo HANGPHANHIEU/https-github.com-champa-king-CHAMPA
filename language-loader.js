@@ -1,40 +1,10 @@
-// BỘ TỪ ĐIỂN SONG NGỮ VIỆT - ANH TOÀN DIỆN
+// BỘ TỪ ĐIỂN SONG NGỮ VIỆT - ANH (KHÔNG PHỤ THUỘC NÚT CŨ)
 const i18nDict = {
     vi: {
-        appTitle: "Việc Gấp",
-        appSubTitle: "Kết nối lao động nhanh chóng",
-        commissionText: "Hoa hồng 1%",
-        manageWorkersText: "Quản lý nhận việc",
-        authBtnText: "Đăng ký / Đăng nhập",
-        heroBadge: "Cộng đồng uy tín Châu Thành & Toàn quốc",
-        heroTitle: "Cần thợ gấp? Hoặc tìm việc làm ngay trong ngày?",
-        heroDesc: "Nền tảng kết nối trực tiếp người cần thuê và người nhận việc an toàn, bảo mật và minh bạch.",
-        postJobNow: "Đăng việc ngay",
-        tabJobList: "Bảng tin việc làm",
-        tabAcceptedJob: "Việc đã nhận",
-        tabOrg: "Tổ chức/Đối tác",
-        tabWorker: "Hồ sơ thợ",
-        filterLoc: "Lọc nhanh theo khu vực:",
-        allLoc: "Tất cả khu vực",
         btnAcceptJob: "Nhận việc",
         deleteBtn: "Xóa"
     },
     en: {
-        appTitle: "Quick Jobs",
-        appSubTitle: "Fast Labor Connection",
-        commissionText: "1% Commission",
-        manageWorkersText: "Manage Workers",
-        authBtnText: "Register / Login",
-        heroBadge: "Chau Thanh & Nationwide Community",
-        heroTitle: "Need workers fast? Or looking for daily jobs?",
-        heroDesc: "Direct platform connecting hirers and job seekers safely, securely, and transparently.",
-        postJobNow: "Post Job Now",
-        tabJobList: "Job Feed",
-        tabAcceptedJob: "Accepted Jobs",
-        tabOrg: "Organizations",
-        tabWorker: "Workers Profile",
-        filterLoc: "Filter by location:",
-        allLoc: "All Locations",
         btnAcceptJob: "Accept Job",
         deleteBtn: "Delete"
     }
@@ -43,26 +13,17 @@ const i18nDict = {
 (function() {
     let currentLang = localStorage.getItem('app_language') || 'vi';
 
-    // 1. Hàm thực thi dịch chữ trực tiếp lên giao diện
-    function executeTranslation(lang) {
+    function runTranslation(lang) {
         currentLang = lang;
         localStorage.setItem('app_language', lang);
 
-        // Đổi nhãn nút bấm trên Header
-        const btnText = document.getElementById('activeLangText');
-        if (btnText) {
-            btnText.textContent = lang === 'vi' ? 'EN' : 'VN';
+        // Đổi chữ trên nút bấm mới của chúng ta
+        const toggleBtnText = document.getElementById('myLangToggleText');
+        if (toggleBtnText) {
+            toggleBtnText.textContent = lang === 'vi' ? 'EN (Tiếng Anh)' : 'VN (Tiếng Việt)';
         }
 
-        // Dịch các thẻ tĩnh chứa attribute data-i18n
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            if (i18nDict[lang] && i18nDict[lang][key]) {
-                el.textContent = i18nDict[lang][key];
-            }
-        });
-
-        // Dịch các nút động "Nhận việc" và "Xóa" bên trong danh sách bài đăng (#jobList)
+        // Dịch các nút Nhận việc / Xóa trong danh sách bài đăng
         document.querySelectorAll('#jobList button').forEach(btn => {
             const html = btn.innerHTML;
             if (lang === 'en') {
@@ -75,49 +36,36 @@ const i18nDict = {
         });
     }
 
-    // 2. Tự động thay thế nút EN tĩnh bằng nút tương tác thật
-    function initLanguageWidget() {
-        // Tìm chữ EN hoặc VN tĩnh đang bị kẹt trên header
-        const headerElements = document.querySelectorAll('header span, header button, header div');
-        let staticBtn = null;
+    // Tự động tạo một nút bấm đổi ngôn ngữ nổi bật đè lên góc phải header
+    document.addEventListener('DOMContentLoaded', () => {
+        const headerContainer = document.querySelector('header .max-w-4xl');
+        if (headerContainer && !document.getElementById('myCustomLangBtn')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex justify-end mb-2';
+            wrapper.innerHTML = `
+                <button type="button" id="myCustomLangBtn" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md">
+                    <i class="fa-solid fa-globe"></i> 
+                    <span id="myLangToggleText">${currentLang === 'vi' ? 'EN (Tiếng Anh)' : 'VN (Tiếng Việt)'}</span>
+                </button>
+            `;
+            // Chèn ngay dưới header
+            headerContainer.parentElement.insertBefore(wrapper, headerContainer.nextSibling);
 
-        headerElements.forEach(el => {
-            const txt = el.textContent.trim();
-            if ((txt === 'EN' || txt === 'VN') && !el.id.includes('activeLangBtn')) {
-                staticBtn = el;
-            }
-        });
-
-        if (staticBtn) {
-            const parent = staticBtn.parentElement;
-            const newBtn = document.createElement('button');
-            newBtn.type = 'button';
-            newBtn.id = 'activeLangBtn';
-            newBtn.className = 'bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer border border-slate-300 shadow-sm';
-            newBtn.innerHTML = `<i class="fa-solid fa-globe text-teal-600"></i> <span id="activeLangText">${currentLang === 'vi' ? 'EN' : 'VN'}</span>`;
-            
-            parent.replaceChild(newBtn, staticBtn);
-
-            // Bắt sự kiện Click trực tiếp
-            newBtn.addEventListener('click', (e) => {
+            // Bắt sự kiện click chắc chắn 100% ăn ngay trên thiết bị cảm ứng
+            document.getElementById('myCustomLangBtn').addEventListener('click', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 const nextLang = currentLang === 'vi' ? 'en' : 'vi';
-                executeTranslation(nextLang);
+                runTranslation(nextLang);
             });
         }
-    }
 
-    // Tự động kích hoạt khi DOM tải xong
-    document.addEventListener('DOMContentLoaded', () => {
-        initLanguageWidget();
-        executeTranslation(currentLang);
+        runTranslation(currentLang);
 
-        // Tự động quan sát #jobList: Khi Supabase render bài mới ra màn hình, tự dịch lại ngay
+        // Tự động quét lại khi có bài viết mới từ Supabase
         const jobContainer = document.getElementById('jobList');
         if (jobContainer) {
             const observer = new MutationObserver(() => {
-                executeTranslation(localStorage.getItem('app_language') || 'vi');
+                runTranslation(localStorage.getItem('app_language') || 'vi');
             });
             observer.observe(jobContainer, { childList: true, subtree: true });
         }

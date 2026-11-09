@@ -100,18 +100,18 @@ const translations = {
 
 window.currentLang = localStorage.getItem('app_language') || 'vi';
 
-// Hàm áp dụng ngôn ngữ lên toàn bộ trang và thẻ động
+// Hàm áp dụng ngôn ngữ cho toàn bộ trang
 window.applyLanguage = function(lang) {
     if (lang) window.currentLang = lang;
     localStorage.setItem('app_language', window.currentLang);
 
-    // Cập nhật nhãn nút bấm trên header
+    // Cập nhật text trên nút bấm ngôn ngữ Header
     const btnText = document.getElementById('langBtnText');
     if (btnText) {
         btnText.textContent = window.currentLang === 'vi' ? 'EN' : 'VN';
     }
 
-    // Dịch toàn bộ các phần tử có thuộc tính data-i18n
+    // Quét và dịch toàn bộ các thẻ có thuộc tính data-i18n
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[window.currentLang] && translations[window.currentLang][key]) {
@@ -120,18 +120,18 @@ window.applyLanguage = function(lang) {
     });
 };
 
-// Hàm bấm chuyển đổi qua lại giữa VI và EN
+// Hàm bấm chuyển đổi ngôn ngữ
 window.toggleLanguage = function() {
     window.currentLang = window.currentLang === 'vi' ? 'en' : 'vi';
     window.applyLanguage(window.currentLang);
     
-    // Gọi lại hàm render bài đăng (nếu có) để cập nhật chữ trên danh sách việc làm
+    // Nếu ứng dụng có hàm render lại danh sách, gọi luôn để cập nhật chữ động
     if (typeof window.renderJobs === 'function') {
-        window.renderJobs(window.currentSelectedLocation || 'ALL');
+        window.renderJobs('ALL');
     }
 };
 
-// Tự động chèn nút bấm ngôn ngữ vào Header nếu chưa có container
+// Tự động khởi tạo nút bấm trên Header và dịch trang khi tải xong
 document.addEventListener('DOMContentLoaded', () => {
     let container = document.getElementById('languageWidgetContainer');
     if (!container) {
@@ -151,6 +151,5 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // Kích hoạt dịch ngay khi nạp trang
     window.applyLanguage(window.currentLang);
 });

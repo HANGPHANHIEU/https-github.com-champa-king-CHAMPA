@@ -1,4 +1,4 @@
-// BỘ TỪ ĐIỂN SONG NGỮ (VIỆT - ANH) CHO "VIỆC GẤP"
+// BỘ TỪ ĐIỂN SONG NGỮ (VIỆT - ANH) HOÀN CHỈNH CHO "VIỆC GẤP"
 const translations = {
     vi: {
         appTitle: "Việc Gấp",
@@ -100,39 +100,55 @@ const translations = {
 
 window.currentLang = localStorage.getItem('app_language') || 'vi';
 
-// Hàm áp dụng ngôn ngữ cho toàn bộ trang
+// HÀM DỊCH TẤT CẢ PHẦN TỬ TRÊN TRANG (KỂ CẢ THẺ ĐỘNG)
 window.applyLanguage = function(lang) {
     if (lang) window.currentLang = lang;
     localStorage.setItem('app_language', window.currentLang);
 
-    // Cập nhật text trên nút bấm ngôn ngữ Header
+    // Cập nhật nút bấm trên Header
     const btnText = document.getElementById('langBtnText');
     if (btnText) {
         btnText.textContent = window.currentLang === 'vi' ? 'EN' : 'VN';
     }
 
-    // Quét và dịch toàn bộ các thẻ có thuộc tính data-i18n
+    // 1. Dịch các thẻ có thuộc tính data-i18n
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[window.currentLang] && translations[window.currentLang][key]) {
             el.textContent = translations[window.currentLang][key];
         }
     });
+
+    // 2. Dịch trực tiếp nút "Nhận việc / Accept Job" và "Xóa / Delete" trong danh sách việc làm
+    document.querySelectorAll('#jobList button').forEach(btn => {
+        const text = btn.textContent.trim();
+        if (window.currentLang === 'en') {
+            if (text.includes('Nhận việc')) {
+                btn.innerHTML = `<span data-i18n="btnAcceptJob">Accept Job</span> &rarr;`;
+            }
+            if (text.includes('Xóa')) {
+                btn.innerHTML = `<i class="fa-solid fa-trash-can mr-1"></i><span data-i18n="deleteBtn">Delete</span>`;
+            }
+        } else {
+            if (text.includes('Accept Job')) {
+                btn.innerHTML = `<span data-i18n="btnAcceptJob">Nhận việc</span> &rarr;`;
+            }
+            if (text.includes('Delete')) {
+                btn.innerHTML = `<i class="fa-solid fa-trash-can mr-1"></i><span data-i18n="deleteBtn">Xóa</span>`;
+            }
+        }
+    });
 };
 
-// Hàm bấm chuyển đổi ngôn ngữ
+// HÀM CHUYỂN ĐỔI NGÔN NGỮ KHI BẤM NÚT
 window.toggleLanguage = function() {
     window.currentLang = window.currentLang === 'vi' ? 'en' : 'vi';
     window.applyLanguage(window.currentLang);
-    
-    // Nếu ứng dụng có hàm render lại danh sách, gọi luôn để cập nhật chữ động
-    if (typeof window.renderJobs === 'function') {
-        window.renderJobs('ALL');
-    }
 };
 
-// Tự động khởi tạo nút bấm trên Header và dịch trang khi tải xong
+// TỰ ĐỘNG LẮNG NGHE THAY ĐỔI GIAO DIỆN ĐỂ DỊCH (MUTATION OBSERVER)
 document.addEventListener('DOMContentLoaded', () => {
+    // Tự chèn nút đổi ngôn ngữ nếu chưa có
     let container = document.getElementById('languageWidgetContainer');
     if (!container) {
         const headerFlex = document.querySelector('header .max-w-4xl > div:last-child');
@@ -151,5 +167,15 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    // Áp dụng dịch ban đầu
     window.applyLanguage(window.currentLang);
+
+    // Tự động quan sát bảng tin #jobList: Mỗi khi Supabase / app.js render lại bài mới, nó tự chạy dịch lại luôn
+    const targetNode = document.getElementById('jobList');
+    if (targetNode) {
+        const observer = new MutationObserver(() => {
+            window.applyLanguage(window.currentLang);
+        });
+        observer.observe(targetNode, { childList: true, subtree: true });
+    }
 });

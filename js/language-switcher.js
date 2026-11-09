@@ -69,30 +69,6 @@ const translations = {
         logout: "Logout",
         heroBadge: "Chau Thanh & Nationwide Community",
         heroTitle: "Need workers fast? Or looking for daily jobs?",
-    },
-    en: {
-        appTitle: "Quick Jobs",
-        appSubTitle: "Fast Labor Connection",
-        commissionText: "1% Commission",
-        manageWorkersText: "Manage Workers",
-        authBtnTest: "Register / Login",
-        tabRegister: "1. Register Account",
-        tabLogin: "2. Login",
-        close: "Close",
-        regNotice: "Each phone number can only register once. Receive OTP via Zalo or WhatsApp.",
-        phoneLabel: "Phone Number *",
-        otpLabel: "OTP Code (6 digits) *",
-        passLabel: "Create Password (Default: 123456)",
-        btnSendOtp: "Send OTP via Zalo / WhatsApp",
-        btnConfirmReg: "Confirm Register & Login",
-        loginPassLabel: "Password",
-        btnChangePass: "Change Password?",
-        btnForgotPass: "Forgot Password? (Zalo/WA)",
-        btnConfirmLogin: "Confirm Login",
-        connectedPhone: "Connected Phone:",
-        logout: "Logout",
-        heroBadge: "Chau Thanh & Nationwide Community",
-        heroTitle: "Need workers fast? Or looking for daily jobs?",
         heroDesc: "Direct platform connecting hirers and job seekers safely, securely, and transparently.",
         postJobNow: "Post Job Now",
         tabJobList: "Job Feed",
@@ -120,16 +96,18 @@ const translations = {
 
 window.currentLang = localStorage.getItem('app_language') || 'vi';
 
-// Hàm áp dụng ngôn ngữ
+// Hàm thực hiện dịch văn bản
 window.applyLanguage = function(lang) {
-    window.currentLang = lang || window.currentLang;
+    if (lang) window.currentLang = lang;
     localStorage.setItem('app_language', window.currentLang);
-    
+
+    // Cập nhật nhãn nút bấm
     const btnText = document.getElementById('langBtnText');
     if (btnText) {
         btnText.textContent = window.currentLang === 'vi' ? 'EN' : 'VN';
     }
-    
+
+    // Dịch tất cả các thẻ có data-i18n
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[window.currentLang] && translations[window.currentLang][key]) {
@@ -138,18 +116,17 @@ window.applyLanguage = function(lang) {
     });
 };
 
-// Hàm bấm chuyển đổi
+// Hàm bấm chuyển đổi ngôn ngữ
 window.toggleLanguage = function() {
-    const nextLang = window.currentLang === 'vi' ? 'en' : 'vi';
-    window.applyLanguage(nextLang);
+    window.currentLang = window.currentLang === 'vi' ? 'en' : 'vi';
+    window.applyLanguage(window.currentLang);
 };
 
-// Tự động chèn nút bấm vào giao diện ngay khi trang tải xong mà không cần sửa index.html
+// Khởi tạo tự động chèn nút bấm và dịch ngay khi DOM sẵn sàng
 document.addEventListener('DOMContentLoaded', () => {
-    // Tìm vị trí container hoặc tạo tự động trên header nếu chưa có
+    // 1. Tự động chèn nút bấm vào Header nếu chưa có container
     let container = document.getElementById('languageWidgetContainer');
     if (!container) {
-        // Nếu trong index chưa có container, tự tạo và chèn vào đầu khu vực nút bấm trên Header
         const headerFlex = document.querySelector('header .max-w-4xl > div:last-child');
         if (headerFlex) {
             container = document.createElement('div');
@@ -158,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    if (container) {
+    if (container && !document.getElementById('langBtnText')) {
         container.innerHTML = `
             <button type="button" onclick="window.toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer border border-slate-300">
                 <i class="fa-solid fa-globe text-teal-600"></i> <span id="langBtnText">EN</span>
@@ -166,5 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    // 2. Chạy dịch lần đầu
     window.applyLanguage(window.currentLang);
 });

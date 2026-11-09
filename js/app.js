@@ -6,6 +6,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const ADMIN_PHONE = '0966507481';
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG HOÀN CHỈNH ---");
 
@@ -23,24 +25,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetFooter = document.getElementById('resetFooter');
     const loginBtnText = document.getElementById('loginBtnText');
 
-    // Kiểm tra trạng thái đăng nhập từ LocalStorage
+    // Kiểm tra trạng thái đăng nhập từ LocalStorage (Đồng bộ cả 2 khóa)
     const checkLoginStatus = () => {
-        const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true';
+        const loggedPhone = localStorage.getItem('viecgap_user_phone') || localStorage.getItem('viecgap_logged_phone');
+        const isLoggedIn = !!loggedPhone;
+        
         if (isLoggedIn && loginBtnText) {
-            loginBtnText.innerHTML = `<i class="fa-solid fa-right-from-bracket mr-1.5"></i> Đăng xuất`;
+            loginBtnText.innerHTML = `<i class="fa-solid fa-right-from-bracket mr-1.5"></i> ${loggedPhone}`;
         }
         return isLoggedIn;
     };
     checkLoginStatus();
 
     const openAuthModal = () => {
-        const isLoggedIn = localStorage.getItem('viecgap_logged_in') === 'true';
-        if (isLoggedIn) {
-            if (confirm("Bạn có chắc chắn muốn đăng xuất tài khoản không?")) {
+        const loggedPhone = localStorage.getItem('viecgap_user_phone') || localStorage.getItem('viecgap_logged_phone');
+        if (loggedPhone) {
+            if (confirm(`Bạn có chắc chắn muốn đăng xuất tài khoản (${loggedPhone}) không?`)) {
                 localStorage.removeItem('viecgap_logged_in');
                 localStorage.removeItem('viecgap_user_phone');
+                localStorage.removeItem('viecgap_logged_phone');
                 if (loginBtnText) {
-                    loginBtnText.innerHTML = `<i class="fa-solid fa-user mr-1.5"></i> Đăng nhập`;
+                    loginBtnText.innerHTML = `<i class="fa-solid fa-user mr-1.5"></i> Đăng ký / Đăng nhập`;
                 }
                 alert("Đã đăng xuất thành công!");
                 window.renderJobs();
@@ -143,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const acceptedContainer = document.getElementById('acceptedJobList');
         if (!acceptedContainer) return;
 
-        const currentUserPhone = localStorage.getItem('viecgap_user_phone');
+        const currentUserPhone = localStorage.getItem('viecgap_user_phone') || localStorage.getItem('viecgap_logged_phone');
         const { data: jobs, error } = await supabase.from('jobs').select('*');
 
         if (error || !jobs) return;
@@ -192,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!trashContainer) return;
 
         if (deletedJobs.length === 0) {
-            trashContainer.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">Thùng rác trống.</div>`;
+            trashContainer.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs" data-i18n="emptyTrash">Thùng rác trống.</div>`;
             return;
         }
 
@@ -210,33 +215,39 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     };
 
-    // --- RENDER BẢNG TIN CHÍNH (CÓ BẢO MẬT CHÍNH CHỦ) ---
-    window.renderJobs = async () => {
+    // --- RENDER BẢNG TIN CHÍNH (CÓ BẢO MẬT CHÍNH CHỦ VÀ ADMIN) ---
+    window.renderJobs = async (locationFilter = 'ALL') => {
         const jobListContainer = document.getElementById('jobList');
         const jobCountElement = document.getElementById('jobCount');
         if (!jobListContainer) return;
 
-        const { data: jobs, error } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
-        const currentUserPhone = localStorage.getItem('viecgap_user_phone');
+        let query = supabase.from('jobs').select('*').order('created_at', { ascending: false });
+        if (locationFilter !== 'ALL') {
+            query = query.ilike('location', `%${locationFilter}%`);
+        }
+
+        const { data: jobs, error } = await query;
+        const currentUserPhone = localStorage.getItem('viecgap_user_phone') || localStorage.getItem('viecgap_logged_phone');
         
         if (error || !jobs) return;
 
         if (jobCountElement) jobCountElement.innerText = jobs.length;
 
         if (jobs.length === 0) {
-            jobListContainer.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">Chưa có công việc nào. Hãy đăng việc ngay!</div>`;
+            jobListContainer.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">Chưa có công việc nào ở khu vực này. Hãy đăng việc ngay!</div>`;
             return;
         }
 
         jobListContainer.innerHTML = jobs.map(job => {
-            const isOwner = currentUserPhone && job.phone === currentUserPhone;
+            const jobPosterPhone = job.phone || job.poster_phone || '';
+            const isOwner = currentUserPhone && (currentUserPhone === jobPosterPhone || currentUserPhone === ADMIN_PHONE);
             const dateStr = job.created_at ? new Date(job.created_at).toLocaleDateString('vi-VN') : 'Gần đây';
 
             let actionButtonHTML = '';
             let acceptedStatusHTML = '';
 
             if (job.status === 'accepted') {
-                if (isOwner) {
+                if (currentUserPhone && currentUserPhone === jobPosterPhone) {
                     acceptedStatusHTML = `
                         <div class="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs flex items-center justify-between">
                             <span class="text-emerald-800 font-medium"><i class="fa-solid fa-user-check mr-1"></i> Thợ nhận việc:</span>
@@ -259,8 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             } else {
                 actionButtonHTML = `
-                    <button onclick="window.handleTakeJob('${job.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1">
-                        Nhận việc &rarr;
+                    <button onclick="window.handleTakeJob('${job.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1 shadow-sm">
+                        <span data-i18n="btnAcceptJob">Nhận việc</span> &rarr;
                     </button>
                 `;
             }
@@ -289,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${actionButtonHTML}
                             ${isOwner ? `
                                 <button onclick="window.handleDeleteJob('${job.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer text-xs flex items-center gap-1">
-                                    <i class="fa-solid fa-trash-can"></i> Xóa
+                                    <i class="fa-solid fa-trash-can"></i> <span data-i18n="deleteBtn">Xóa</span>
                                 </button>
                             ` : ''}
                         </div>
@@ -302,21 +313,33 @@ document.addEventListener('DOMContentLoaded', () => {
         renderApprovedOrgs();
         renderApprovedWorkers();
         renderTrashList();
+
+        // Tự động gọi hàm dịch nếu file language-switcher.js tồn tại
+        if (typeof window.applyLanguage === 'function') {
+            window.applyLanguage(window.currentLang);
+        }
     };
+
+    // Lắng nghe sự kiện lọc khu vực từ thanh filter
+    window.addEventListener('filterJobLocationChanged', (e) => {
+        window.renderJobs(e.detail.location);
+    });
 
     // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
     window.handleTakeJob = async (jobId) => {
-        if (!checkLoginStatus()) {
+        const currentUserPhone = localStorage.getItem('viecgap_user_phone') || localStorage.getItem('viecgap_logged_phone');
+        if (!currentUserPhone) {
             alert("Vui lòng đăng nhập trước khi nhận việc!");
             openAuthModal();
             return;
         }
-        const currentUserPhone = localStorage.getItem('viecgap_user_phone');
+
         const { data: jobs } = await supabase.from('jobs').select('*').eq('id', jobId);
         if (!jobs || jobs.length === 0) return;
 
         const job = jobs[0];
-        if (job.phone === currentUserPhone) {
+        const posterPhone = job.phone || job.poster_phone;
+        if (posterPhone === currentUserPhone) {
             alert("Bạn không thể tự nhận công việc do chính mình đăng!");
             return;
         }
@@ -326,6 +349,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!error) {
                 alert("Nhận việc thành công!");
                 window.renderJobs();
+            } else {
+                alert("Lỗi: " + error.message);
             }
         }
     };
@@ -341,17 +366,29 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.handleDeleteJob = async (jobId) => {
+        const currentUserPhone = localStorage.getItem('viecgap_user_phone') || localStorage.getItem('viecgap_logged_phone');
+        const { data: jobs } = await supabase.from('jobs').select('*').eq('id', jobId);
+        
+        if (!jobs || jobs.length === 0) return;
+        const job = jobs[0];
+        const posterPhone = job.phone || job.poster_phone;
+
+        if (!currentUserPhone || (currentUserPhone !== posterPhone && currentUserPhone !== ADMIN_PHONE)) {
+            alert("Bạn không có quyền xóa bài viết này!");
+            return;
+        }
+
         if (confirm("Xóa bài đăng này?")) {
-            const { data: jobs } = await supabase.from('jobs').select('*').eq('id', jobId);
-            if (jobs && jobs.length > 0) {
-                const deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
-                deletedJobs.push({ ...jobs[0], deletedAt: new Date().toLocaleString('vi-VN') });
-                localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
-            }
+            const deletedJobs = JSON.parse(localStorage.getItem('viecgap_deleted_jobs') || '[]');
+            deletedJobs.push({ ...job, deletedAt: new Date().toLocaleString('vi-VN') });
+            localStorage.setItem('viecgap_deleted_jobs', JSON.stringify(deletedJobs));
+
             const { error } = await supabase.from('jobs').delete().eq('id', jobId);
             if (!error) {
                 alert("Đã xóa công việc!");
                 window.renderJobs();
+            } else {
+                alert("Lỗi khi xóa: " + error.message);
             }
         }
     };
@@ -385,6 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (phone) {
             localStorage.setItem('viecgap_logged_in', 'true');
             localStorage.setItem('viecgap_user_phone', phone);
+            localStorage.setItem('viecgap_logged_phone', phone);
             alert('Đăng nhập thành công!');
             closeAuthModal();
             window.renderJobs();
@@ -400,7 +438,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const postJobForm = document.getElementById('postJobForm');
 
     const openPostJob = () => {
-        if (!checkLoginStatus()) {
+        const loggedPhone = localStorage.getItem('viecgap_user_phone') || localStorage.getItem('viecgap_logged_phone');
+        if (!loggedPhone) {
             alert('Vui lòng đăng nhập trước khi đăng công việc!');
             openAuthModal();
             return;
@@ -422,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     postJobForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const currentUserPhone = localStorage.getItem('viecgap_user_phone') || '';
+        const currentUserPhone = localStorage.getItem('viecgap_user_phone') || localStorage.getItem('viecgap_logged_phone') || '';
         const locationVal = document.getElementById('jobLocationInput')?.value || 'Toàn quốc';
 
         const newJob = {
@@ -477,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- MODAL ĐĂNG KÝ HỒ SƠ THỢ (ĐÃ KHẮC PHỤC LỖI GỬI) ---
+    // --- MODAL ĐĂNG KÝ HỒ SƠ THỢ ---
     const workerModal = document.getElementById('workerModal');
     const workerForm = document.getElementById('workerForm');
 
@@ -489,8 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCancelWorkerModal')?.addEventListener('click', () => workerModal?.classList.add('hidden'));
 
     workerForm?.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Ngăn chặn load lại trang
-        
+        e.preventDefault();
         const name = document.getElementById('workerNameInput')?.value;
         const phone = document.getElementById('workerPhoneInput')?.value;
         const location = document.getElementById('workerLocationInput')?.value;
@@ -506,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
             phone: phone,
             location: location || 'Châu Thành, An Giang',
             skill: skill || 'Thợ tự do',
-            status: 'pending' // Trạng thái chờ Admin duyệt
+            status: 'pending'
         };
 
         const { error } = await supabase.from('workers').insert([newWorker]);

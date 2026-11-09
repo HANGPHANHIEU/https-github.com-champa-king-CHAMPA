@@ -8,97 +8,85 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ADMIN_PHONE = '0966507481';
 
-// --- BẢNG TỪ ĐIỂN ĐỐI CHIẾU SONG NGỮ (VIỆT - ANH) ---
-const translationPairs = [
-    { vi: "Việc Gấp", en: "Quick Jobs" },
-    { vi: "Kết nối lao động nhanh chóng", en: "Fast Labor Connection" },
-    { vi: "Hoa hồng 1%", en: "1% Commission" },
-    { vi: "Quản lý nhận việc", en: "Manage Workers" },
-    { vi: "Đăng ký / Đăng nhập", en: "Register / Login" },
-    { vi: "CỘNG ĐỒNG UY TÍN CHÂU THÀNH & TOÀN QUỐC", en: "CHAU THANH & NATIONWIDE TRUSTED COMMUNITY" },
-    { vi: "Cộng đồng uy tín Châu Thành & Toàn quốc", en: "Chau Thanh & Nationwide Trusted Community" },
-    { vi: "Cần thợ gấp? Hoặc tìm việc làm ngay trong ngày?", en: "Need workers fast? Or looking for daily jobs?" },
-    { vi: "Nền tảng kết nối trực tiếp người cần thuê và người nhận việc an toàn, bảo mật và minh bạch.", en: "Direct platform connecting hirers and job seekers safely, securely, and transparently." },
-    { vi: "Đăng việc ngay", en: "Post Job Now" },
-    { vi: "Bảng tin việc làm", en: "Job Feed" },
-    { vi: "Việc đã nhận", en: "Accepted Jobs" },
-    { vi: "Tổ chức/Đối tác", en: "Organizations" },
-    { vi: "Hồ sơ thợ", en: "Workers Profile" },
-    { vi: "Lọc nhanh theo khu vực:", en: "Filter by location:" },
-    { vi: "Tất cả khu vực", en: "All Locations" },
-    { vi: "Nhận việc", en: "Accept Job" },
-    { vi: "Xóa", en: "Delete" },
-    { vi: "Hủy nhận", en: "Cancel" },
-    { vi: "Khôi phục", en: "Restore" },
-    { vi: "Xóa hẳn", en: "Delete Permanently" },
-    { vi: "Đăng nhập tài khoản", en: "Login Account" },
-    { vi: "Đăng xuất", en: "Logout" },
-    { vi: "Đã xác minh", en: "Verified" },
-    { vi: "Thế mạnh", en: "Strength" },
-    { vi: "Kỹ năng/Nghề nghiệp", en: "Skills" },
-    { vi: "Thông tin bảo mật", en: "Confidential" },
-    { vi: "Gấp", en: "Urgent" },
-    { vi: "Thỏa thuận", en: "Negotiable" },
-    { vi: "Lương", en: "Salary" },
-    { vi: "Chưa có công việc nào ở khu vực này. Hãy đăng việc ngay!", en: "No jobs available in this area. Post a job now!" },
-    { vi: "Bạn chưa nhận công việc nào.", en: "You have not accepted any jobs." },
-    { vi: "Th thùng rác trống.", en: "Trash is empty." },
-    { vi: "Công việc đã có người nhận", en: "This job has been accepted" },
-    { vi: "Thợ nhận việc:", en: "Accepted Worker:" },
-    { vi: "Công việc đã hoàn tất (Đã tính 1% phí)", en: "Completed (1% fee applied)" }
-];
+// --- TỪ ĐIỂN ÁNH XẠ TRỰC TIẾP (VIỆT <-> ANH) ---
+const textMap = {
+    "Việc Gấp": "Quick Jobs",
+    "Kết nối lao động nhanh chóng": "Fast Labor Connection",
+    "Hoa hồng 1%": "1% Commission",
+    "Quản lý nhận việc": "Manage Workers",
+    "Đăng ký / Đăng nhập": "Register / Login",
+    "Cộng đồng uy tín Châu Thành & Toàn quốc": "Chau Thanh & Nationwide Community",
+    "Cần thợ gấp? Hoặc tìm việc làm ngay trong ngày?": "Need workers fast? Or looking for daily jobs?",
+    "Nền tảng kết nối trực tiếp người cần thuê và người nhận việc an toàn, bảo mật và minh bạch.": "Direct platform connecting hirers and job seekers safely, securely, and transparently.",
+    "Đăng việc ngay": "Post Job Now",
+    "Bảng tin việc làm": "Job Feed",
+    "Việc đã nhận": "Accepted Jobs",
+    "Tổ chức/Đối tác": "Organizations",
+    "Hồ sơ thợ": "Workers Profile",
+    "Lọc nhanh theo khu vực:": "Filter by location:",
+    "Tất cả khu vực": "All Locations",
+    "Nhận việc": "Accept Job",
+    "Xóa": "Delete",
+    "Hủy nhận": "Cancel",
+    "Khôi phục": "Restore",
+    "Xóa hẳn": "Delete Permanently",
+    "Đăng nhập tài khoản": "Login Account",
+    "Đăng xuất": "Logout"
+};
 
-// Lấy trạng thái ngôn ngữ hiện tại từ localStorage (mặc định là 'vi')
+// Trạng thái ngôn ngữ toàn cục
 window.currentLang = localStorage.getItem('app_language') || 'vi';
 
-// --- HÀM THỰC THI DỊCH TOÀN BỘ GIAO DIỆN ---
+// Hàm quét toàn bộ văn bản trên trang để dịch tự động
 window.applyLanguage = function(lang) {
     if (lang) window.currentLang = lang;
     localStorage.setItem('app_language', window.currentLang);
-    const isEn = window.currentLang === 'en';
 
-    // Cập nhật chữ hiển thị trên nút bấm (Đang ở VN thì hiện nút EN để bấm sang Anh, ngược lại đang ở EN thì hiện VN để bấm về Việt)
+    // 1. Đổi chữ trên nút bấm Header
     const langBtnText = document.getElementById('langBtnText') || document.getElementById('activeLangText');
     if (langBtnText) {
-        langBtnText.textContent = isEn ? 'VN (Tiếng Việt)' : 'EN (English)';
+        langBtnText.textContent = window.currentLang === 'vi' ? 'EN' : 'VN';
     }
 
-    // Quét toàn bộ văn bản trên trang để dịch đồng loạt
+    // 2. Duyệt qua tất cả các thẻ văn bản trên giao diện để đổi ngôn ngữ theo từ điển
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
     let node;
     while (node = walker.nextNode()) {
-        let val = node.nodeValue.trim();
-        if (!val) continue;
+        let text = node.nodeValue.trim();
+        if (!text) continue;
 
-        translationPairs.forEach(pair => {
-            if (isEn && val === pair.vi) {
-                node.nodeValue = node.nodeValue.replace(pair.vi, pair.en);
-            } else if (!isEn && val === pair.en) {
-                node.nodeValue = node.nodeValue.replace(pair.en, pair.vi);
+        if (window.currentLang === 'en') {
+            if (textMap[text]) {
+                node.nodeValue = node.nodeValue.replace(text, textMap[text]);
             }
-        });
+        } else {
+            // Đổi ngược lại tiếng Việt
+            for (let [vi, en] of Object.entries(textMap)) {
+                if (text === en || text.includes(en)) {
+                    node.nodeValue = node.nodeValue.replace(en, vi);
+                }
+            }
+        }
     }
 
+    // 3. Render lại danh sách việc làm để cập nhật trạng thái động
     if (typeof window.renderJobs === 'function') {
         window.renderJobs('ALL');
     }
 };
 
-// --- HÀM BẤM NÚT CHUYỂN ĐỔI ANH <-> VIỆT TRỰC TIẾP ---
+// Hàm bấm chuyển đổi ngôn ngữ
 window.toggleLanguage = function() {
-    // Đảo ngược trạng thái ngôn ngữ
-    let newLang = window.currentLang === 'vi' ? 'en' : 'vi';
-    localStorage.setItem('app_language', newLang);
-    window.currentLang = newLang;
-
-    // Tải lại trang nhẹ nhàng để áp dụng toàn bộ từ điển mới mượt mà 100% trên Safari/iPad
+    window.currentLang = window.currentLang === 'vi' ? 'en' : 'vi';
+    window.applyLanguage(window.currentLang);
+    // Tải lại nhẹ trang để cập nhật toàn diện văn bản DOM tĩnh
     location.reload();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("--- HỆ THỐNG CHUYỂN ĐỔI ANH - VIỆT ĐÃ SẴN SÀNG ---");
+    console.log("--- HỆ THỐNG 'VIỆC GẤP' ĐÃ KHỞI ĐỘNG (ĐÃ TÍCH HỢP QUÉT DỊCH TEXT) ---");
 
-    // Tự động chèn nút đổi ngôn ngữ lên Header nếu chưa có
+    // Tự động chèn nút bấm đổi ngôn ngữ lên Header nếu chưa có
     let langContainer = document.getElementById('languageWidgetContainer');
     if (!langContainer) {
         const headerRight = document.querySelector('header .max-w-4xl > div:last-child') || document.querySelector('header');
@@ -110,9 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (langContainer && !document.getElementById('langBtnText')) {
         langContainer.innerHTML = `
-            <button type="button" onclick="window.toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-slate-300 shadow-sm">
-                <i class="fa-solid fa-globe text-teal-600"></i> 
-                <span id="langBtnText">${window.currentLang === 'vi' ? 'EN (English)' : 'VN (Tiếng Việt)'}</span>
+            <button type="button" onclick="window.toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer border border-slate-300 shadow-sm">
+                <i class="fa-solid fa-globe text-teal-600"></i> <span id="langBtnText">${window.currentLang === 'vi' ? 'EN' : 'VN'}</span>
             </button>
         `;
     }
@@ -320,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     };
 
-    // --- RENDER BẢNG TIN CHÍNH ---
+    // --- RENDER BẢNG TIN CHÍNH (CÓ BẢO MẬT CHÍNH CHỦ VÀ ADMIN) ---
     window.renderJobs = async (locationFilter = 'ALL') => {
         const jobListContainer = document.getElementById('jobList');
         const jobCountElement = document.getElementById('jobCount');
@@ -419,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderApprovedWorkers();
         renderTrashList();
 
-        // Nếu đang ở chế độ tiếng Anh, tự động áp dụng dịch toàn trang
+        // Sau khi render xong bảng tin, chạy quét dịch ngay lập tức
         if (window.currentLang === 'en') {
             window.applyLanguage('en');
         }
@@ -684,10 +671,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Khởi chạy ứng dụng và tự động quét dịch nếu trạng thái lưu là tiếng Anh
+    // Khởi chạy
     window.renderJobs();
+
+    // Nếu trước đó đang lưu ngôn ngữ tiếng Anh, tự động áp dụng ngay khi load xong
     if (window.currentLang === 'en') {
-        setTimeout(() => window.applyLanguage('en'), 200);
+        setTimeout(() => window.applyLanguage('en'), 300);
     }
 
     // Realtime sync đa thiết bị
